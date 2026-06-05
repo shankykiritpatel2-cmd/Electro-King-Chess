@@ -1,0 +1,24 @@
+{
+  "name": "Electro King Chess",
+  "short_name": "Electro King",
+  "description": "Stunning cyber-neon chess game featuring multiple AI difficulties and gamified career scoring.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b071e",
+  "theme_color": "#0b071e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

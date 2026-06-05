@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Electro King 👑 - Cyber Chess</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- PWA Manifest link -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b071e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div class="game-container">
+        <!-- HEADER HUD -->
+        <header class="game-header">
+            <div class="header-main">
+                <h1 class="glow-text">ELECTRO KING</h1>
+                <div class="hud-score-container">
+                    <div class="hud-score-card">
+                        <span class="hud-score-label">MATCH SCORE</span>
+                        <span class="hud-score-val" id="match-score">0</span>
+                    </div>
+                    <div class="hud-score-card highlighted">
+                        <span class="hud-score-label">CAREER POINTS</span>
+                        <span class="hud-score-val" id="career-points">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TURN & STATUS INDICATOR -->
+            <div class="turn-banner" id="turn-banner">
+                <span class="turn-dot" id="turn-dot"></span>
+                <span id="turn-message">Loading match...</span>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="game-layout">
+            <!-- CAPTURED WHITE PIECES SIDEBAR -->
+            <aside class="captured-box white-captured">
+                <h3 class="side-title">⚪ Captured</h3>
+                <div class="captured-list" id="captured-by-black"></div>
+            </aside>
+
+            <!-- CHESS BOARD ZONE -->
+            <section class="board-zone">
+                <div class="board-wrapper">
+                    <!-- Labels Row/Col -->
+                    <div class="board-border">
+                        <div class="board" id="chessboard">
+                            <!-- 64 squares will be injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CAPTURED BLACK PIECES SIDEBAR -->
+            <aside class="captured-box black-captured">
+                <h3 class="side-title">⚫ Captured</h3>
+                <div class="captured-list" id="captured-by-white"></div>
+            </aside>
+        </main>
+
+        <!-- ACTION BAR -->
+        <footer class="controls-bar">
+            <button id="undo-btn" class="control-btn" title="Undo Move (Costs 100 career points)">
+                <span class="btn-icon">↩️</span>
+                <span class="btn-label">Undo <small id="undo-cost-text">(100 Pts)</small></span>
+            </button>
+            
+            <button id="hint-btn" class="control-btn accent-btn" title="Get Suggestion (Costs 100 career points)">
+                <span class="btn-icon">💡</span>
+                <span class="btn-label">Hint <small id="hint-cost-text">(100 Pts)</small></span>
+            </button>
+            
+            <button id="sound-btn" class="control-btn" title="Toggle Sound">
+                <span class="btn-icon" id="sound-icon">🔊</span>
+                <span class="btn-label">Sound</span>
+            </button>
+
+            <button id="menu-btn" class="control-btn" title="New Game / Match Settings">
+                <span class="btn-icon">⚙️</span>
+                <span class="btn-label">New Game</span>
+            </button>
+        </footer>
+    </div>
+
+    <!-- SETTINGS / MATCH SETUP MODAL -->
+    <div class="modal-overlay" id="setup-modal">
+        <div class="modal-card">
+            <h2 class="glow-text">ELECTRO KING 👑</h2>
+            <p class="modal-sub">Setup your cybernetic chess match</p>
+
+            <div class="setup-form">
+                <!-- GAME MODE -->
+                <div class="setup-section">
+                    <label class="setup-label">👾 Select Game Mode</label>
+                    <div class="mode-toggle-group">
+                        <button type="button" class="mode-btn active" id="mode-ai-btn">vs. Computer 🤖</button>
+                        <button type="button" class="mode-btn" id="mode-local-btn">Play with Friend 👥</button>
+                    </div>
+                </div>
+
+                <!-- PLAYER NAMES -->
+                <div class="setup-section" id="player-names-section">
+                    <!-- Dynamic inputs based on mode -->
+                    <div id="ai-name-inputs">
+                        <label class="setup-label" for="player-name-input">👤 Your Name</label>
+                        <input type="text" id="player-name-input" class="setup-input" value="Player 1" placeholder="Enter name">
+                    </div>
+                    <div id="local-name-inputs" class="hidden">
+                        <div class="name-grid">
+                            <div>
+                                <label class="setup-label" for="p1-name-input">⚪ Player 1 (White)</label>
+                                <input type="text" id="p1-name-input" class="setup-input" value="Player 1" placeholder="White Name">
+                            </div>
+                            <div>
+                                <label class="setup-label" for="p2-name-input">⚫ Player 2 (Black)</label>
+                                <input type="text" id="p2-name-input" class="setup-input" value="Player 2" placeholder="Black Name">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIDE SELECTOR (Only for vs AI) -->
+                <div class="setup-section" id="side-select-section">
+                    <label class="setup-label">🎨 Play As</label>
+                    <div class="color-toggle-group">
+                        <button type="button" class="color-btn active" id="side-white-btn" data-side="white">⚪ White</button>
+                        <button type="button" class="color-btn" id="side-random-btn" data-side="random">🎲 Random</button>
+                        <button type="button" class="color-btn" id="side-black-btn" data-side="black">⚫ Black</button>
+                    </div>
+                </div>
+
+                <!-- AI DIFFICULTY (Only for vs AI) -->
+                <div class="setup-section" id="difficulty-section">
+                    <label class="setup-label" id="diff-label">⚙️ Bot Difficulty: Easy</label>
+                    <input type="range" id="difficulty-slider" class="setup-slider" min="1" max="4" step="1" value="2">
+                    <div class="slider-ticks">
+                        <span>Beginner</span>
+                        <span>Easy</span>
+                        <span>Hard</span>
+                        <span>Difficult</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="start-match-btn" class="start-btn">ENGAGE MATCH ⚡</button>
+        </div>
+    </div>
+
+    <!-- PAWN PROMOTION DIALOG OVERLAY -->
+    <div class="modal-overlay hidden" id="promotion-modal">
+        <div class="modal-card mini-card">
+            <h3>Pawn Promotion! ⚡</h3>
+            <p>Choose a piece to upgrade your pawn:</p>
+            <div class="promo-buttons-container" id="promo-options">
+                <!-- Promo choice buttons injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER OVERLAY -->
+    <div class="modal-overlay hidden" id="gameover-modal">
+        <div class="modal-card text-center">
+            <h2 class="glow-text" id="gameover-title">MATCH OVER</h2>
+            <p class="gameover-desc" id="gameover-msg">Checkmate!</p>
+            <div class="gameover-stats">
+                <p>Match Score: <span id="gameover-score">0</span></p>
+                <p>New Career Points: <span id="gameover-career">0</span></p>
+            </div>
+            <button id="gameover-restart-btn" class="start-btn">PLAY AGAIN 🎮</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // Service Worker registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                    .catch(err => console.log('Service Worker registration failed: ', err));
+            });
+        }
+    </script>
+</body>
+</html>
