@@ -78,6 +78,23 @@ body {
     align-items: center;
 }
 
+.title-author-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.author-subtext {
+    font-size: 0.7rem;
+    color: var(--secondary);
+    text-shadow: 0 0 5px var(--secondary-glow);
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin-top: -3px;
+    opacity: 0.9;
+    text-transform: uppercase;
+}
+
 .glow-text {
     font-size: 1.6rem;
     font-weight: 800;
@@ -748,6 +765,12 @@ body {
     
     .glow-text {
         font-size: 1.15rem;
+    }
+    
+    .author-subtext {
+        font-size: 0.55rem;
+        letter-spacing: 1px;
+        margin-top: -2px;
     }
     
     .hud-score-card {
