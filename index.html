@@ -17,45 +17,26 @@
 </head>
 <body>
     <div class="game-container">
-        <!-- HEADER HUD -->
+        <!-- CLEAN STREAMLINED HEADER -->
         <header class="game-header">
-            <div class="header-main">
-                <div class="title-author-group">
-                    <h1 class="glow-text">ELECTRO KING</h1>
-                    <span class="author-subtext">by Viaan Patel</span>
-                </div>
-                <div class="hud-score-container">
-                    <div class="hud-score-card">
-                        <span class="hud-score-label">MATCH</span>
-                        <span class="hud-score-val" id="match-score">0</span>
-                    </div>
-                    <div class="hud-score-card highlighted" id="hud-career-card" title="Click to view Trophies">
-                        <span class="hud-score-label">CAREER PTS</span>
-                        <span class="hud-score-val" id="career-points">0</span>
-                    </div>
-                    <div class="hud-trophy-badge" id="hud-trophy-badge" title="Current Rank">
-                        <span class="trophy-icon" id="hud-trophy-icon">🪵</span>
-                        <span class="trophy-name" id="hud-trophy-name">Wood</span>
-                    </div>
-                </div>
+            <div class="header-left">
+                <h1 class="logo-title">ELECTRO KING</h1>
+                <span class="logo-by">by Viaan Patel</span>
             </div>
             
-            <!-- TURN & CLOCK BANNER (Visible on Arena) -->
-            <div class="turn-banner" id="turn-banner">
-                <div class="turn-status-group">
+            <div class="header-center">
+                <div class="turn-chip" id="turn-banner">
                     <span class="turn-dot" id="turn-dot"></span>
-                    <span id="turn-message">Setup your match...</span>
+                    <span class="turn-text" id="turn-message">White's Turn</span>
                 </div>
-                <!-- Clocks for White & Black -->
-                <div class="chess-clocks-group" id="chess-clocks-group">
-                    <div class="clock-badge" id="clock-white" title="White Clock">
-                        <span class="clock-label">⚪</span>
-                        <span class="clock-time" id="time-white">--:--</span>
-                    </div>
-                    <div class="clock-badge" id="clock-black" title="Black Clock">
-                        <span class="clock-label">⚫</span>
-                        <span class="clock-time" id="time-black">--:--</span>
-                    </div>
+            </div>
+
+            <div class="header-right">
+                <div class="career-pill" id="hud-career-card" title="Click to view Trophies">
+                    <span class="pill-icon" id="hud-trophy-icon">🪵</span>
+                    <span class="pill-val" id="career-points">0</span>
+                    <span class="hud-score-val hidden" id="match-score">0</span>
+                    <span class="trophy-name hidden" id="hud-trophy-name">Wood</span>
                 </div>
             </div>
         </header>
@@ -66,10 +47,16 @@
             <!-- TAB 1: ARENA (CHESSBOARD & PLAY) -->
             <section class="tab-screen active" id="screen-arena">
                 <main class="game-layout">
-                    <!-- TOP OPPONENT CAPTURED STRIP -->
-                    <div class="captured-strip top-captured" id="top-captured-strip">
-                        <span class="strip-label" id="opponent-name-tag">⚫ Opponent Captures</span>
+                    <!-- OPPONENT PLAYER BAR -->
+                    <div class="player-bar top-player-bar">
+                        <div class="player-info">
+                            <span class="player-avatar-mini">🤖</span>
+                            <span class="player-name-tag" id="opponent-name-tag">ElectroBot</span>
+                        </div>
                         <div class="captured-list horizontal" id="captured-by-black"></div>
+                        <div class="clock-badge" id="clock-black" title="Black Clock">
+                            <span class="clock-time" id="time-black">03:00</span>
+                        </div>
                     </div>
 
                     <!-- CHESS BOARD ZONE -->
@@ -84,38 +71,44 @@
                         </div>
                     </section>
 
-                    <!-- BOTTOM PLAYER CAPTURED STRIP -->
-                    <div class="captured-strip bottom-captured" id="bottom-captured-strip">
-                        <span class="strip-label" id="player-name-tag">⚪ Your Captures</span>
+                    <!-- YOUR PLAYER BAR -->
+                    <div class="player-bar bottom-player-bar">
+                        <div class="player-info">
+                            <span class="player-avatar-mini">👑</span>
+                            <span class="player-name-tag" id="player-name-tag">Crazy Voss</span>
+                        </div>
                         <div class="captured-list horizontal" id="captured-by-white"></div>
+                        <div class="clock-badge" id="clock-white" title="White Clock">
+                            <span class="clock-time" id="time-white">03:00</span>
+                        </div>
                     </div>
                 </main>
 
-                <!-- IN-GAME ACTION BAR -->
-                <div class="controls-bar in-game-controls">
-                    <button id="undo-btn" class="control-btn" title="Undo Move (Costs 100 career points)">
-                        <span class="btn-icon">↩️</span>
-                        <span class="btn-label">Undo <small id="undo-cost-text">(100 Pts)</small></span>
+                <!-- MINIMALIST IN-GAME ACTION BAR -->
+                <div class="in-game-controls">
+                    <button id="undo-btn" class="clean-action-btn" title="Undo Move (100 Pts)">
+                        <span class="action-icon">↩️</span>
+                        <span class="action-txt">Undo</span>
                     </button>
                     
-                    <button id="hint-btn" class="control-btn accent-btn" title="Get Suggestion (Costs 100 career points)">
-                        <span class="btn-icon">💡</span>
-                        <span class="btn-label">Hint <small id="hint-cost-text">(100 Pts)</small></span>
+                    <button id="hint-btn" class="clean-action-btn accent-action" title="Get Hint (100 Pts)">
+                        <span class="action-icon">💡</span>
+                        <span class="action-txt">Hint</span>
                     </button>
                     
-                    <button id="powerup-btn" class="control-btn powerup-btn" title="Cyber Power-Up">
-                        <span class="btn-icon">⚡</span>
-                        <span class="btn-label">Power-Up</span>
+                    <button id="powerup-btn" class="clean-action-btn powerup-action" title="EMP Lightning Power-Up">
+                        <span class="action-icon">⚡</span>
+                        <span class="action-txt">EMP</span>
                     </button>
 
-                    <button id="sound-btn" class="control-btn" title="Toggle Sound">
-                        <span class="btn-icon" id="sound-icon">🔊</span>
-                        <span class="btn-label">Sound</span>
+                    <button id="sound-btn" class="clean-action-btn" title="Toggle Sound">
+                        <span class="action-icon" id="sound-icon">🔊</span>
+                        <span class="action-txt">Sound</span>
                     </button>
 
-                    <button id="menu-btn" class="control-btn" title="Match Settings">
-                        <span class="btn-icon">⚙️</span>
-                        <span class="btn-label">Settings</span>
+                    <button id="menu-btn" class="clean-action-btn" title="Match Settings">
+                        <span class="action-icon">⚙️</span>
+                        <span class="action-txt">Setup</span>
                     </button>
                 </div>
             </section>

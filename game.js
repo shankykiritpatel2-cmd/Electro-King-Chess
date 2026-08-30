@@ -1276,20 +1276,23 @@ function updateHUD() {
     const banner = document.getElementById('turn-banner');
     const msg = document.getElementById('turn-message');
     
-    if (banner) banner.className = `turn-banner ${turn === 'white' ? 'white-turn' : 'black-turn'}`;
-    
     if (msg) {
         if (isGameOver) {
-            msg.textContent = "MATCH FINISHED!";
+            msg.textContent = "Finished!";
         } else {
             const activeName = playerNames[turn] || 'Player';
             if (gameMode === 'ai' && turn === botSide) {
-                msg.textContent = `${activeName} calculating... ⚡`;
+                msg.textContent = `${activeName} ⚡`;
             } else {
-                msg.textContent = `${activeName}'s turn (${turn.toUpperCase()})`;
+                msg.textContent = `${turn.toUpperCase()}'S TURN`;
             }
         }
     }
+
+    const oppNameEl = document.getElementById('opponent-name-tag');
+    const playerNameEl = document.getElementById('player-name-tag');
+    if (oppNameEl) oppNameEl.textContent = playerNames[botSide || 'black'] || 'ElectroBot';
+    if (playerNameEl) playerNameEl.textContent = playerNames[playerSide || 'white'] || 'Player 1';
 
     updateTrophyHUD();
     updateClockDisplay();
