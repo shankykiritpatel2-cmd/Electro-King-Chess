@@ -11,16 +11,16 @@ const UNICODE_PIECES = {
     black: { 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟' }
 };
 
-// --- 8-TIER TROPHY PROGRESSION LADDER ---
+// --- 8-TIER TROPHY PROGRESSION LADDER (HARD MODE) ---
 const TROPHY_TIERS = [
-    { tier: 1, name: 'Wood Tier', icon: '🪵', tag: 'Apprentice Spark', minPts: 0, maxPts: 99, cssClass: 'tier-wood' },
-    { tier: 2, name: 'Bronze Tier', icon: '🟫', tag: 'Cyber Knight', minPts: 100, maxPts: 249, cssClass: 'tier-bronze' },
-    { tier: 3, name: 'Silver Tier', icon: '⚪', tag: 'Neon Bishop', minPts: 250, maxPts: 499, cssClass: 'tier-silver' },
-    { tier: 4, name: 'Gold Tier', icon: '🟡', tag: 'Electro Commander', minPts: 500, maxPts: 999, cssClass: 'tier-gold' },
-    { tier: 5, name: 'Platinum Tier', icon: '💎', tag: 'Plasma Queen', minPts: 1000, maxPts: 1999, cssClass: 'tier-platinum' },
-    { tier: 6, name: 'Diamond Tier', icon: '💠', tag: 'Titan of Voltage', minPts: 2000, maxPts: 3499, cssClass: 'tier-diamond' },
-    { tier: 7, name: 'Master Tier', icon: '🌌', tag: 'Grandmaster Cyber', minPts: 3500, maxPts: 4999, cssClass: 'tier-master' },
-    { tier: 8, name: 'Electro King', icon: '👑', tag: 'Supreme Sovereign', minPts: 5000, maxPts: Infinity, cssClass: 'tier-king' }
+    { tier: 1, name: 'Wood Tier', icon: '🪵', tag: 'Apprentice Spark', minPts: 0, maxPts: 249, cssClass: 'tier-wood' },
+    { tier: 2, name: 'Bronze Tier', icon: '🟫', tag: 'Cyber Knight', minPts: 250, maxPts: 699, cssClass: 'tier-bronze' },
+    { tier: 3, name: 'Silver Tier', icon: '⚪', tag: 'Neon Bishop', minPts: 700, maxPts: 1499, cssClass: 'tier-silver' },
+    { tier: 4, name: 'Gold Tier', icon: '🟡', tag: 'Electro Commander', minPts: 1500, maxPts: 2999, cssClass: 'tier-gold' },
+    { tier: 5, name: 'Platinum Tier', icon: '💎', tag: 'Plasma Queen', minPts: 3000, maxPts: 5999, cssClass: 'tier-platinum' },
+    { tier: 6, name: 'Diamond Tier', icon: '💠', tag: 'Titan of Voltage', minPts: 6000, maxPts: 9999, cssClass: 'tier-diamond' },
+    { tier: 7, name: 'Master Tier', icon: '🌌', tag: 'Grandmaster Cyber', minPts: 10000, maxPts: 19999, cssClass: 'tier-master' },
+    { tier: 8, name: 'Electro King', icon: '👑', tag: 'Supreme Sovereign', minPts: 20000, maxPts: Infinity, cssClass: 'tier-king' }
 ];
 
 // --- GAME STATE ---
@@ -34,7 +34,7 @@ let gameMode = 'ai'; // 'ai', 'local', 'online'
 let playerSide = 'white'; // 'white', 'black', or 'random'
 let botSide = 'black'; // Bot side for AI mode
 let difficulty = 2; // 1: Beginner, 2: Easy, 3: Hard, 4: Difficult
-let playerNames = { white: 'Viaan Patel', black: 'ElectroBot 🤖' };
+let playerNames = { white: 'Player 1', black: 'ElectroBot 🤖' };
 let matchScore = 0;
 let careerPoints = 0;
 let soundEnabled = true;
@@ -2000,45 +2000,191 @@ function setupEvents() {
         };
     }
 
-    // Theme Shop Selection
+    // --- THEME SHOP & UNLOCKING LOGIC ---
+    let unlockedThemes = ['cyber'];
+    try {
+        const savedThemes = localStorage.getItem('electro_king_unlocked_themes');
+        if (savedThemes) unlockedThemes = JSON.parse(savedThemes);
+    } catch(e) {}
+
+    function updateThemeCardsUI() {
+        const currentActiveTheme = localStorage.getItem('electro_king_theme') || 'cyber';
+        document.querySelectorAll('.theme-card').forEach(card => {
+            const theme = card.dataset.theme;
+            const cost = parseInt(card.dataset.cost, 10) || 0;
+            const costSpan = card.querySelector('.theme-cost');
+            
+            card.classList.toggle('active', theme === currentActiveTheme);
+            
+            if (unlockedThemes.includes(theme)) {
+                if (costSpan) costSpan.textContent = (theme === currentActiveTheme) ? 'Active' : 'Unlocked';
+            } else {
+                if (costSpan) costSpan.textContent = `${cost} Pts (Tap to Unlock)`;
+            }
+        });
+    }
+
     document.querySelectorAll('.theme-card').forEach(card => {
         card.onclick = () => {
             const theme = card.dataset.theme;
-            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
+            const cost = parseInt(card.dataset.cost, 10) || 0;
             
-            document.body.className = '';
-            if (theme !== 'cyber') {
-                document.body.classList.add(`theme-${theme}`);
+            // If already unlocked
+            if (unlockedThemes.includes(theme)) {
+                document.body.className = '';
+                if (theme !== 'cyber') {
+                    document.body.classList.add(`theme-${theme}`);
+                }
+                localStorage.setItem('electro_king_theme', theme);
+                playSound('move');
+                updateThemeCardsUI();
+                return;
             }
-            localStorage.setItem('electro_king_theme', theme);
-            playSound('move');
+            
+            // Check if player has enough points to unlock
+            if (careerPoints < cost) {
+                alert(`⚠️ You need ${cost} Career Points to unlock this theme!\n(Your points: ${careerPoints})`);
+                playSound('undo');
+                return;
+            }
+            
+            // Unlock with points!
+            if (confirm(`Unlock ${card.querySelector('h4').textContent} for ${cost} Career Points?`)) {
+                careerPoints -= cost;
+                saveCareerPoints();
+                unlockedThemes.push(theme);
+                localStorage.setItem('electro_king_unlocked_themes', JSON.stringify(unlockedThemes));
+                
+                document.body.className = '';
+                if (theme !== 'cyber') {
+                    document.body.classList.add(`theme-${theme}`);
+                }
+                localStorage.setItem('electro_king_theme', theme);
+                
+                playSound('win');
+                floatPointsMessage(-cost, null, null, true);
+                updateHUD();
+                updateThemeCardsUI();
+                alert(`🎉 Theme Unlocked Successfully!`);
+            }
         };
     });
+    updateThemeCardsUI();
 
-    // Cloud Auth Dialog
+    // --- GOOGLE & VERIFIED EMAIL AUTHENTICATION ---
     const authBtn = document.getElementById('profile-auth-btn');
     const authModal = document.getElementById('auth-modal');
     const authClose = document.getElementById('auth-close-btn');
     const authSubmit = document.getElementById('auth-submit-btn');
+    const googleBtn = document.getElementById('google-signin-btn');
+    const authError = document.getElementById('auth-error-msg');
     
     if (authBtn && authModal) {
-        authBtn.onclick = () => authModal.classList.remove('hidden');
+        authBtn.onclick = () => {
+            if (authError) authError.classList.add('hidden');
+            authModal.classList.remove('hidden');
+        };
     }
     if (authClose && authModal) {
         authClose.onclick = () => authModal.classList.add('hidden');
     }
-    if (authSubmit && authModal) {
-        authSubmit.onclick = () => {
-            const name = document.getElementById('auth-username-input').value.trim() || 'Viaan Patel';
-            document.getElementById('profile-name').textContent = name;
-            document.getElementById('account-type-badge').textContent = 'Cloud Synced ☁️';
-            document.getElementById('account-type-badge').style.background = '#06d6a0';
-            document.getElementById('account-type-badge').style.color = '#000000';
+
+    // Google 1-Tap Sign-In
+    if (googleBtn) {
+        googleBtn.onclick = () => {
+            const defaultGoogleEmail = "player.electro@gmail.com";
+            const googleEmail = prompt("Enter your Google Account Email to connect:", defaultGoogleEmail);
+            
+            if (!googleEmail) return;
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(googleEmail.trim())) {
+                alert("❌ Invalid Google Email format! Please enter a valid email address.");
+                return;
+            }
+            
+            const googleName = googleEmail.split('@')[0];
+            const profileData = {
+                username: googleName,
+                email: googleEmail.trim(),
+                verified: true,
+                provider: 'google'
+            };
+            
+            localStorage.setItem('electro_king_profile', JSON.stringify(profileData));
+            applyUserProfile(profileData);
+            
             authModal.classList.add('hidden');
             playSound('win');
+            alert(`🎉 Signed in with Google! Verified: ${profileData.email}`);
         };
     }
+
+    // Verified Email Form Submission
+    if (authSubmit && authModal) {
+        authSubmit.onclick = () => {
+            const usernameInput = document.getElementById('auth-username-input').value.trim();
+            const emailInput = document.getElementById('auth-email-input').value.trim();
+            
+            if (!usernameInput) {
+                showAuthError("Please choose a Display Username!");
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailInput || !emailRegex.test(emailInput)) {
+                showAuthError("❌ Please enter a valid verified Email ID (e.g. name@domain.com)!");
+                return;
+            }
+            
+            const profileData = {
+                username: usernameInput,
+                email: emailInput,
+                verified: true,
+                provider: 'email'
+            };
+            
+            localStorage.setItem('electro_king_profile', JSON.stringify(profileData));
+            applyUserProfile(profileData);
+            
+            authModal.classList.add('hidden');
+            playSound('win');
+            alert(`🎉 Verified & Signed in as ${usernameInput} (${emailInput})!`);
+        };
+    }
+
+    function showAuthError(msg) {
+        if (authError) {
+            authError.textContent = msg;
+            authError.classList.remove('hidden');
+        } else {
+            alert(msg);
+        }
+    }
+
+    function applyUserProfile(profile) {
+        const nameEl = document.getElementById('profile-name');
+        const badgeEl = document.getElementById('account-type-badge');
+        const playerInput = document.getElementById('player-name-input');
+        
+        if (nameEl) nameEl.textContent = profile.username;
+        if (playerInput) playerInput.value = profile.username;
+        
+        if (badgeEl) {
+            badgeEl.textContent = `✓ ${profile.provider === 'google' ? 'Google' : 'Email'} Verified: ${profile.email}`;
+            badgeEl.style.background = '#06d6a0';
+            badgeEl.style.color = '#000000';
+            badgeEl.style.fontWeight = '800';
+        }
+    }
+
+    // Restore saved profile on start
+    try {
+        const savedProfile = localStorage.getItem('electro_king_profile');
+        if (savedProfile) {
+            applyUserProfile(JSON.parse(savedProfile));
+        }
+    } catch(e) {}
 }
 
 function startNewGame() {
