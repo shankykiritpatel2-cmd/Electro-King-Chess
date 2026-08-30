@@ -330,32 +330,6 @@
                             <span class="stat-lbl">Puzzles</span>
                         </div>
                     </div>
-
-                    <!-- ONLINE FRIENDS LIST -->
-                    <div class="friends-section">
-                        <div class="friends-header">
-                            <h3>👥 Friends & Challengers</h3>
-                            <button class="add-friend-btn" id="add-friend-btn">+ Add Friend</button>
-                        </div>
-                        <div class="friends-list" id="friends-list">
-                            <div class="friend-item">
-                                <span class="friend-status online"></span>
-                                <div class="friend-info">
-                                    <span class="friend-name">CyberRook #9021</span>
-                                    <span class="friend-rank">🟡 Gold Tier</span>
-                                </div>
-                                <button class="challenge-btn" onclick="startChallenge('CyberRook')">Challenge ⚡</button>
-                            </div>
-                            <div class="friend-item">
-                                <span class="friend-status online"></span>
-                                <div class="friend-info">
-                                    <span class="friend-name">NeonQueen #4402</span>
-                                    <span class="friend-rank">💎 Platinum Tier</span>
-                                </div>
-                                <button class="challenge-btn" onclick="startChallenge('NeonQueen')">Challenge ⚡</button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </section>
         </div>
@@ -401,7 +375,6 @@
                     <div class="mode-toggle-group">
                         <button type="button" class="mode-btn active" id="mode-ai-btn">vs. Computer 🤖</button>
                         <button type="button" class="mode-btn" id="mode-local-btn">Pass & Play 👥</button>
-                        <button type="button" class="mode-btn" id="mode-online-btn">Online Room 🌐</button>
                     </div>
                 </div>
 
@@ -420,7 +393,7 @@
                 <div class="setup-section" id="player-names-section">
                     <div id="ai-name-inputs">
                         <label class="setup-label" for="player-name-input">👤 Your Name</label>
-                        <input type="text" id="player-name-input" class="setup-input" value="Player 1" placeholder="Enter your name">
+                        <input type="text" id="player-name-input" class="setup-input" value="Crazy Voss" placeholder="Enter your name">
                     </div>
                     <div id="local-name-inputs" class="hidden">
                         <div class="name-grid">
@@ -432,13 +405,6 @@
                                 <label class="setup-label" for="p2-name-input">⚫ Player 2 (Black)</label>
                                 <input type="text" id="p2-name-input" class="setup-input" value="Player 2" placeholder="Black Name">
                             </div>
-                        </div>
-                    </div>
-                    <div id="online-room-inputs" class="hidden">
-                        <label class="setup-label">🌐 4-Digit Match Room Code</label>
-                        <div class="room-code-input-group">
-                            <input type="text" id="room-code-input" class="setup-input" placeholder="e.g. 7729" maxlength="4">
-                            <button type="button" class="secondary-btn" id="generate-room-btn">🎲 Generate</button>
                         </div>
                     </div>
                 </div>

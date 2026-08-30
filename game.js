@@ -1880,48 +1880,32 @@ function setupEvents() {
     // Modes in Setup Modal
     const modeAi = document.getElementById('mode-ai-btn');
     const modeLocal = document.getElementById('mode-local-btn');
-    const modeOnline = document.getElementById('mode-online-btn');
     const aiInputs = document.getElementById('ai-name-inputs');
     const localInputs = document.getElementById('local-name-inputs');
-    const onlineInputs = document.getElementById('online-room-inputs');
     const sideSection = document.getElementById('side-select-section');
     const diffSection = document.getElementById('difficulty-section');
     
-    modeAi.onclick = () => {
-        modeAi.classList.add('active');
-        modeLocal.classList.remove('active');
-        modeOnline.classList.remove('active');
-        aiInputs.classList.remove('hidden');
-        localInputs.classList.add('hidden');
-        onlineInputs.classList.add('hidden');
-        sideSection.classList.remove('hidden');
-        diffSection.classList.remove('hidden');
-        gameMode = 'ai';
-    };
+    if (modeAi) {
+        modeAi.onclick = () => {
+            modeAi.classList.add('active');
+            if (modeLocal) modeLocal.classList.remove('active');
+            if (aiInputs) aiInputs.classList.remove('hidden');
+            if (localInputs) localInputs.classList.add('hidden');
+            if (sideSection) sideSection.classList.remove('hidden');
+            if (diffSection) diffSection.classList.remove('hidden');
+            gameMode = 'ai';
+        };
+    }
     
-    modeLocal.onclick = () => {
-        modeLocal.classList.add('active');
-        modeAi.classList.remove('active');
-        modeOnline.classList.remove('active');
-        aiInputs.classList.add('hidden');
-        localInputs.classList.remove('hidden');
-        onlineInputs.classList.add('hidden');
-        sideSection.classList.add('hidden');
-        diffSection.classList.add('hidden');
-        gameMode = 'local';
-    };
-
-    if (modeOnline) {
-        modeOnline.onclick = () => {
-            modeOnline.classList.add('active');
-            modeAi.classList.remove('active');
-            modeLocal.classList.remove('active');
-            aiInputs.classList.add('hidden');
-            localInputs.classList.add('hidden');
-            onlineInputs.classList.remove('hidden');
-            sideSection.classList.remove('hidden');
-            diffSection.classList.add('hidden');
-            gameMode = 'online';
+    if (modeLocal) {
+        modeLocal.onclick = () => {
+            modeLocal.classList.add('active');
+            if (modeAi) modeAi.classList.remove('active');
+            if (aiInputs) aiInputs.classList.add('hidden');
+            if (localInputs) localInputs.classList.remove('hidden');
+            if (sideSection) sideSection.classList.add('hidden');
+            if (diffSection) diffSection.classList.add('hidden');
+            gameMode = 'local';
         };
     }
 
@@ -2247,13 +2231,10 @@ function startNewGame() {
             playerNames = { white: 'ElectroBot 🤖', black: userName };
             botSide = 'white';
         }
-    } else if (gameMode === 'local') {
-        const p1 = document.getElementById('p1-name-input').value.trim() || 'Viaan';
-        const p2 = document.getElementById('p2-name-input').value.trim() || 'Challenger';
-        playerNames = { white: p1, black: p2 };
     } else {
-        const room = document.getElementById('room-code-input').value.trim() || '7729';
-        playerNames = { white: 'Viaan (Host)', black: `Online #${room}` };
+        const p1 = document.getElementById('p1-name-input').value.trim() || 'Player 1';
+        const p2 = document.getElementById('p2-name-input').value.trim() || 'Player 2';
+        playerNames = { white: p1, black: p2 };
         botSide = null;
     }
 
