@@ -66,11 +66,11 @@
             <!-- TAB 1: ARENA (CHESSBOARD & PLAY) -->
             <section class="tab-screen active" id="screen-arena">
                 <main class="game-layout">
-                    <!-- CAPTURED WHITE PIECES SIDEBAR -->
-                    <aside class="captured-box white-captured">
-                        <h3 class="side-title">⚪ Captured</h3>
-                        <div class="captured-list" id="captured-by-black"></div>
-                    </aside>
+                    <!-- TOP OPPONENT CAPTURED STRIP -->
+                    <div class="captured-strip top-captured" id="top-captured-strip">
+                        <span class="strip-label" id="opponent-name-tag">⚫ Opponent Captures</span>
+                        <div class="captured-list horizontal" id="captured-by-black"></div>
+                    </div>
 
                     <!-- CHESS BOARD ZONE -->
                     <section class="board-zone">
@@ -84,11 +84,11 @@
                         </div>
                     </section>
 
-                    <!-- CAPTURED BLACK PIECES SIDEBAR -->
-                    <aside class="captured-box black-captured">
-                        <h3 class="side-title">⚫ Captured</h3>
-                        <div class="captured-list" id="captured-by-white"></div>
-                    </aside>
+                    <!-- BOTTOM PLAYER CAPTURED STRIP -->
+                    <div class="captured-strip bottom-captured" id="bottom-captured-strip">
+                        <span class="strip-label" id="player-name-tag">⚪ Your Captures</span>
+                        <div class="captured-list horizontal" id="captured-by-white"></div>
+                    </div>
                 </main>
 
                 <!-- IN-GAME ACTION BAR -->
