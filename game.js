@@ -1944,6 +1944,7 @@ function setupEvents() {
         if (diffLabel) {
             diffLabel.innerHTML = `⚙️ Bot Difficulty: <span class="diff-badge" style="background:${config.bg}; color:${config.color}; box-shadow:0 0 10px ${config.glow}; border: 1px solid ${config.color}">${config.name}</span>`;
         }
+        applyDifficultyTheme(difficulty);
     }
 
     if (diffSlider) {
@@ -2210,11 +2211,20 @@ function renderAvatarImage(url) {
     }
 }
 
+function applyDifficultyTheme(diffVal) {
+    document.body.classList.remove('diff-beginner', 'diff-easy', 'diff-hard', 'diff-difficult');
+    if (diffVal === 1) document.body.classList.add('diff-beginner');
+    else if (diffVal === 2) document.body.classList.add('diff-easy');
+    else if (diffVal === 3) document.body.classList.add('diff-hard');
+    else if (diffVal === 4) document.body.classList.add('diff-difficult');
+}
+
 function startNewGame() {
     initAudio(); 
     switchTab('arena');
     
     if (gameMode === 'ai') {
+        applyDifficultyTheme(difficulty);
         const rawName = document.getElementById('player-name-input').value.trim();
         const userName = rawName || 'Viaan Patel';
         
@@ -2297,6 +2307,7 @@ window.onload = () => {
     updateHUD();
     updateClockDisplay();
     FX.init();
+    applyDifficultyTheme(difficulty || 2);
 
     // Default to Arena Tab
     switchTab('arena');
