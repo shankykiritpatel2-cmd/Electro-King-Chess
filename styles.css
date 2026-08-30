@@ -58,6 +58,10 @@ body.theme-ice {
     --primary-glow: rgba(0, 180, 216, 0.5);
     --secondary: #90e0ef;
     --secondary-glow: rgba(144, 224, 239, 0.5);
+    --board-dark: #08182b;
+    --board-light: rgba(0, 180, 216, 0.08);
+}
+
 /* DIFFICULTY-BASED DYNAMIC BACKGROUNDS */
 body.diff-beginner {
     --bg-color: #030c1a;
