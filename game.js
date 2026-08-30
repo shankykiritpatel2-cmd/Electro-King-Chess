@@ -2085,6 +2085,16 @@ function setupEvents() {
     if (authBtn && authModal) {
         authBtn.onclick = () => {
             if (authError) authError.classList.add('hidden');
+            try {
+                const saved = localStorage.getItem('electro_king_profile');
+                if (saved) {
+                    const p = JSON.parse(saved);
+                    const authUsernameInput = document.getElementById('auth-username-input');
+                    const authEmailInput = document.getElementById('auth-email-input');
+                    if (authUsernameInput && p.username) authUsernameInput.value = p.username;
+                    if (authEmailInput && p.email) authEmailInput.value = p.email;
+                }
+            } catch(e) {}
             authModal.classList.remove('hidden');
         };
     }
@@ -2196,12 +2206,23 @@ function setupEvents() {
     }
 
     function applyUserProfile(profile) {
+        if (!profile) return;
+        
         const nameEl = document.getElementById('profile-name');
         const badgeEl = document.getElementById('account-type-badge');
         const playerInput = document.getElementById('player-name-input');
+        const p1Input = document.getElementById('p1-name-input');
+        const authUsernameInput = document.getElementById('auth-username-input');
+        const authEmailInput = document.getElementById('auth-email-input');
         
+        // Auto-fill all display names & input fields
         if (nameEl) nameEl.textContent = profile.username;
         if (playerInput) playerInput.value = profile.username;
+        if (p1Input) p1Input.value = profile.username;
+        if (authUsernameInput) authUsernameInput.value = profile.username;
+        if (authEmailInput) authEmailInput.value = profile.email || '';
+        
+        playerNames.white = profile.username;
         
         if (badgeEl) {
             badgeEl.textContent = `✓ ${profile.provider === 'google' ? 'Google' : 'Email'} Verified: ${profile.email}`;
