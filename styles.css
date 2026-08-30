@@ -1296,18 +1296,47 @@ body {
 /* PROMOTION MODAL */
 .promo-buttons-container {
     display: flex;
-    justify-content: space-around;
-    gap: 8px;
-    margin-top: 10px;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 14px;
 }
 
 .promo-btn {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--secondary);
-    border-radius: 8px;
-    font-size: 2rem;
-    padding: 8px;
+    background: rgba(14, 9, 30, 0.85);
+    border: 2px solid rgba(0, 245, 212, 0.4);
+    border-radius: 12px;
+    font-size: 2.4rem;
+    line-height: 1;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.promo-btn:hover, .promo-btn:active {
+    transform: scale(1.08);
+    border-color: #00f5d4;
+    background: rgba(0, 245, 212, 0.15);
+    box-shadow: 0 0 20px rgba(0, 245, 212, 0.6);
+}
+
+.promo-btn.white {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-text-stroke: 1.2px #00f5d4;
+    text-shadow: 0 0 10px #ffffff, 0 0 20px rgba(0, 245, 212, 0.9);
+}
+
+.promo-btn.black {
+    color: #12091c !important;
+    -webkit-text-fill-color: #12091c !important;
+    -webkit-text-stroke: 2px #ff0054;
+    text-shadow: 0 0 12px #ff0054, 0 0 22px rgba(255, 0, 84, 0.85);
 }
 
 /* GOOGLE AUTH BUTTON & DIVIDER */

@@ -1609,7 +1609,7 @@ function showPromotionModal(color) {
     const options = ['q', 'r', 'b', 'n'];
     options.forEach(type => {
         const btn = document.createElement('button');
-        btn.className = 'promo-btn';
+        btn.className = `promo-btn ${color}`;
         btn.textContent = UNICODE_PIECES[color][type];
         btn.onclick = () => {
             modal.classList.add('hidden');
