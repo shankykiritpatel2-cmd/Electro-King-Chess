@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electro King 👑 - Cyber Chess</title>
-    <!-- Premium Fonts -->
+    <title>Electro King 👑 - Cyber Chess 2.0</title>
+    <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=17">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20">
     <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b071e">
@@ -26,76 +26,372 @@
                 </div>
                 <div class="hud-score-container">
                     <div class="hud-score-card">
-                        <span class="hud-score-label">MATCH SCORE</span>
+                        <span class="hud-score-label">MATCH</span>
                         <span class="hud-score-val" id="match-score">0</span>
                     </div>
-                    <div class="hud-score-card highlighted">
-                        <span class="hud-score-label">CAREER POINTS</span>
+                    <div class="hud-score-card highlighted" id="hud-career-card" title="Click to view Trophies">
+                        <span class="hud-score-label">CAREER PTS</span>
                         <span class="hud-score-val" id="career-points">0</span>
+                    </div>
+                    <div class="hud-trophy-badge" id="hud-trophy-badge" title="Current Rank">
+                        <span class="trophy-icon" id="hud-trophy-icon">🪵</span>
+                        <span class="trophy-name" id="hud-trophy-name">Wood</span>
                     </div>
                 </div>
             </div>
             
-            <!-- TURN & STATUS INDICATOR -->
+            <!-- TURN & CLOCK BANNER (Visible on Arena) -->
             <div class="turn-banner" id="turn-banner">
-                <span class="turn-dot" id="turn-dot"></span>
-                <span id="turn-message">Setup your match...</span>
+                <div class="turn-status-group">
+                    <span class="turn-dot" id="turn-dot"></span>
+                    <span id="turn-message">Setup your match...</span>
+                </div>
+                <!-- Clocks for White & Black -->
+                <div class="chess-clocks-group" id="chess-clocks-group">
+                    <div class="clock-badge" id="clock-white" title="White Clock">
+                        <span class="clock-label">⚪</span>
+                        <span class="clock-time" id="time-white">--:--</span>
+                    </div>
+                    <div class="clock-badge" id="clock-black" title="Black Clock">
+                        <span class="clock-label">⚫</span>
+                        <span class="clock-time" id="time-black">--:--</span>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- MAIN LAYOUT -->
-        <main class="game-layout">
-            <!-- CAPTURED WHITE PIECES SIDEBAR -->
-            <aside class="captured-box white-captured">
-                <h3 class="side-title">⚪ Captured</h3>
-                <div class="captured-list" id="captured-by-black"></div>
-            </aside>
+        <!-- MASTER TAB SCREENS CONTAINER -->
+        <div class="tab-screens-viewport">
 
-            <!-- CHESS BOARD ZONE -->
-            <section class="board-zone">
-                <div class="board-wrapper">
-                    <!-- Labels Row/Col -->
-                    <div class="board-border">
-                        <div class="board" id="chessboard">
-                            <!-- 64 squares will be injected dynamically -->
+            <!-- TAB 1: ARENA (CHESSBOARD & PLAY) -->
+            <section class="tab-screen active" id="screen-arena">
+                <main class="game-layout">
+                    <!-- CAPTURED WHITE PIECES SIDEBAR -->
+                    <aside class="captured-box white-captured">
+                        <h3 class="side-title">⚪ Captured</h3>
+                        <div class="captured-list" id="captured-by-black"></div>
+                    </aside>
+
+                    <!-- CHESS BOARD ZONE -->
+                    <section class="board-zone">
+                        <div class="board-wrapper">
+                            <div class="board-border">
+                                <div class="board" id="chessboard">
+                                    <!-- 64 squares injected dynamically -->
+                                </div>
+                                <canvas id="fx-canvas" class="fx-canvas"></canvas>
+                            </div>
                         </div>
-                        <canvas id="fx-canvas" class="fx-canvas"></canvas>
+                    </section>
+
+                    <!-- CAPTURED BLACK PIECES SIDEBAR -->
+                    <aside class="captured-box black-captured">
+                        <h3 class="side-title">⚫ Captured</h3>
+                        <div class="captured-list" id="captured-by-white"></div>
+                    </aside>
+                </main>
+
+                <!-- IN-GAME ACTION BAR -->
+                <div class="controls-bar in-game-controls">
+                    <button id="undo-btn" class="control-btn" title="Undo Move (Costs 100 career points)">
+                        <span class="btn-icon">↩️</span>
+                        <span class="btn-label">Undo <small id="undo-cost-text">(100 Pts)</small></span>
+                    </button>
+                    
+                    <button id="hint-btn" class="control-btn accent-btn" title="Get Suggestion (Costs 100 career points)">
+                        <span class="btn-icon">💡</span>
+                        <span class="btn-label">Hint <small id="hint-cost-text">(100 Pts)</small></span>
+                    </button>
+                    
+                    <button id="powerup-btn" class="control-btn powerup-btn" title="Cyber Power-Up">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-label">Power-Up</span>
+                    </button>
+
+                    <button id="sound-btn" class="control-btn" title="Toggle Sound">
+                        <span class="btn-icon" id="sound-icon">🔊</span>
+                        <span class="btn-label">Sound</span>
+                    </button>
+
+                    <button id="menu-btn" class="control-btn" title="Match Settings">
+                        <span class="btn-icon">⚙️</span>
+                        <span class="btn-label">Settings</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 2: DAILY PUZZLES & TACTICS -->
+            <section class="tab-screen" id="screen-puzzles">
+                <div class="puzzle-view-card">
+                    <div class="puzzle-header">
+                        <div class="puzzle-title-group">
+                            <h2 class="sub-screen-title">🧩 Daily Tactical Puzzles</h2>
+                            <p class="sub-screen-desc">Find the winning move to earn Career Points!</p>
+                        </div>
+                        <div class="puzzle-reward-badge" id="puzzle-reward-badge">
+                            <span>⚡ +50 PTS</span>
+                        </div>
+                    </div>
+
+                    <div class="puzzle-challenge-box">
+                        <div class="puzzle-info-bar">
+                            <span class="puzzle-level-tag" id="puzzle-level-tag">Puzzle #1: Mate in 1</span>
+                            <span class="puzzle-instruction" id="puzzle-turn-text">⚪ White to move & checkmate</span>
+                        </div>
+                        
+                        <div class="puzzle-board-container">
+                            <div class="board-border mini-border">
+                                <div class="board" id="puzzle-board"></div>
+                            </div>
+                        </div>
+
+                        <div class="puzzle-actions">
+                            <button id="puzzle-hint-btn" class="secondary-btn">💡 Hint</button>
+                            <button id="puzzle-reset-btn" class="secondary-btn">🔄 Reset</button>
+                            <button id="puzzle-next-btn" class="primary-btn pulse-btn">Next Puzzle ➡️</button>
+                        </div>
+                        <div class="puzzle-status-feedback" id="puzzle-feedback"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- CAPTURED BLACK PIECES SIDEBAR -->
-            <aside class="captured-box black-captured">
-                <h3 class="side-title">⚫ Captured</h3>
-                <div class="captured-list" id="captured-by-white"></div>
-            </aside>
-        </main>
+            <!-- TAB 3: TROPHIES & CYBER SHOP -->
+            <section class="tab-screen" id="screen-shop">
+                <div class="scrollable-screen-content">
+                    <h2 class="sub-screen-title">🏆 Trophy Ladder & Cyber Shop</h2>
+                    <p class="sub-screen-desc">Climb the 8 rank tiers from Wood to Electro King!</p>
 
-        <!-- ACTION BAR -->
-        <footer class="controls-bar">
-            <button id="undo-btn" class="control-btn" title="Undo Move (Costs 100 career points)">
-                <span class="btn-icon">↩️</span>
-                <span class="btn-label">Undo <small id="undo-cost-text">(100 Pts)</small></span>
-            </button>
-            
-            <button id="hint-btn" class="control-btn accent-btn" title="Get Suggestion (Costs 100 career points)">
-                <span class="btn-icon">💡</span>
-                <span class="btn-label">Hint <small id="hint-cost-text">(100 Pts)</small></span>
-            </button>
-            
-            <button id="sound-btn" class="control-btn" title="Toggle Sound">
-                <span class="btn-icon" id="sound-icon">🔊</span>
-                <span class="btn-label">Sound</span>
-            </button>
+                    <!-- CURRENT RANK BANNER -->
+                    <div class="current-rank-card" id="current-rank-card">
+                        <div class="rank-banner-left">
+                            <span class="big-rank-icon" id="rank-card-icon">🪵</span>
+                            <div>
+                                <span class="rank-card-subtitle">CURRENT TIER</span>
+                                <h3 class="rank-card-title" id="rank-card-title">Wood Tier</h3>
+                                <span class="rank-card-tag" id="rank-card-tag">Apprentice Spark</span>
+                            </div>
+                        </div>
+                        <div class="rank-banner-right">
+                            <div class="rank-progress-info">
+                                <span id="rank-pts-text">0 / 100 Pts</span>
+                            </div>
+                            <div class="rank-progress-bar-bg">
+                                <div class="rank-progress-fill" id="rank-progress-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
 
-            <button id="menu-btn" class="control-btn" title="New Game / Match Settings">
-                <span class="btn-icon">⚙️</span>
-                <span class="btn-label">New Game</span>
+                    <!-- 8 TROPHY TIERS SHOWCASE -->
+                    <h3 class="section-heading">👑 8-Tier Trophy Showcase</h3>
+                    <div class="trophy-grid">
+                        <div class="trophy-card tier-wood" data-tier="1">
+                            <div class="trophy-badge-icon">🪵</div>
+                            <div class="trophy-details">
+                                <h4>Wood Tier</h4>
+                                <span class="tier-points">0 - 99 Pts</span>
+                                <span class="tier-status">Active</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-bronze" data-tier="2">
+                            <div class="trophy-badge-icon">🟫</div>
+                            <div class="trophy-details">
+                                <h4>Bronze Tier</h4>
+                                <span class="tier-points">100 - 249 Pts</span>
+                                <span class="tier-status">Locked</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-silver" data-tier="3">
+                            <div class="trophy-badge-icon">⚪</div>
+                            <div class="trophy-details">
+                                <h4>Silver Tier</h4>
+                                <span class="tier-points">250 - 499 Pts</span>
+                                <span class="tier-status">Locked</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-gold" data-tier="4">
+                            <div class="trophy-badge-icon">🟡</div>
+                            <div class="trophy-details">
+                                <h4>Gold Tier</h4>
+                                <span class="tier-points">500 - 999 Pts</span>
+                                <span class="tier-status">Locked</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-platinum" data-tier="5">
+                            <div class="trophy-badge-icon">💎</div>
+                            <div class="trophy-details">
+                                <h4>Platinum Tier</h4>
+                                <span class="tier-points">1,000 - 1,999 Pts</span>
+                                <span class="tier-status">Locked</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-diamond" data-tier="6">
+                            <div class="trophy-badge-icon">💠</div>
+                            <div class="trophy-details">
+                                <h4>Diamond Tier</h4>
+                                <span class="tier-points">2,000 - 3,499 Pts</span>
+                                <span class="tier-status">Locked</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-master" data-tier="7">
+                            <div class="trophy-badge-icon">🌌</div>
+                            <div class="trophy-details">
+                                <h4>Master Tier</h4>
+                                <span class="tier-points">3,500 - 4,999 Pts</span>
+                                <span class="tier-status">Locked</span>
+                            </div>
+                        </div>
+
+                        <div class="trophy-card tier-king" data-tier="8">
+                            <div class="trophy-badge-icon">👑</div>
+                            <div class="trophy-details">
+                                <h4>Electro King</h4>
+                                <span class="tier-points">5,000+ Pts</span>
+                                <span class="tier-status">Supreme</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CYBER THEME SKINS SHOP -->
+                    <h3 class="section-heading" style="margin-top: 20px;">🎨 Cyber Board Skins</h3>
+                    <div class="theme-shop-grid">
+                        <div class="theme-card active" data-theme="cyber">
+                            <div class="theme-preview cyber-preview"></div>
+                            <div class="theme-card-info">
+                                <h4>Classic Cyber Neon</h4>
+                                <span class="theme-cost">Default (Active)</span>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="matrix">
+                            <div class="theme-preview matrix-preview"></div>
+                            <div class="theme-card-info">
+                                <h4>Matrix Terminal</h4>
+                                <span class="theme-cost">150 Pts (Unlock)</span>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="solar">
+                            <div class="theme-preview solar-preview"></div>
+                            <div class="theme-card-info">
+                                <h4>Solar Flare</h4>
+                                <span class="theme-cost">300 Pts (Unlock)</span>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="ice">
+                            <div class="theme-preview ice-preview"></div>
+                            <div class="theme-card-info">
+                                <h4>Ice Voltage</h4>
+                                <span class="theme-cost">500 Pts (Unlock)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PROFILE ("YOU") & FRIENDS -->
+            <section class="tab-screen" id="screen-profile">
+                <div class="scrollable-screen-content">
+                    <h2 class="sub-screen-title">👤 Player Profile</h2>
+                    <p class="sub-screen-desc">Manage your account, stats, and friends list.</p>
+
+                    <!-- USER AVATAR & ACCOUNT STATUS -->
+                    <div class="profile-header-card">
+                        <div class="avatar-ring">
+                            <span class="avatar-emoji" id="profile-avatar">👑</span>
+                        </div>
+                        <div class="profile-info-group">
+                            <h3 class="profile-username" id="profile-name">Viaan Patel</h3>
+                            <div class="account-pill-group">
+                                <span class="account-badge guest" id="account-type-badge">Guest Account</span>
+                                <button class="sign-in-link-btn" id="profile-auth-btn">Sign In / Sync ☁️</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CAREER STATS SUMMARY -->
+                    <div class="stats-overview-grid">
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-matches">0</span>
+                            <span class="stat-lbl">Matches</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-wins">0</span>
+                            <span class="stat-lbl">Wins</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-winrate">0%</span>
+                            <span class="stat-lbl">Win Rate</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-puzzles">0</span>
+                            <span class="stat-lbl">Puzzles</span>
+                        </div>
+                    </div>
+
+                    <!-- ONLINE FRIENDS LIST -->
+                    <div class="friends-section">
+                        <div class="friends-header">
+                            <h3>👥 Friends & Challengers</h3>
+                            <button class="add-friend-btn" id="add-friend-btn">+ Add Friend</button>
+                        </div>
+                        <div class="friends-list" id="friends-list">
+                            <div class="friend-item">
+                                <span class="friend-status online"></span>
+                                <div class="friend-info">
+                                    <span class="friend-name">CyberRook #9021</span>
+                                    <span class="friend-rank">🟡 Gold Tier</span>
+                                </div>
+                                <button class="challenge-btn" onclick="startChallenge('CyberRook')">Challenge ⚡</button>
+                            </div>
+                            <div class="friend-item">
+                                <span class="friend-status online"></span>
+                                <div class="friend-info">
+                                    <span class="friend-name">NeonQueen #4402</span>
+                                    <span class="friend-rank">💎 Platinum Tier</span>
+                                </div>
+                                <button class="challenge-btn" onclick="startChallenge('NeonQueen')">Challenge ⚡</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- PERSISTENT 5-TAB BOTTOM NAVIGATION DOCK -->
+        <nav class="bottom-nav-dock">
+            <button class="nav-tab active" id="nav-btn-arena" data-tab="arena">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Arena</span>
             </button>
-        </footer>
+            <button class="nav-tab" id="nav-btn-puzzles" data-tab="puzzles">
+                <span class="nav-icon">🧩</span>
+                <span class="nav-label">Puzzles</span>
+            </button>
+            <button class="nav-tab nav-action-btn" id="nav-btn-quick" data-tab="quick" title="Start Quick Match">
+                <div class="plus-bubble">
+                    <span class="plus-icon">➕</span>
+                </div>
+                <span class="nav-label">Quick Play</span>
+            </button>
+            <button class="nav-tab" id="nav-btn-shop" data-tab="shop">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Trophies</span>
+            </button>
+            <button class="nav-tab" id="nav-btn-profile" data-tab="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">You</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- SETTINGS / MATCH SETUP MODAL -->
+    <!-- QUICK MATCH & CLOCKS SETUP MODAL -->
     <div class="modal-overlay" id="setup-modal">
         <div class="modal-card">
             <button type="button" class="modal-close-btn" id="setup-close-btn" title="Close">&times;</button>
@@ -108,27 +404,45 @@
                     <label class="setup-label">👾 Select Game Mode</label>
                     <div class="mode-toggle-group">
                         <button type="button" class="mode-btn active" id="mode-ai-btn">vs. Computer 🤖</button>
-                        <button type="button" class="mode-btn" id="mode-local-btn">Play with Friend 👥</button>
+                        <button type="button" class="mode-btn" id="mode-local-btn">Pass & Play 👥</button>
+                        <button type="button" class="mode-btn" id="mode-online-btn">Online Room 🌐</button>
+                    </div>
+                </div>
+
+                <!-- CHESS CLOCK SPEED SELECTION -->
+                <div class="setup-section">
+                    <label class="setup-label">⏱️ Match Clock Timer</label>
+                    <div class="timer-toggle-group">
+                        <button type="button" class="clock-btn" data-time="60">⚡ 1m</button>
+                        <button type="button" class="clock-btn active" data-time="180">⚡ 3m Blitz</button>
+                        <button type="button" class="clock-btn" data-time="300">⏱️ 5m Rapid</button>
+                        <button type="button" class="clock-btn" data-time="0">♾️ None</button>
                     </div>
                 </div>
 
                 <!-- PLAYER NAMES -->
                 <div class="setup-section" id="player-names-section">
-                    <!-- Dynamic inputs based on mode -->
                     <div id="ai-name-inputs">
                         <label class="setup-label" for="player-name-input">👤 Your Name</label>
-                        <input type="text" id="player-name-input" class="setup-input" value="Player 1" placeholder="Enter name">
+                        <input type="text" id="player-name-input" class="setup-input" value="Viaan Patel" placeholder="Enter name">
                     </div>
                     <div id="local-name-inputs" class="hidden">
                         <div class="name-grid">
                             <div>
                                 <label class="setup-label" for="p1-name-input">⚪ Player 1 (White)</label>
-                                <input type="text" id="p1-name-input" class="setup-input" value="Player 1" placeholder="White Name">
+                                <input type="text" id="p1-name-input" class="setup-input" value="Viaan" placeholder="White Name">
                             </div>
                             <div>
                                 <label class="setup-label" for="p2-name-input">⚫ Player 2 (Black)</label>
-                                <input type="text" id="p2-name-input" class="setup-input" value="Player 2" placeholder="Black Name">
+                                <input type="text" id="p2-name-input" class="setup-input" value="Challenger" placeholder="Black Name">
                             </div>
+                        </div>
+                    </div>
+                    <div id="online-room-inputs" class="hidden">
+                        <label class="setup-label">🌐 4-Digit Match Room Code</label>
+                        <div class="room-code-input-group">
+                            <input type="text" id="room-code-input" class="setup-input" placeholder="e.g. 7729" maxlength="4">
+                            <button type="button" class="secondary-btn" id="generate-room-btn">🎲 Generate</button>
                         </div>
                     </div>
                 </div>
@@ -165,9 +479,7 @@
         <div class="modal-card mini-card">
             <h3>Pawn Promotion! ⚡</h3>
             <p>Choose a piece to upgrade your pawn:</p>
-            <div class="promo-buttons-container" id="promo-options">
-                <!-- Promo choice buttons injected dynamically -->
-            </div>
+            <div class="promo-buttons-container" id="promo-options"></div>
         </div>
     </div>
 
@@ -179,8 +491,24 @@
             <div class="gameover-stats">
                 <p>Match Score: <span id="gameover-score">0</span></p>
                 <p>New Career Points: <span id="gameover-career">0</span></p>
+                <div class="gameover-trophy-alert" id="gameover-trophy-alert"></div>
             </div>
             <button id="gameover-restart-btn" class="start-btn">PLAY AGAIN 🎮</button>
+        </div>
+    </div>
+
+    <!-- SIGN IN / CLOUD SYNC MODAL -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal-card">
+            <button type="button" class="modal-close-btn" id="auth-close-btn">&times;</button>
+            <h2 class="glow-text">CLOUD SYNC ☁️</h2>
+            <p class="modal-sub">Save your points, trophies & friends across all devices!</p>
+            <div class="setup-form">
+                <input type="text" id="auth-username-input" class="setup-input" placeholder="Choose a Username">
+                <input type="email" id="auth-email-input" class="setup-input" placeholder="Your Email Address">
+                <button type="button" class="start-btn" id="auth-submit-btn">CREATE / SIGN IN 🚀</button>
+                <p class="text-center" style="font-size:0.8rem; color:#9d99b3; margin-top:8px;">100% Free Cloud Storage via Electro Serverless Network</p>
+            </div>
         </div>
     </div>
 
