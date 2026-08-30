@@ -367,13 +367,19 @@ function switchTab(tabId) {
         screen.classList.toggle('active', screen.id === `screen-${tabId}`);
     });
     
+    const turnMessageEl = document.getElementById('turn-message');
+    
     if (tabId === 'puzzles') {
+        if (turnMessageEl) turnMessageEl.textContent = "TACTICS 🧩";
         renderCurrentPuzzle();
     } else if (tabId === 'shop') {
+        if (turnMessageEl) turnMessageEl.textContent = "TROPHIES 🏆";
         updateTrophyShowcase();
     } else if (tabId === 'profile') {
+        if (turnMessageEl) turnMessageEl.textContent = "PROFILE 👤";
         updateProfileScreen();
     } else if (tabId === 'arena') {
+        updateHUD();
         setTimeout(() => FX.resize(), 50);
     }
 }
@@ -577,7 +583,7 @@ function handlePuzzleClick(r, c) {
             drawPuzzleBoard();
             
             playSound('win');
-            feedback.innerHTML = `<span style="color:#06d6a0">🎉 BRILLIANT! Checkmate found! (+${puzzle.reward} Pts)</span>`;
+            feedback.innerHTML = `<span style="color:#06d6a0">🎉 BRILLIANT! Tactical solution found! (+${puzzle.reward} Pts)</span>`;
             addCareerPoints(puzzle.reward);
             playerStats.puzzles++;
             saveStats();
