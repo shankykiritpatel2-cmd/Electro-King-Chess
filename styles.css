@@ -444,16 +444,27 @@ body {
 
 .piece {
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
     transition: transform 0.1s ease;
+    user-select: none;
+    line-height: 1;
 }
 
+/* WHITE PIECES - PURE BRIGHT SOLID WHITE WITH CYAN NEON GLOW */
 .piece.white {
-    filter: drop-shadow(0 0 6px var(--secondary-glow));
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-text-stroke: 1.2px #00f5d4;
+    text-shadow: 0 0 8px #ffffff, 0 0 18px rgba(0, 245, 212, 0.9);
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
 }
 
+/* BLACK PIECES - SOLID OBSIDIAN DARK WITH CRIMSON RED NEON OUTLINE */
 .piece.black {
-    filter: drop-shadow(0 0 6px var(--primary-glow));
+    color: #0d0819 !important;
+    -webkit-text-fill-color: #0d0819 !important;
+    -webkit-text-stroke: 1.8px #ff0054;
+    text-shadow: 0 0 10px #ff0054, 0 0 20px rgba(255, 0, 84, 0.8);
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95));
 }
 
 .fx-canvas {

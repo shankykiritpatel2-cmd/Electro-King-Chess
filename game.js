@@ -7,7 +7,7 @@
 const PIECE_VALUES = { 'p': 10, 'n': 30, 'b': 30, 'r': 50, 'q': 90, 'k': 10000 };
 const CAPTURE_POINTS = { 'p': 5, 'n': 30, 'b': 20, 'r': 30, 'q': 50 };
 const UNICODE_PIECES = {
-    white: { 'k': '♔', 'q': '♕', 'r': '♖', 'b': '♗', 'n': '♘', 'p': '♙' },
+    white: { 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟' },
     black: { 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟' }
 };
 
@@ -2102,28 +2102,20 @@ function setupEvents() {
     });
     updateThemeCardsUI();
 
-    // --- GOOGLE PLAY SERVICES & REAL EMAIL VERIFICATION ---
+    // --- CLEAN PROFILE / USERNAME SETTINGS ---
     const authBtn = document.getElementById('profile-auth-btn');
     const authModal = document.getElementById('auth-modal');
     const authClose = document.getElementById('auth-close-btn');
     const authSubmit = document.getElementById('auth-submit-btn');
-    const googleBtn = document.getElementById('google-signin-btn');
-    const authError = document.getElementById('auth-error-msg');
-    let pendingOtpCode = null;
-    let pendingOtpEmail = null;
-    let pendingOtpName = null;
     
     if (authBtn && authModal) {
         authBtn.onclick = () => {
-            if (authError) authError.classList.add('hidden');
             try {
                 const saved = localStorage.getItem('electro_king_profile');
                 if (saved) {
                     const p = JSON.parse(saved);
                     const authUsernameInput = document.getElementById('auth-username-input');
-                    const authEmailInput = document.getElementById('auth-email-input');
                     if (authUsernameInput && p.username) authUsernameInput.value = p.username;
-                    if (authEmailInput && p.email) authEmailInput.value = p.email;
                 }
             } catch(e) {}
             authModal.classList.remove('hidden');
@@ -2133,107 +2125,21 @@ function setupEvents() {
         authClose.onclick = () => authModal.classList.add('hidden');
     }
 
-    // Native Google Account Picker Bridge
-    window.onGoogleSignInSuccess = function(name, email, photoUrl) {
-        const profileData = {
-            username: name || 'Google Player',
-            email: email,
-            photoUrl: photoUrl || '',
-            verified: true,
-            provider: 'google'
-        };
-        localStorage.setItem('electro_king_profile', JSON.stringify(profileData));
-        applyUserProfile(profileData);
-        if (authModal) authModal.classList.add('hidden');
-        playSound('win');
-        alert(`🎉 Google Sign-In Verified!\nWelcome, ${profileData.username}\nAccount: ${profileData.email}`);
-    };
-
-    window.onGoogleSignInFailure = function(errorMsg) {
-        if (authError) {
-            authError.textContent = `Google Sign-In: ${errorMsg || 'Cancelled by user'}`;
-            authError.classList.remove('hidden');
-        }
-    };
-
-    // Google Sign-In Button Click
-    if (googleBtn) {
-        googleBtn.onclick = () => {
-            if (window.AndroidBridge && typeof window.AndroidBridge.signInWithGoogle === 'function') {
-                // Launch native Android Google Account Picker!
-                window.AndroidBridge.signInWithGoogle();
-            } else {
-                // Web OAuth / Account selector
-                const userEmail = prompt("Google Account Verification:\nEnter your actual Google Email address to receive your 6-digit access code:");
-                if (!userEmail) return;
-                
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(userEmail.trim())) {
-                    alert("❌ Invalid email format! Must be a valid email (e.g. yourname@gmail.com).");
-                    return;
-                }
-                
-                const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-                const enteredCode = prompt(`📧 A verification code [${generatedCode}] was sent to ${userEmail}.\n\nPlease enter the 6-digit code to verify your Google Account:`);
-                
-                if (enteredCode === generatedCode) {
-                    const name = userEmail.split('@')[0];
-                    window.onGoogleSignInSuccess(name, userEmail.trim(), '');
-                } else {
-                    alert("❌ Invalid Verification Code! Authentication failed.");
-                }
-            }
-        };
-    }
-
-    // 2-Step Verified Email Form Submission
+    // Direct 1-Click Profile Save (Zero questions, zero prompts!)
     if (authSubmit && authModal) {
         authSubmit.onclick = () => {
-            const usernameInput = document.getElementById('auth-username-input').value.trim();
-            const emailInput = document.getElementById('auth-email-input').value.trim();
+            const usernameInput = document.getElementById('auth-username-input').value.trim() || 'Crazy Voss';
             
-            if (!usernameInput) {
-                showAuthError("Please enter your Display Username!");
-                return;
-            }
+            const profileData = {
+                username: usernameInput
+            };
             
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailInput || !emailRegex.test(emailInput)) {
-                showAuthError("❌ Invalid Email! Please provide a valid email ID (e.g. name@domain.com)!");
-                return;
-            }
+            localStorage.setItem('electro_king_profile', JSON.stringify(profileData));
+            applyUserProfile(profileData);
             
-            // Generate 6-digit verification challenge
-            const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-            const userInputCode = prompt(`🔐 Verification Code sent to ${emailInput}!\n\nSecurity Code: [${verifyCode}]\n\nEnter the 6-digit code below to verify your email identity:`);
-            
-            if (userInputCode === verifyCode) {
-                const profileData = {
-                    username: usernameInput,
-                    email: emailInput,
-                    verified: true,
-                    provider: 'email'
-                };
-                
-                localStorage.setItem('electro_king_profile', JSON.stringify(profileData));
-                applyUserProfile(profileData);
-                
-                authModal.classList.add('hidden');
-                playSound('win');
-                alert(`🎉 Email Verified Successfully!\nSigned in as: ${usernameInput} (${emailInput})`);
-            } else {
-                showAuthError("❌ Incorrect verification code! Identity could not be verified.");
-            }
+            authModal.classList.add('hidden');
+            playSound('win');
         };
-    }
-
-    function showAuthError(msg) {
-        if (authError) {
-            authError.textContent = msg;
-            authError.classList.remove('hidden');
-        } else {
-            alert(msg);
-        }
     }
 
     function applyUserProfile(profile) {
