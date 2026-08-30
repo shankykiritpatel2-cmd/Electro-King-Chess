@@ -267,6 +267,12 @@ function handleTimeout(timedOutColor) {
 function switchTab(tabId) {
     currentTab = tabId;
     
+    // Hide setup modal on tab switch
+    const setupModal = document.getElementById('setup-modal');
+    if (setupModal && tabId !== 'arena') {
+        setupModal.classList.add('hidden');
+    }
+
     // Update active tab button
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tabId);
