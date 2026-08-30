@@ -334,28 +334,26 @@ function showCustomConfirm(title, msg, onConfirm, onCancel) {
 
 // --- 5-TAB NAVIGATION CONTROLLER ---
 function switchTab(tabId) {
-    // Check if match is in progress
-    if (currentTab === 'arena' && tabId !== 'arena' && !isGameOver && history.length > 0) {
-        showCustomConfirm(
-            "MATCH IN PROGRESS ⚠️",
-            "If you leave or switch tabs during an active match, your match will be forfeited and your opponent will win!<br><br>Do you want to forfeit and leave the Arena?",
-            () => {
-                handleForfeit();
-                actuallySwitchTab(tabId);
-            }
-        );
-        return;
+    const wasInArena = (currentTab === 'arena');
+    const goingToOtherTab = (tabId !== 'arena');
+    
+    // If switching away from active Arena match, PAUSE CLOCK
+    if (wasInArena && goingToOtherTab && !isGameOver && history.length > 0) {
+        stopClock();
+        showToast("⏸️ Match Paused", "info", 1500);
+    }
+    
+    // If returning back to Arena with active match, RESUME CLOCK
+    if (currentTab !== 'arena' && tabId === 'arena' && !isGameOver && history.length > 0 && clockSetting > 0) {
+        startClock();
+        showToast("▶️ Match Resumed", "success", 1500);
     }
 
-    actuallySwitchTab(tabId);
-}
-
-function actuallySwitchTab(tabId) {
     currentTab = tabId;
     
-    // Hide setup modal on tab switch
+    // Hide setup modal on tab switch (unless quick match was tapped)
     const setupModal = document.getElementById('setup-modal');
-    if (setupModal && tabId !== 'arena') {
+    if (setupModal && tabId !== 'quick') {
         setupModal.classList.add('hidden');
     }
 
@@ -2374,9 +2372,6 @@ window.onload = () => {
     FX.init();
     applyDifficultyTheme(difficulty || 2);
 
-    // Default to Arena Tab
+    // Default to Arena Tab in clean idle state
     switchTab('arena');
-    if (clockSetting > 0) {
-        startClock();
-    }
 };
