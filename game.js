@@ -263,8 +263,34 @@ function handleTimeout(timedOutColor) {
     updateStatsOnGameOver(winnerColor);
 }
 
+function handleForfeit() {
+    if (isGameOver) return;
+    isGameOver = true;
+    stopClock();
+    
+    const oppColor = turn === 'white' ? 'black' : 'white';
+    const oppName = playerNames[oppColor] || 'Opponent';
+    
+    playSound('undo');
+    document.getElementById('gameover-title').textContent = "MATCH FORFEITED 🏳️";
+    document.getElementById('gameover-msg').textContent = `Match abandoned! ${oppName} wins by forfeiture.`;
+    document.getElementById('gameover-score').textContent = matchScore;
+    document.getElementById('gameover-career').textContent = `+0 Pts`;
+    
+    updateStatsOnGameOver(oppColor);
+}
+
 // --- 5-TAB NAVIGATION CONTROLLER ---
 function switchTab(tabId) {
+    // Check if match is in progress
+    if (currentTab === 'arena' && tabId !== 'arena' && !isGameOver && history.length > 0) {
+        const confirmLeave = confirm("⚠️ Match in Progress!\n\nIf you leave or switch tabs during an active match, your match will be forfeited and your opponent will win!\n\nDo you want to forfeit and leave the Arena?");
+        if (!confirmLeave) {
+            return; // Abort tab switch, keep playing!
+        }
+        handleForfeit();
+    }
+
     currentTab = tabId;
     
     // Hide setup modal on tab switch
@@ -1403,6 +1429,11 @@ function executeMove(from, to, forcePromoType = null) {
     pushHistory(); 
     activeHint = null; 
     
+    // Ensure clock starts ticking on first move
+    if (clockSetting > 0 && !clockInterval && !isGameOver) {
+        startClock();
+    }
+    
     const activePiece = board[from.r][from.c];
     let isCapture = false;
     let pointsGained = 0;
@@ -2230,7 +2261,14 @@ function setupEvents() {
             badgeEl.style.color = '#000000';
             badgeEl.style.fontWeight = '800';
         }
+
+        if (profile.photoUrl) {
+            renderAvatarImage(profile.photoUrl);
+        }
     }
+
+    // Custom Avatar Gallery / Camera Picker
+    setupAvatarPicker();
 
     // Restore saved profile on start
     try {
@@ -2239,6 +2277,44 @@ function setupEvents() {
             applyUserProfile(JSON.parse(savedProfile));
         }
     } catch(e) {}
+}
+
+function setupAvatarPicker() {
+    const pickerBtn = document.getElementById('avatar-picker-btn');
+    const fileInput = document.getElementById('avatar-file-input');
+    
+    if (pickerBtn && fileInput) {
+        pickerBtn.onclick = () => fileInput.click();
+        
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = event.target.result;
+                localStorage.setItem('electro_king_custom_avatar', base64);
+                renderAvatarImage(base64);
+                playSound('move');
+            };
+            reader.readAsDataURL(file);
+        };
+    }
+    
+    const savedAvatar = localStorage.getItem('electro_king_custom_avatar');
+    if (savedAvatar) {
+        renderAvatarImage(savedAvatar);
+    }
+}
+
+function renderAvatarImage(url) {
+    const avatarImg = document.getElementById('profile-avatar-img');
+    const avatarEmoji = document.getElementById('profile-avatar');
+    if (avatarImg && avatarEmoji && url) {
+        avatarImg.src = url;
+        avatarImg.classList.remove('hidden');
+        avatarEmoji.classList.add('hidden');
+    }
 }
 
 function startNewGame() {
@@ -2326,9 +2402,15 @@ window.onload = () => {
     
     initBoard();
     drawBoard();
+    timeRemaining.white = clockSetting;
+    timeRemaining.black = clockSetting;
     updateHUD();
+    updateClockDisplay();
     FX.init();
 
     // Default to Arena Tab
     switchTab('arena');
+    if (clockSetting > 0) {
+        startClock();
+    }
 };

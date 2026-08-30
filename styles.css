@@ -909,8 +909,8 @@ body {
 }
 
 .avatar-ring {
-    width: 52px;
-    height: 52px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid var(--secondary);
@@ -918,6 +918,35 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    overflow: visible;
+}
+
+.avatar-ring.clickable-avatar {
+    cursor: pointer;
+}
+
+.avatar-custom-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-badge-edit {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 20px;
+    height: 20px;
+    background: var(--secondary);
+    border: 1px solid #ffffff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.65rem;
+    box-shadow: 0 0 6px rgba(0,0,0,0.8);
 }
 
 .avatar-emoji {

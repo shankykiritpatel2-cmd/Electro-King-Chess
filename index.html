@@ -303,11 +303,14 @@
 
                     <!-- USER AVATAR & ACCOUNT STATUS -->
                     <div class="profile-header-card">
-                        <div class="avatar-ring">
+                        <div class="avatar-ring clickable-avatar" id="avatar-picker-btn" title="Tap to change avatar from Gallery or Google Photos">
+                            <img id="profile-avatar-img" class="avatar-custom-img hidden" src="" alt="Profile">
                             <span class="avatar-emoji" id="profile-avatar">👑</span>
+                            <div class="avatar-badge-edit">📷</div>
+                            <input type="file" id="avatar-file-input" accept="image/*" class="hidden">
                         </div>
                         <div class="profile-info-group">
-                            <h3 class="profile-username" id="profile-name">Viaan Patel</h3>
+                            <h3 class="profile-username" id="profile-name">Player 1</h3>
                             <div class="account-pill-group">
                                 <span class="account-badge guest" id="account-type-badge">Guest Account</span>
                                 <button class="sign-in-link-btn" id="profile-auth-btn">Sign In / Sync ☁️</button>
