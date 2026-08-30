@@ -280,17 +280,77 @@ function handleForfeit() {
     updateStatsOnGameOver(oppColor);
 }
 
+// --- IN-GAME TOAST & CUSTOM MODAL DIALOGS ---
+function showToast(msg, type = 'info', duration = 2800) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = msg;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function showCustomConfirm(title, msg, onConfirm, onCancel) {
+    const modal = document.getElementById('custom-confirm-modal');
+    const titleEl = document.getElementById('confirm-modal-title');
+    const msgEl = document.getElementById('confirm-modal-msg');
+    const okBtn = document.getElementById('confirm-modal-ok');
+    const cancelBtn = document.getElementById('confirm-modal-cancel');
+    
+    if (modal && titleEl && msgEl && okBtn && cancelBtn) {
+        titleEl.textContent = title;
+        msgEl.innerHTML = msg;
+        modal.classList.remove('hidden');
+        
+        okBtn.onclick = () => {
+            modal.classList.add('hidden');
+            if (onConfirm) onConfirm();
+        };
+        
+        cancelBtn.onclick = () => {
+            modal.classList.add('hidden');
+            if (onCancel) onCancel();
+        };
+    } else {
+        if (confirm(`${title}\n\n${msg.replace(/<[^>]*>?/gm, '')}`)) {
+            if (onConfirm) onConfirm();
+        } else {
+            if (onCancel) onCancel();
+        }
+    }
+}
+
 // --- 5-TAB NAVIGATION CONTROLLER ---
 function switchTab(tabId) {
     // Check if match is in progress
     if (currentTab === 'arena' && tabId !== 'arena' && !isGameOver && history.length > 0) {
-        const confirmLeave = confirm("⚠️ Match in Progress!\n\nIf you leave or switch tabs during an active match, your match will be forfeited and your opponent will win!\n\nDo you want to forfeit and leave the Arena?");
-        if (!confirmLeave) {
-            return; // Abort tab switch, keep playing!
-        }
-        handleForfeit();
+        showCustomConfirm(
+            "MATCH IN PROGRESS ⚠️",
+            "If you leave or switch tabs during an active match, your match will be forfeited and your opponent will win!<br><br>Do you want to forfeit and leave the Arena?",
+            () => {
+                handleForfeit();
+                actuallySwitchTab(tabId);
+            }
+        );
+        return;
     }
 
+    actuallySwitchTab(tabId);
+}
+
+function actuallySwitchTab(tabId) {
     currentTab = tabId;
     
     // Hide setup modal on tab switch
@@ -1333,7 +1393,7 @@ function pushHistory() {
 function handleUndo() {
     if (history.length === 0 || isGameOver) return;
     if (careerPoints < 100) {
-        alert("You need at least 100 Career Points to undo a move!");
+        showToast("⚠️ You need at least 100 Career Points to undo a move!", "warning");
         return;
     }
     
@@ -2062,30 +2122,35 @@ function setupEvents() {
             
             // Check if player has enough points to unlock
             if (careerPoints < cost) {
-                alert(`⚠️ You need ${cost} Career Points to unlock this theme!\n(Your points: ${careerPoints})`);
+                showToast(`⚠️ You need ${cost} Career Points to unlock this theme! (Your points: ${careerPoints})`, 'warning');
                 playSound('undo');
                 return;
             }
             
             // Unlock with points!
-            if (confirm(`Unlock ${card.querySelector('h4').textContent} for ${cost} Career Points?`)) {
-                careerPoints -= cost;
-                saveCareerPoints();
-                unlockedThemes.push(theme);
-                localStorage.setItem('electro_king_unlocked_themes', JSON.stringify(unlockedThemes));
-                
-                document.body.className = '';
-                if (theme !== 'cyber') {
-                    document.body.classList.add(`theme-${theme}`);
+            const themeTitle = card.querySelector('h4').textContent;
+            showCustomConfirm(
+                "UNLOCK THEME ✨",
+                `Unlock <strong>${themeTitle}</strong> for <strong>${cost} Career Points</strong>?`,
+                () => {
+                    careerPoints -= cost;
+                    saveCareerPoints();
+                    unlockedThemes.push(theme);
+                    localStorage.setItem('electro_king_unlocked_themes', JSON.stringify(unlockedThemes));
+                    
+                    document.body.className = '';
+                    if (theme !== 'cyber') {
+                        document.body.classList.add(`theme-${theme}`);
+                    }
+                    localStorage.setItem('electro_king_theme', theme);
+                    
+                    playSound('win');
+                    floatPointsMessage(-cost, null, null, true);
+                    updateHUD();
+                    updateThemeCardsUI();
+                    showToast(`🎉 Theme "${themeTitle}" Unlocked Successfully!`, 'success');
                 }
-                localStorage.setItem('electro_king_theme', theme);
-                
-                playSound('win');
-                floatPointsMessage(-cost, null, null, true);
-                updateHUD();
-                updateThemeCardsUI();
-                alert(`🎉 Theme Unlocked Successfully!`);
-            }
+            );
         };
     });
     updateThemeCardsUI();

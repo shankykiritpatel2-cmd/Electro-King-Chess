@@ -477,6 +477,21 @@
         </div>
     </div>
 
+    <!-- IN-GAME SLEEK TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- IN-GAME CUSTOM CONFIRM / DIALOG MODAL -->
+    <div class="modal-overlay hidden" id="custom-confirm-modal">
+        <div class="modal-card confirm-card text-center">
+            <h3 class="glow-text" id="confirm-modal-title">CONFIRM ACTION</h3>
+            <p class="modal-sub" id="confirm-modal-msg" style="font-size:0.9rem; margin:14px 0 20px 0; color:#e0e0f0;"></p>
+            <div class="confirm-btn-row">
+                <button type="button" class="cancel-modal-btn" id="confirm-modal-cancel">Cancel</button>
+                <button type="button" class="confirm-modal-btn" id="confirm-modal-ok">Confirm ⚡</button>
+            </div>
+        </div>
+    </div>
+
     <script src="game.js"></script>
     <script>
         // Service Worker registration for PWA
