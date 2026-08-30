@@ -504,19 +504,36 @@ const PUZZLE_DATABASE = [
     {
         id: 3,
         title: "Puzzle #3: Royal Knight Fork ♞",
-        instruction: "⚪ White to move: Fork King and Queen!",
+        instruction: "⚪ White to move: Jump Knight into c7 to Fork King & Rook!",
         reward: 75,
         board: [
             [{ type: 'r', color: 'black', hasMoved: true }, null, { type: 'b', color: 'black', hasMoved: true }, { type: 'q', color: 'black', hasMoved: true }, { type: 'k', color: 'black', hasMoved: true }, { type: 'b', color: 'black', hasMoved: true }, null, { type: 'r', color: 'black', hasMoved: true }],
             [{ type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, null, { type: 'p', color: 'black', hasMoved: true }, null, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }],
             [null, null, null, null, null, null, null, null],
-            [null, null, null, null, { type: 'n', color: 'white', hasMoved: true }, null, null, null],
+            [null, null, null, { type: 'n', color: 'white', hasMoved: true }, null, null, null, null],
             [null, null, null, null, null, null, null, null],
             [null, null, null, null, null, null, null, null],
             [{ type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }, null, null, { type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }],
             [{ type: 'r', color: 'white', hasMoved: true }, null, { type: 'b', color: 'white', hasMoved: true }, { type: 'q', color: 'white', hasMoved: true }, { type: 'k', color: 'white', hasMoved: true }, null, null, { type: 'r', color: 'white', hasMoved: true }]
         ],
-        solution: { from: { r: 3, c: 4 }, to: { r: 1, c: 2 } }
+        solution: { from: { r: 3, c: 3 }, to: { r: 1, c: 2 } }
+    },
+    {
+        id: 4,
+        title: "Puzzle #4: Lightning Bishop Pin ⚡",
+        instruction: "⚪ White to move: Pin Queen to King!",
+        reward: 100,
+        board: [
+            [{ type: 'r', color: 'black', hasMoved: true }, null, null, null, { type: 'k', color: 'black', hasMoved: true }, null, null, { type: 'r', color: 'black', hasMoved: true }],
+            [{ type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, null, null, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }],
+            [null, null, null, null, { type: 'q', color: 'black', hasMoved: true }, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [{ type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }, null, null, { type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }, { type: 'p', color: 'white', hasMoved: true }],
+            [{ type: 'r', color: 'white', hasMoved: true }, null, { type: 'b', color: 'white', hasMoved: true }, null, { type: 'k', color: 'white', hasMoved: true }, null, null, { type: 'r', color: 'white', hasMoved: true }]
+        ],
+        solution: { from: { r: 7, c: 2 }, to: { r: 4, c: 5 } }
     }
 ];
 
