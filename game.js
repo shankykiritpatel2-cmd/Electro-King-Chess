@@ -11,16 +11,16 @@ const UNICODE_PIECES = {
     black: { 'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟' }
 };
 
-// --- 8-TIER TROPHY PROGRESSION LADDER (HARD MODE) ---
+// --- 8-TIER TROPHY PROGRESSION LADDER (ULTRA HARD MODE) ---
 const TROPHY_TIERS = [
-    { tier: 1, name: 'Wood Tier', icon: '🪵', tag: 'Apprentice Spark', minPts: 0, maxPts: 249, cssClass: 'tier-wood' },
-    { tier: 2, name: 'Bronze Tier', icon: '🟫', tag: 'Cyber Knight', minPts: 250, maxPts: 699, cssClass: 'tier-bronze' },
-    { tier: 3, name: 'Silver Tier', icon: '⚪', tag: 'Neon Bishop', minPts: 700, maxPts: 1499, cssClass: 'tier-silver' },
-    { tier: 4, name: 'Gold Tier', icon: '🟡', tag: 'Electro Commander', minPts: 1500, maxPts: 2999, cssClass: 'tier-gold' },
-    { tier: 5, name: 'Platinum Tier', icon: '💎', tag: 'Plasma Queen', minPts: 3000, maxPts: 5999, cssClass: 'tier-platinum' },
-    { tier: 6, name: 'Diamond Tier', icon: '💠', tag: 'Titan of Voltage', minPts: 6000, maxPts: 9999, cssClass: 'tier-diamond' },
-    { tier: 7, name: 'Master Tier', icon: '🌌', tag: 'Grandmaster Cyber', minPts: 10000, maxPts: 19999, cssClass: 'tier-master' },
-    { tier: 8, name: 'Electro King', icon: '👑', tag: 'Supreme Sovereign', minPts: 20000, maxPts: Infinity, cssClass: 'tier-king' }
+    { tier: 1, name: 'Wood Tier', icon: '🪵', tag: 'Apprentice Spark', minPts: 0, maxPts: 499, cssClass: 'tier-wood' },
+    { tier: 2, name: 'Bronze Tier', icon: '🟫', tag: 'Cyber Knight', minPts: 500, maxPts: 1499, cssClass: 'tier-bronze' },
+    { tier: 3, name: 'Silver Tier', icon: '⚪', tag: 'Neon Bishop', minPts: 1500, maxPts: 3499, cssClass: 'tier-silver' },
+    { tier: 4, name: 'Gold Tier', icon: '🟡', tag: 'Electro Commander', minPts: 3500, maxPts: 6999, cssClass: 'tier-gold' },
+    { tier: 5, name: 'Platinum Tier', icon: '💎', tag: 'Plasma Queen', minPts: 7000, maxPts: 12999, cssClass: 'tier-platinum' },
+    { tier: 6, name: 'Diamond Tier', icon: '💠', tag: 'Titan of Voltage', minPts: 13000, maxPts: 24999, cssClass: 'tier-diamond' },
+    { tier: 7, name: 'Master Tier', icon: '🌌', tag: 'Grandmaster Cyber', minPts: 25000, maxPts: 49999, cssClass: 'tier-master' },
+    { tier: 8, name: 'Electro King', icon: '👑', tag: 'Supreme Sovereign', minPts: 50000, maxPts: Infinity, cssClass: 'tier-king' }
 ];
 
 // --- GAME STATE ---
@@ -255,7 +255,7 @@ function handleTimeout(timedOutColor) {
     
     let bonus = 0;
     if (gameMode === 'ai' && winnerColor === playerSide) {
-        bonus = addCareerPoints(800);
+        bonus = addCareerPoints(100);
     }
     document.getElementById('gameover-career').textContent = `+${bonus} Pts`;
     document.getElementById('gameover-modal').classList.remove('hidden');
@@ -470,8 +470,8 @@ const PUZZLE_DATABASE = [
     {
         id: 1,
         title: "Puzzle #1: Back-Rank Zap ⚡",
-        instruction: "⚪ White to move: Find the Checkmate!",
-        reward: 50,
+        instruction: "⚪ White to move: Move Rook to d8 to deliver Back-Rank Mate!",
+        reward: 25,
         board: [
             [{ type: 'r', color: 'black', hasMoved: true }, null, null, null, { type: 'k', color: 'black', hasMoved: true }, null, null, { type: 'r', color: 'black', hasMoved: true }],
             [{ type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, null, null, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }],
@@ -487,8 +487,8 @@ const PUZZLE_DATABASE = [
     {
         id: 2,
         title: "Puzzle #2: Scholar's Blitz 👑",
-        instruction: "⚪ White to move: Deliver Checkmate!",
-        reward: 50,
+        instruction: "⚪ White to move: Take on f7 with Queen for Checkmate!",
+        reward: 35,
         board: [
             [{ type: 'r', color: 'black', hasMoved: true }, { type: 'n', color: 'black', hasMoved: true }, { type: 'b', color: 'black', hasMoved: true }, { type: 'q', color: 'black', hasMoved: true }, { type: 'k', color: 'black', hasMoved: true }, { type: 'b', color: 'black', hasMoved: true }, null, { type: 'r', color: 'black', hasMoved: true }],
             [{ type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, null, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }],
@@ -505,7 +505,7 @@ const PUZZLE_DATABASE = [
         id: 3,
         title: "Puzzle #3: Royal Knight Fork ♞",
         instruction: "⚪ White to move: Jump Knight into c7 to Fork King & Rook!",
-        reward: 75,
+        reward: 40,
         board: [
             [{ type: 'r', color: 'black', hasMoved: true }, null, { type: 'b', color: 'black', hasMoved: true }, { type: 'q', color: 'black', hasMoved: true }, { type: 'k', color: 'black', hasMoved: true }, { type: 'b', color: 'black', hasMoved: true }, null, { type: 'r', color: 'black', hasMoved: true }],
             [{ type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, null, { type: 'p', color: 'black', hasMoved: true }, null, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }],
@@ -521,8 +521,8 @@ const PUZZLE_DATABASE = [
     {
         id: 4,
         title: "Puzzle #4: Lightning Bishop Pin ⚡",
-        instruction: "⚪ White to move: Pin Queen to King!",
-        reward: 100,
+        instruction: "⚪ White to move: Pin Queen to King with Bishop at f4!",
+        reward: 45,
         board: [
             [{ type: 'r', color: 'black', hasMoved: true }, null, null, null, { type: 'k', color: 'black', hasMoved: true }, null, null, { type: 'r', color: 'black', hasMoved: true }],
             [{ type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, null, null, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }, { type: 'p', color: 'black', hasMoved: true }],
@@ -1463,9 +1463,10 @@ function saveCareerPoints() {
 function addCareerPoints(value) {
     let multiplier = 1;
     if (gameMode === 'ai') {
-        if (difficulty === 2) multiplier = 1.5;
-        if (difficulty === 3) multiplier = 2;
-        if (difficulty === 4) multiplier = 3;
+        if (difficulty === 1) multiplier = 1.0;
+        if (difficulty === 2) multiplier = 1.25;
+        if (difficulty === 3) multiplier = 1.75;
+        if (difficulty === 4) multiplier = 2.5;
     }
     const finalValue = Math.floor(value * multiplier);
     careerPoints += finalValue;
@@ -1666,9 +1667,9 @@ function checkGameOver() {
             msg = `${winnerName} has won the match!`;
             
             if (gameMode === 'ai' && winnerColor === playerSide) {
-                points = 1000;
+                points = 120;
             } else if (gameMode === 'local') {
-                points = 1000;
+                points = 100;
             }
             playSound('win');
             FX.spawnWinCelebration();
@@ -1676,7 +1677,7 @@ function checkGameOver() {
         } else {
             title = "STALEMATE (DRAW) 🤝";
             msg = "No legal moves left. The match is a draw.";
-            points = 500;
+            points = 30;
             playSound('move');
             updateStatsOnGameOver(null);
         }
@@ -2202,7 +2203,7 @@ function setupEvents() {
     // Direct 1-Click Profile Save (Zero questions, zero prompts!)
     if (authSubmit && authModal) {
         authSubmit.onclick = () => {
-            const usernameInput = document.getElementById('auth-username-input').value.trim() || 'Crazy Voss';
+            const usernameInput = document.getElementById('auth-username-input').value.trim() || 'Player 1';
             
             const profileData = {
                 username: usernameInput
@@ -2213,6 +2214,7 @@ function setupEvents() {
             
             authModal.classList.add('hidden');
             playSound('win');
+            showToast(`Profile updated to: ${usernameInput}`, 'success');
         };
     }
 
@@ -2227,16 +2229,20 @@ function setupEvents() {
         const authEmailInput = document.getElementById('auth-email-input');
         
         // Auto-fill all display names & input fields
-        if (nameEl) nameEl.textContent = profile.username;
-        if (playerInput) playerInput.value = profile.username;
-        if (p1Input) p1Input.value = profile.username;
-        if (authUsernameInput) authUsernameInput.value = profile.username;
+        if (nameEl) nameEl.textContent = profile.username || 'Player 1';
+        if (playerInput) playerInput.value = profile.username || '';
+        if (p1Input) p1Input.value = profile.username || '';
+        if (authUsernameInput) authUsernameInput.value = profile.username || '';
         if (authEmailInput) authEmailInput.value = profile.email || '';
         
-        playerNames.white = profile.username;
+        playerNames.white = profile.username || 'Player 1';
         
         if (badgeEl) {
-            badgeEl.textContent = `✓ ${profile.provider === 'google' ? 'Google' : 'Email'} Verified: ${profile.email}`;
+            if (profile.email && profile.email !== 'undefined') {
+                badgeEl.textContent = `✓ ${profile.provider === 'google' ? 'Google' : 'Email'} Verified: ${profile.email}`;
+            } else {
+                badgeEl.textContent = `👑 Active Player Profile`;
+            }
             badgeEl.style.background = '#06d6a0';
             badgeEl.style.color = '#000000';
             badgeEl.style.fontWeight = '800';
@@ -2312,7 +2318,15 @@ function startNewGame() {
     if (gameMode === 'ai') {
         applyDifficultyTheme(difficulty);
         const rawName = document.getElementById('player-name-input').value.trim();
-        const userName = rawName || 'Viaan Patel';
+        let defaultName = 'Player 1';
+        try {
+            const savedProfile = localStorage.getItem('electro_king_profile');
+            if (savedProfile) {
+                const parsed = JSON.parse(savedProfile);
+                if (parsed.username) defaultName = parsed.username;
+            }
+        } catch(e) {}
+        const userName = rawName || defaultName;
         
         let activeSide = playerSide;
         if (playerSide === 'random') {
