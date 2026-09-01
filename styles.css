@@ -510,10 +510,17 @@ body {
 }
 
 .piece {
-    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-    transition: transform 0.1s ease;
-    user-select: none;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-align: center;
     line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    transition: transform 0.1s ease;
 }
 
 /* WHITE PIECES - PURE SOLID SNOW WHITE WITH CYAN ELECTRIC AURA */
@@ -721,20 +728,31 @@ body {
 }
 
 .puzzle-board-container {
-    width: min(70vw, 320px);
-    height: min(70vw, 320px);
+    width: min(85vw, 400px, calc(100dvh - 270px));
+    height: min(85vw, 400px, calc(100dvh - 270px));
     aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
 }
 
 .mini-border {
-    padding: 4px;
+    padding: 5px;
+    width: 100%;
+    height: 100%;
+}
+
+#puzzle-board .square {
+    font-size: clamp(1.2rem, 3.8vw, 1.95rem) !important;
 }
 
 .puzzle-actions {
     display: flex;
     gap: 8px;
     width: 100%;
-    max-width: 320px;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .primary-btn {
