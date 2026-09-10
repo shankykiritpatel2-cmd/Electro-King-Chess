@@ -425,13 +425,16 @@ body {
 
 .board {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-rows: repeat(8, minmax(0, 1fr));
     width: 100%;
     height: 100%;
     border-radius: 8px;
     overflow: hidden;
     background-color: var(--board-dark);
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .board.flipped {
@@ -448,7 +451,11 @@ body {
     align-items: center;
     position: relative;
     cursor: pointer;
-    font-size: clamp(1.4rem, 4.5vw, 2.2rem);
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition: background-color 0.15s ease;
 }
 
@@ -461,12 +468,12 @@ body {
 }
 
 .square.selected {
-    background-color: rgba(157, 78, 221, 0.4) !important;
-    box-shadow: inset 0 0 10px var(--primary);
+    background-color: rgba(157, 78, 221, 0.45) !important;
+    box-shadow: inset 0 0 12px var(--primary);
 }
 
 .square.last-move {
-    background-color: rgba(0, 245, 212, 0.25) !important;
+    background-color: rgba(0, 245, 212, 0.28) !important;
 }
 
 .square.valid-move::after {
@@ -476,26 +483,26 @@ body {
     height: 28%;
     background-color: var(--secondary);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--secondary-glow);
-    opacity: 0.8;
+    box-shadow: 0 0 10px var(--secondary-glow);
+    opacity: 0.85;
 }
 
 .square.valid-capture {
-    background-color: rgba(255, 0, 84, 0.3) !important;
+    background-color: rgba(255, 0, 84, 0.35) !important;
 }
 
 .square.valid-capture::after {
     content: '';
     position: absolute;
-    width: 80%;
-    height: 80%;
-    border: 2px dashed var(--accent);
+    width: 82%;
+    height: 82%;
+    border: 2.5px dashed var(--accent);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent-glow);
+    box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .square.check {
-    background-color: rgba(255, 0, 84, 0.5) !important;
+    background-color: rgba(255, 0, 84, 0.55) !important;
     animation: checkFlash 1s infinite alternate;
 }
 
@@ -505,40 +512,38 @@ body {
 }
 
 .square.suggested {
-    background-color: rgba(255, 209, 102, 0.4) !important;
-    box-shadow: inset 0 0 12px var(--yellow);
+    background-color: rgba(255, 209, 102, 0.45) !important;
+    box-shadow: inset 0 0 14px var(--yellow);
 }
 
 .piece {
-    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
-    text-align: center;
-    line-height: 1;
     pointer-events: none;
     user-select: none;
     transition: transform 0.1s ease;
+    box-sizing: border-box;
 }
 
-/* WHITE PIECES - PURE SOLID SNOW WHITE WITH CYAN ELECTRIC AURA */
-.piece.white {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    -webkit-text-stroke: 1.2px #00f5d4;
-    text-shadow: 0 0 10px #ffffff, 0 0 20px rgba(0, 245, 212, 0.9);
-    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
+.piece svg {
+    width: 82%;
+    height: 82%;
+    display: block;
+    pointer-events: none;
+    transition: transform 0.12s ease;
 }
 
-/* BLACK PIECES - OBSIDIAN CHARCOAL BODY WITH SHARP CRIMSON NEON OUTLINE & GLOW */
-.piece.black {
-    color: #12091c !important;
-    -webkit-text-fill-color: #12091c !important;
-    -webkit-text-stroke: 2px #ff0054;
-    text-shadow: 0 0 12px #ff0054, 0 0 22px rgba(255, 0, 84, 0.85);
-    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95));
+/* WHITE PIECES - GLOWING ELECTRIC CYAN OUTLINE & CRISP SNOW WHITE */
+.piece.white svg {
+    filter: drop-shadow(0 0 4px #00f5d4) drop-shadow(0 0 12px rgba(0, 245, 212, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+}
+
+/* BLACK PIECES - GLOWING CRIMSON NEON OUTLINE & OBSIDIAN BODY */
+.piece.black svg {
+    filter: drop-shadow(0 0 5px #ff0054) drop-shadow(0 0 14px rgba(255, 0, 84, 0.85)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.95));
 }
 
 .fx-canvas {
@@ -558,10 +563,10 @@ body {
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 3px !important;
+    gap: 4px !important;
     overflow-x: auto !important;
     max-width: 55% !important;
-    min-height: 22px !important;
+    min-height: 24px !important;
     white-space: nowrap !important;
     scrollbar-width: none;
 }
@@ -571,24 +576,25 @@ body {
 }
 
 .captured-item {
-    font-size: 1.05rem !important;
-    line-height: 1 !important;
-    display: inline-block !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
     flex-shrink: 0 !important;
+    width: 20px !important;
+    height: 20px !important;
 }
 
-.captured-item.white {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    -webkit-text-stroke: 0.8px #00f5d4;
-    text-shadow: 0 0 5px rgba(0, 245, 212, 0.8);
+.captured-item svg {
+    width: 100% !important;
+    height: 100% !important;
 }
 
-.captured-item.black {
-    color: #0d0819 !important;
-    -webkit-text-fill-color: #0d0819 !important;
-    -webkit-text-stroke: 1.2px #ff0054;
-    text-shadow: 0 0 5px rgba(255, 0, 84, 0.8);
+.captured-item.white svg {
+    filter: drop-shadow(0 0 4px rgba(0, 245, 212, 0.8));
+}
+
+.captured-item.black svg {
+    filter: drop-shadow(0 0 4px rgba(255, 0, 84, 0.8));
 }
 
 /* PERSISTENT 5-TAB BOTTOM NAVIGATION DOCK */
@@ -1323,8 +1329,6 @@ body {
     background: rgba(14, 9, 30, 0.85);
     border: 2px solid rgba(0, 245, 212, 0.4);
     border-radius: 12px;
-    font-size: 2.4rem;
-    line-height: 1;
     width: 64px;
     height: 64px;
     display: flex;
@@ -1334,6 +1338,8 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     transition: all 0.15s ease;
     user-select: none;
+    padding: 8px;
+    box-sizing: border-box;
 }
 
 .promo-btn:hover, .promo-btn:active {
@@ -1343,18 +1349,19 @@ body {
     box-shadow: 0 0 20px rgba(0, 245, 212, 0.6);
 }
 
-.promo-btn.white {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    -webkit-text-stroke: 1.2px #00f5d4;
-    text-shadow: 0 0 10px #ffffff, 0 0 20px rgba(0, 245, 212, 0.9);
+.promo-btn svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
 }
 
-.promo-btn.black {
-    color: #12091c !important;
-    -webkit-text-fill-color: #12091c !important;
-    -webkit-text-stroke: 2px #ff0054;
-    text-shadow: 0 0 12px #ff0054, 0 0 22px rgba(255, 0, 84, 0.85);
+.promo-btn.white svg {
+    filter: drop-shadow(0 0 4px #00f5d4) drop-shadow(0 0 10px rgba(0, 245, 212, 0.85));
+}
+
+.promo-btn.black svg {
+    filter: drop-shadow(0 0 4px #ff0054) drop-shadow(0 0 10px rgba(255, 0, 84, 0.85));
 }
 
 /* GOOGLE AUTH BUTTON & DIVIDER */
