@@ -54,6 +54,105 @@ let pendingPromotion = null;
 let activeHint = null;
 let currentTab = 'arena';
 let powerUpUsedThisMatch = false;
+let showCoordinates = true;
+let showEvalBar = true;
+let moveHistoryNotation = [];
+
+const BOT_PERSONALITIES = {
+    1: { name: 'Sparky ⚡', icon: '⚡', rating: '~600 Elo' },
+    2: { name: 'CyberKnight 🛡️', icon: '🛡️', rating: '~1200 Elo' },
+    3: { name: 'VoltQueen 👑', icon: '👑', rating: '~1700 Elo' },
+    4: { name: 'ElectroKing 🌌', icon: '🌌', rating: '~2200 Elo' }
+};
+
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+function moveToAlgebraic(from, to, piece, isCapture, isCheck, isMate) {
+    if (!piece) return '';
+    let notation = '';
+    const pieceLetter = piece.type === 'p' ? '' : piece.type.toUpperCase();
+    const targetSquare = `${FILES[to.c]}${RANKS[to.r]}`;
+    
+    if (piece.type === 'p' && isCapture) {
+        notation = `${FILES[from.c]}x${targetSquare}`;
+    } else if (isCapture) {
+        notation = `${pieceLetter}x${targetSquare}`;
+    } else {
+        notation = `${pieceLetter}${targetSquare}`;
+    }
+    
+    if (isMate) notation += '#';
+    else if (isCheck) notation += '+';
+    
+    return notation;
+}
+
+function updateMoveHistoryUI(moveNot) {
+    const container = document.getElementById('history-chips');
+    if (!container) return;
+    
+    moveHistoryNotation.push(moveNot);
+    
+    if (moveHistoryNotation.length === 1) {
+        container.innerHTML = '';
+    }
+    
+    const chip = document.createElement('span');
+    chip.className = 'history-chip active';
+    const moveNum = Math.ceil(moveHistoryNotation.length / 2);
+    const isWhite = moveHistoryNotation.length % 2 === 1;
+    chip.textContent = isWhite ? `${moveNum}. ${moveNot}` : `${moveNot}`;
+    
+    const prevActive = container.querySelectorAll('.history-chip.active');
+    prevActive.forEach(c => c.classList.remove('active'));
+    
+    container.appendChild(chip);
+    container.scrollLeft = container.scrollWidth;
+}
+
+function calculateBoardEvaluation(currentBoard) {
+    let score = 0;
+    const pieceVal = { 'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000 };
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const p = currentBoard[r][c];
+            if (!p) continue;
+            let val = pieceVal[p.type] || 0;
+            if ((r === 3 || r === 4) && (c === 3 || c === 4)) val += 20;
+            if (p.color === 'white') score += val;
+            else score -= val;
+        }
+    }
+    return score / 100;
+}
+
+function updateEvalBar() {
+    const evalWrapper = document.getElementById('eval-bar-wrapper');
+    const evalFill = document.getElementById('eval-bar-fill');
+    const evalScore = document.getElementById('eval-bar-score');
+    if (!evalWrapper || !evalFill || !evalScore) return;
+
+    if (!showEvalBar) {
+        evalWrapper.classList.add('hidden');
+        return;
+    } else {
+        evalWrapper.classList.remove('hidden');
+    }
+
+    const evalVal = calculateBoardEvaluation(board);
+    const clamped = Math.max(-10, Math.min(10, evalVal));
+    const pct = ((clamped + 10) / 20) * 100;
+    evalFill.style.height = `${pct}%`;
+    
+    if (Math.abs(evalVal) < 0.1) {
+        evalScore.textContent = '0.0';
+    } else if (evalVal > 0) {
+        evalScore.textContent = `+${evalVal.toFixed(1)}`;
+    } else {
+        evalScore.textContent = `${evalVal.toFixed(1)}`;
+    }
+}
 
 // --- STATS TRACKING ---
 let playerStats = {
@@ -548,9 +647,95 @@ const PUZZLE_DATABASE = [
     }
 ];
 
+// --- INTERACTIVE OPENINGS MASTER DATABASE ---
+const OPENINGS_DATABASE = [
+    {
+        id: 'italian',
+        name: 'Italian Game (Giuoco Piano)',
+        desc: 'One of the most classical openings. Develops the Bishop to c4 to directly target Black\'s weak f7 square.',
+        movesNotation: '1. e4 e5 2. Nf3 Nc6 3. Bc4',
+        moves: [
+            { from: { r: 6, c: 4 }, to: { r: 4, c: 4 }, comment: '1. e4: White claims the center and opens diagonal lines.' },
+            { from: { r: 1, c: 4 }, to: { r: 3, c: 4 }, comment: '1... e5: Black matches central stake.' },
+            { from: { r: 7, c: 6 }, to: { r: 5, c: 5 }, comment: '2. Nf3: Knight develops with tempo against e5.' },
+            { from: { r: 0, c: 1 }, to: { r: 2, c: 2 }, comment: '2... Nc6: Black protects e5 while developing.' },
+            { from: { r: 7, c: 5 }, to: { r: 4, c: 2 }, comment: '3. Bc4: The Italian Bishop! Ready to launch kingside pressure.' }
+        ]
+    },
+    {
+        id: 'sicilian',
+        name: 'Sicilian Defense (Open)',
+        desc: 'The most aggressive, asymmetric grandmaster response to 1. e4, fighting for the center from the c-file.',
+        movesNotation: '1. e4 c5 2. Nf3 d6 3. d4',
+        moves: [
+            { from: { r: 6, c: 4 }, to: { r: 4, c: 4 }, comment: '1. e4: Central pawn push.' },
+            { from: { r: 1, c: 2 }, to: { r: 3, c: 2 }, comment: '1... c5: The Sicilian! Asymmetrical fight for d4.' },
+            { from: { r: 7, c: 6 }, to: { r: 5, c: 5 }, comment: '2. Nf3: Preparing the d4 central break.' },
+            { from: { r: 1, c: 3 }, to: { r: 2, c: 3 }, comment: '2... d6: Guards e5 and prepares knight development.' },
+            { from: { r: 6, c: 3 }, to: { r: 4, c: 3 }, comment: '3. d4: White strikes the center open!' }
+        ]
+    },
+    {
+        id: 'queens_gambit',
+        name: 'Queen\'s Gambit',
+        desc: 'A hyper-solid positional master opening offering a wing pawn to gain massive center dominance.',
+        movesNotation: '1. d4 d5 2. c4 e6 3. Nc3',
+        moves: [
+            { from: { r: 6, c: 3 }, to: { r: 4, c: 3 }, comment: '1. d4: Queen\'s Pawn opening.' },
+            { from: { r: 1, c: 3 }, to: { r: 3, c: 3 }, comment: '1... d5: Symmetrical center control.' },
+            { from: { r: 6, c: 2 }, to: { r: 4, c: 2 }, comment: '2. c4: The Gambit! Undermining Black\'s d5 anchor.' },
+            { from: { r: 1, c: 4 }, to: { r: 2, c: 4 }, comment: '2... e6: Queen\'s Gambit Declined (solid defense).' },
+            { from: { r: 7, c: 1 }, to: { r: 5, c: 2 }, comment: '3. Nc3: Puts maximum pressure on d5.' }
+        ]
+    },
+    {
+        id: 'ruy_lopez',
+        name: 'Ruy Lopez (Spanish Opening)',
+        desc: 'One of the deepest and most prestigious openings in chess history.',
+        movesNotation: '1. e4 e5 2. Nf3 Nc6 3. Bb5',
+        moves: [
+            { from: { r: 6, c: 4 }, to: { r: 4, c: 4 }, comment: '1. e4: King\'s pawn.' },
+            { from: { r: 1, c: 4 }, to: { r: 3, c: 4 }, comment: '1... e5: Open game.' },
+            { from: { r: 7, c: 6 }, to: { r: 5, c: 5 }, comment: '2. Nf3: Attacking e5.' },
+            { from: { r: 0, c: 1 }, to: { r: 2, c: 2 }, comment: '2... Nc6: Defending e5.' },
+            { from: { r: 7, c: 5 }, to: { r: 3, c: 1 }, comment: '3. Bb5: The Spanish Pin! Threatens the defender of e5.' }
+        ]
+    },
+    {
+        id: 'french',
+        name: 'French Defense',
+        desc: 'A resilient, counter-attacking system with a rock-solid pawn chain.',
+        movesNotation: '1. e4 e6 2. d4 d5 3. Nc3',
+        moves: [
+            { from: { r: 6, c: 4 }, to: { r: 4, c: 4 }, comment: '1. e4: King\'s pawn.' },
+            { from: { r: 1, c: 4 }, to: { r: 2, c: 4 }, comment: '1... e6: Prepares the d5 central thrust.' },
+            { from: { r: 6, c: 3 }, to: { r: 4, c: 3 }, comment: '2. d4: White occupies the full center.' },
+            { from: { r: 1, c: 3 }, to: { r: 3, c: 3 }, comment: '2... d5: Direct challenge to White\'s e4 pawn.' },
+            { from: { r: 7, c: 1 }, to: { r: 5, c: 2 }, comment: '3. Nc3: Main line: Defends e4 while developing.' }
+        ]
+    },
+    {
+        id: 'scandinavian',
+        name: 'Scandinavian Defense',
+        desc: 'Immediately challenges White\'s e4 pawn on move 1 for dynamic, open play.',
+        movesNotation: '1. e4 d5 2. exd5 Qxd5 3. Nc3',
+        moves: [
+            { from: { r: 6, c: 4 }, to: { r: 4, c: 4 }, comment: '1. e4: King\'s pawn.' },
+            { from: { r: 1, c: 3 }, to: { r: 3, c: 3 }, comment: '1... d5: Immediate central challenge!' },
+            { from: { r: 4, c: 4 }, to: { r: 3, c: 3 }, comment: '2. exd5: White accepts the pawn.' },
+            { from: { r: 0, c: 3 }, to: { r: 3, c: 3 }, comment: '2... Qxd5: Black recaptures with the Queen.' },
+            { from: { r: 7, c: 1 }, to: { r: 5, c: 2 }, comment: '3. Nc3: Developing with tempo against the Queen.' }
+        ]
+    }
+];
+
 let currentPuzzleIdx = 0;
 let puzzleBoardState = [];
 let puzzleSelected = null;
+
+let currentOpeningKey = 'italian';
+let currentOpeningStep = 0;
+let openingsBoardState = [];
 
 function renderCurrentPuzzle() {
     const puzzle = PUZZLE_DATABASE[currentPuzzleIdx];
@@ -631,6 +816,67 @@ function handlePuzzleClick(r, c) {
         drawPuzzleBoard();
         const sq = document.querySelector(`#puzzle-board .square[data-row="${r}"][data-col="${c}"]`);
         if (sq) sq.classList.add('selected');
+    }
+}
+
+// --- OPENINGS MASTER ENGINE ---
+function initOpeningsBoard() {
+    openingsBoardState = [
+        [{ type: 'r', color: 'black' }, { type: 'n', color: 'black' }, { type: 'b', color: 'black' }, { type: 'q', color: 'black' }, { type: 'k', color: 'black' }, { type: 'b', color: 'black' }, { type: 'n', color: 'black' }, { type: 'r', color: 'black' }],
+        [{ type: 'p', color: 'black' }, { type: 'p', color: 'black' }, { type: 'p', color: 'black' }, { type: 'p', color: 'black' }, { type: 'p', color: 'black' }, { type: 'p', color: 'black' }, { type: 'p', color: 'black' }, { type: 'p', color: 'black' }],
+        [null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null, null],
+        [{ type: 'p', color: 'white' }, { type: 'p', color: 'white' }, { type: 'p', color: 'white' }, { type: 'p', color: 'white' }, { type: 'p', color: 'white' }, { type: 'p', color: 'white' }, { type: 'p', color: 'white' }, { type: 'p', color: 'white' }],
+        [{ type: 'r', color: 'white' }, { type: 'n', color: 'white' }, { type: 'b', color: 'white' }, { type: 'q', color: 'white' }, { type: 'k', color: 'white' }, { type: 'b', color: 'white' }, { type: 'n', color: 'white' }, { type: 'r', color: 'white' }]
+    ];
+}
+
+function renderOpeningsMaster() {
+    const opening = OPENINGS_DATABASE.find(o => o.id === currentOpeningKey) || OPENINGS_DATABASE[0];
+    document.getElementById('opening-title').textContent = opening.name;
+    document.getElementById('opening-desc').textContent = opening.desc;
+    document.getElementById('opening-move-notation').textContent = opening.movesNotation;
+    
+    // Replay up to current step
+    initOpeningsBoard();
+    for (let i = 0; i < currentOpeningStep; i++) {
+        const step = opening.moves[i];
+        if (step) {
+            openingsBoardState[step.to.r][step.to.c] = openingsBoardState[step.from.r][step.from.c];
+            openingsBoardState[step.from.r][step.from.c] = null;
+        }
+    }
+    
+    if (currentOpeningStep > 0 && opening.moves[currentOpeningStep - 1]) {
+        document.getElementById('opening-desc').textContent = opening.moves[currentOpeningStep - 1].comment;
+    }
+    
+    drawOpeningsBoard();
+}
+
+function drawOpeningsBoard() {
+    const boardEl = document.getElementById('openings-board');
+    if (!boardEl) return;
+    boardEl.innerHTML = '';
+    
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const sq = document.createElement('div');
+            sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+            sq.dataset.row = r;
+            sq.dataset.col = c;
+            
+            const piece = openingsBoardState[r][c];
+            if (piece) {
+                const pEl = document.createElement('div');
+                pEl.className = `piece ${piece.color}`;
+                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+                sq.appendChild(pEl);
+            }
+            boardEl.appendChild(sq);
+        }
     }
 }
 
@@ -1230,12 +1476,28 @@ function drawBoard() {
                 square.appendChild(pieceElement);
             }
             
+            if (showCoordinates) {
+                if (c === 0) {
+                    const rankLabel = document.createElement('span');
+                    rankLabel.className = 'coord-label rank';
+                    rankLabel.textContent = playerSide === 'black' ? (r + 1) : (8 - r);
+                    square.appendChild(rankLabel);
+                }
+                if (r === 7) {
+                    const fileLabel = document.createElement('span');
+                    fileLabel.className = 'coord-label file';
+                    fileLabel.textContent = playerSide === 'black' ? FILES[7 - c] : FILES[c];
+                    square.appendChild(fileLabel);
+                }
+            }
+            
             square.addEventListener('click', () => handleSquareClick(r, c));
             boardElement.appendChild(square);
         }
     }
     
     applyBoardHighlights();
+    updateEvalBar();
     setTimeout(() => FX.resize(), 20);
 }
 
@@ -1605,6 +1867,11 @@ function executeMove(from, to, forcePromoType = null) {
 function finalizeMoveStep(toSquare, isCapture, pointsGained) {
     const currentOpponent = turn === 'white' ? 'black' : 'white';
     const deliversCheck = isKingInCheck(currentOpponent);
+    
+    if (lastMove && lastMove.piece) {
+        const not = moveToAlgebraic(lastMove.from, toSquare, lastMove.piece, isCapture, deliversCheck, false);
+        updateMoveHistoryUI(not);
+    }
     
     if (deliversCheck) {
         playSound('check');
@@ -2021,28 +2288,98 @@ function setupEvents() {
         };
     });
 
-    // AI Difficulty Slider
-    const diffSlider = document.getElementById('difficulty-slider');
-    const diffLabel = document.getElementById('diff-label');
-    const diffConfigs = [
-        { name: 'Beginner', color: '#00b4d8', glow: 'rgba(0, 180, 216, 0.8)', bg: 'rgba(0, 180, 216, 0.2)' },
-        { name: 'Easy', color: '#06d6a0', glow: 'rgba(6, 214, 160, 0.8)', bg: 'rgba(6, 214, 160, 0.2)' },
-        { name: 'Hard', color: '#ff0054', glow: 'rgba(255, 0, 84, 0.8)', bg: 'rgba(255, 0, 84, 0.2)' },
-        { name: 'Difficult', color: '#9d4edd', glow: 'rgba(157, 78, 221, 0.8)', bg: 'rgba(157, 78, 221, 0.2)' }
-    ];
+    // Bot Cards Selection
+    document.querySelectorAll('.bot-card').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.bot-card').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            difficulty = parseInt(btn.dataset.diff, 10) || 2;
+            applyDifficultyTheme(difficulty);
+        };
+    });
 
-    function updateDifficultyUI(val) {
-        difficulty = parseInt(val, 10);
-        const config = diffConfigs[difficulty - 1];
-        if (diffLabel) {
-            diffLabel.innerHTML = `⚙️ Bot Difficulty: <span class="diff-badge" style="background:${config.bg}; color:${config.color}; box-shadow:0 0 10px ${config.glow}; border: 1px solid ${config.color}">${config.name}</span>`;
-        }
-        applyDifficultyTheme(difficulty);
+    // Preferences Toggles
+    const toggleCoordsEl = document.getElementById('toggle-coords');
+    if (toggleCoordsEl) {
+        toggleCoordsEl.onchange = () => {
+            showCoordinates = toggleCoordsEl.checked;
+            drawBoard();
+        };
     }
 
-    if (diffSlider) {
-        diffSlider.oninput = () => updateDifficultyUI(diffSlider.value);
-        updateDifficultyUI(diffSlider.value || 2);
+    const toggleEvalEl = document.getElementById('toggle-eval');
+    if (toggleEvalEl) {
+        toggleEvalEl.onchange = () => {
+            showEvalBar = toggleEvalEl.checked;
+            updateEvalBar();
+        };
+    }
+
+    // Sub-Nav Mode Switcher (Puzzles vs Openings)
+    const subnavPuzzlesBtn = document.getElementById('subnav-puzzles-btn');
+    const subnavOpeningsBtn = document.getElementById('subnav-openings-btn');
+    const puzzlesView = document.getElementById('puzzles-view-container');
+    const openingsView = document.getElementById('openings-view-container');
+
+    if (subnavPuzzlesBtn && subnavOpeningsBtn) {
+        subnavPuzzlesBtn.onclick = () => {
+            subnavPuzzlesBtn.classList.add('active');
+            subnavOpeningsBtn.classList.remove('active');
+            if (puzzlesView) puzzlesView.classList.remove('hidden');
+            if (openingsView) openingsView.classList.add('hidden');
+            renderCurrentPuzzle();
+        };
+
+        subnavOpeningsBtn.onclick = () => {
+            subnavOpeningsBtn.classList.add('active');
+            subnavPuzzlesBtn.classList.remove('active');
+            if (puzzlesView) puzzlesView.classList.add('hidden');
+            if (openingsView) openingsView.classList.remove('hidden');
+            currentOpeningStep = 0;
+            renderOpeningsMaster();
+        };
+    }
+
+    // Openings Controls
+    const openingsDropdown = document.getElementById('openings-dropdown');
+    if (openingsDropdown) {
+        openingsDropdown.onchange = () => {
+            currentOpeningKey = openingsDropdown.value;
+            currentOpeningStep = 0;
+            renderOpeningsMaster();
+        };
+    }
+
+    const opNext = document.getElementById('opening-next-btn');
+    if (opNext) {
+        opNext.onclick = () => {
+            const opening = OPENINGS_DATABASE.find(o => o.id === currentOpeningKey) || OPENINGS_DATABASE[0];
+            if (currentOpeningStep < opening.moves.length) {
+                currentOpeningStep++;
+                renderOpeningsMaster();
+                playSound('move');
+            }
+        };
+    }
+
+    const opPrev = document.getElementById('opening-prev-btn');
+    if (opPrev) {
+        opPrev.onclick = () => {
+            if (currentOpeningStep > 0) {
+                currentOpeningStep--;
+                renderOpeningsMaster();
+                playSound('move');
+            }
+        };
+    }
+
+    const opReset = document.getElementById('opening-reset-btn');
+    if (opReset) {
+        opReset.onclick = () => {
+            currentOpeningStep = 0;
+            renderOpeningsMaster();
+            playSound('move');
+        };
     }
 
     // Room Generator
@@ -2345,11 +2682,14 @@ function startNewGame() {
         }
         playerSide = activeSide;
         
+        const botProfile = BOT_PERSONALITIES[difficulty] || BOT_PERSONALITIES[2];
+        const botName = botProfile.name;
+        
         if (activeSide === 'white') {
-            playerNames = { white: userName, black: 'ElectroBot 🤖' };
+            playerNames = { white: userName, black: botName };
             botSide = 'black';
         } else {
-            playerNames = { white: 'ElectroBot 🤖', black: userName };
+            playerNames = { white: botName, black: userName };
             botSide = 'white';
         }
     } else {
@@ -2376,6 +2716,12 @@ function startNewGame() {
     pendingPromotion = null;
     activeHint = null;
     powerUpUsedThisMatch = false;
+    moveHistoryNotation = [];
+
+    const historyChips = document.getElementById('history-chips');
+    if (historyChips) {
+        historyChips.innerHTML = '<span class="history-empty-placeholder">Match engaged! Make your first move.</span>';
+    }
 
     // Reset Clocks
     timeRemaining.white = clockSetting;

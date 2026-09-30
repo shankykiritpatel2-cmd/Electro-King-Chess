@@ -61,8 +61,14 @@
 
                     <!-- CHESS BOARD ZONE -->
                     <section class="board-zone">
+                        <!-- REAL-TIME EVALUATION BAR -->
+                        <div class="eval-bar-wrapper" id="eval-bar-wrapper" title="Real-Time Position Advantage">
+                            <div class="eval-bar-fill" id="eval-bar-fill" style="height: 50%;"></div>
+                            <span class="eval-bar-score" id="eval-bar-score">0.0</span>
+                        </div>
+
                         <div class="board-wrapper">
-                            <div class="board-border">
+                            <div class="board-border" id="board-border-frame">
                                 <div class="board" id="chessboard">
                                     <!-- 64 squares injected dynamically -->
                                 </div>
@@ -71,11 +77,19 @@
                         </div>
                     </section>
 
+                    <!-- LIVE MOVE HISTORY RIBBON -->
+                    <div class="move-history-ribbon" id="move-history-ribbon">
+                        <span class="history-label">⚡ Moves:</span>
+                        <div class="history-chips-container" id="history-chips">
+                            <span class="history-empty-placeholder">Game ready to engage...</span>
+                        </div>
+                    </div>
+
                     <!-- YOUR PLAYER BAR -->
                     <div class="player-bar bottom-player-bar">
                         <div class="player-info">
                             <span class="player-avatar-mini">👑</span>
-                            <span class="player-name-tag" id="player-name-tag">Crazy Voss</span>
+                            <span class="player-name-tag" id="player-name-tag">Player 1</span>
                         </div>
                         <div class="captured-list horizontal" id="captured-by-white"></div>
                         <div class="clock-badge" id="clock-white" title="White Clock">
@@ -91,7 +105,7 @@
                         <span class="action-txt">Undo</span>
                     </button>
                     
-                    <button id="hint-btn" class="clean-action-btn accent-action" title="Get Hint (100 Pts)">
+                    <button id="hint-btn" class="clean-action-btn accent-action" title="Get Tactical Hint (100 Pts)">
                         <span class="action-icon">💡</span>
                         <span class="action-txt">Hint</span>
                     </button>
@@ -113,20 +127,17 @@
                 </div>
             </section>
 
-            <!-- TAB 2: DAILY PUZZLES & TACTICS -->
+            <!-- TAB 2: DAILY PUZZLES & OPENINGS MASTER -->
             <section class="tab-screen" id="screen-puzzles">
                 <div class="puzzle-view-card">
-                    <div class="puzzle-header">
-                        <div class="puzzle-title-group">
-                            <h2 class="sub-screen-title">🧩 Daily Tactical Puzzles</h2>
-                            <p class="sub-screen-desc">Find the winning move to earn Career Points!</p>
-                        </div>
-                        <div class="puzzle-reward-badge" id="puzzle-reward-badge">
-                            <span>⚡ +50 PTS</span>
-                        </div>
+                    <!-- MODE SWITCHER SUB-HEADER -->
+                    <div class="sub-nav-pill-group">
+                        <button type="button" class="sub-nav-pill active" id="subnav-puzzles-btn">🧩 Daily Puzzles</button>
+                        <button type="button" class="sub-nav-pill" id="subnav-openings-btn">📖 Openings Master</button>
                     </div>
 
-                    <div class="puzzle-challenge-box">
+                    <!-- PUZZLES VIEW -->
+                    <div id="puzzles-view-container" class="puzzle-challenge-box">
                         <div class="puzzle-info-bar">
                             <span class="puzzle-level-tag" id="puzzle-level-tag">Puzzle #1: Mate in 1</span>
                             <span class="puzzle-instruction" id="puzzle-turn-text">⚪ White to move & checkmate</span>
@@ -144,6 +155,38 @@
                             <button id="puzzle-next-btn" class="primary-btn pulse-btn">Next Puzzle ➡️</button>
                         </div>
                         <div class="puzzle-status-feedback" id="puzzle-feedback"></div>
+                    </div>
+
+                    <!-- OPENINGS MASTER VIEW -->
+                    <div id="openings-view-container" class="openings-challenge-box hidden">
+                        <div class="openings-selector-row">
+                            <select id="openings-dropdown" class="cyber-select">
+                                <option value="italian">⚔️ Italian Game (Giuoco Piano)</option>
+                                <option value="sicilian">🛡️ Sicilian Defense (Open)</option>
+                                <option value="queens_gambit">👑 Queen's Gambit</option>
+                                <option value="ruy_lopez">⚡ Ruy Lopez (Spanish Opening)</option>
+                                <option value="french">🏰 French Defense</option>
+                                <option value="scandinavian">🌊 Scandinavian Defense</option>
+                            </select>
+                        </div>
+
+                        <div class="puzzle-board-container">
+                            <div class="board-border mini-border">
+                                <div class="board" id="openings-board"></div>
+                            </div>
+                        </div>
+
+                        <div class="opening-explanation-card">
+                            <h4 id="opening-title">Italian Game</h4>
+                            <p id="opening-desc">One of the oldest chess openings. Develops the Bishop to c4 to target the weak f7 square.</p>
+                            <span id="opening-move-notation" class="opening-moves-pill">1. e4 e5 2. Nf3 Nc6 3. Bc4</span>
+                        </div>
+
+                        <div class="puzzle-actions">
+                            <button id="opening-prev-btn" class="secondary-btn">⬅️ Prev</button>
+                            <button id="opening-reset-btn" class="secondary-btn">🔄 Start</button>
+                            <button id="opening-next-btn" class="primary-btn">Next Move ➡️</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -284,6 +327,22 @@
                                 <span class="theme-cost">150 Pts (Unlock)</span>
                             </div>
                         </div>
+
+                        <div class="theme-card" data-theme="royal" data-cost="250">
+                            <div class="theme-preview royal-preview"></div>
+                            <div class="theme-card-info">
+                                <h4>Royal Gold 👑</h4>
+                                <span class="theme-cost">250 Pts (Unlock)</span>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="obsidian" data-cost="350">
+                            <div class="theme-preview obsidian-preview"></div>
+                            <div class="theme-card-info">
+                                <h4>Dark Obsidian 🌌</h4>
+                                <span class="theme-cost">350 Pts (Unlock)</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -413,15 +472,45 @@
                     </div>
                 </div>
 
-                <!-- AI DIFFICULTY (Only for vs AI) -->
+                <!-- AI DIFFICULTY & BOT PERSONALITY -->
                 <div class="setup-section" id="difficulty-section">
-                    <label class="setup-label" id="diff-label">⚙️ Bot Difficulty: Easy</label>
-                    <input type="range" id="difficulty-slider" class="setup-slider" min="1" max="4" step="1" value="2">
-                    <div class="slider-ticks">
-                        <span>Beginner</span>
-                        <span>Easy</span>
-                        <span>Hard</span>
-                        <span>Difficult</span>
+                    <label class="setup-label" id="diff-label">⚙️ Bot Personality & Rating</label>
+                    <div class="bot-cards-grid">
+                        <button type="button" class="bot-card" data-diff="1">
+                            <span class="bot-card-icon">⚡</span>
+                            <span class="bot-card-name">Sparky</span>
+                            <span class="bot-card-rating">~600 Elo</span>
+                        </button>
+                        <button type="button" class="bot-card active" data-diff="2">
+                            <span class="bot-card-icon">🛡️</span>
+                            <span class="bot-card-name">CyberKnight</span>
+                            <span class="bot-card-rating">~1200 Elo</span>
+                        </button>
+                        <button type="button" class="bot-card" data-diff="3">
+                            <span class="bot-card-icon">👑</span>
+                            <span class="bot-card-name">VoltQueen</span>
+                            <span class="bot-card-rating">~1700 Elo</span>
+                        </button>
+                        <button type="button" class="bot-card" data-diff="4">
+                            <span class="bot-card-icon">🌌</span>
+                            <span class="bot-card-name">ElectroKing</span>
+                            <span class="bot-card-rating">~2200 Elo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BOARD DISPLAY TOGGLES -->
+                <div class="setup-section">
+                    <label class="setup-label">🎛️ Match Preferences</label>
+                    <div class="preferences-toggle-grid">
+                        <label class="custom-toggle-label">
+                            <input type="checkbox" id="toggle-coords" checked>
+                            <span class="toggle-text">Show Board Coordinates (a-h, 1-8)</span>
+                        </label>
+                        <label class="custom-toggle-label">
+                            <input type="checkbox" id="toggle-eval" checked>
+                            <span class="toggle-text">Show Live Eval Bar</span>
+                        </label>
                     </div>
                 </div>
             </div>
