@@ -1621,6 +1621,38 @@ function setupEventListeners() {
         });
     }
     
+    // 2-Player Mode Selector (vs AI or Pass & Play)
+    const modeAiBtn = document.getElementById('mode-ai-btn');
+    const modeLocalBtn = document.getElementById('mode-local-btn');
+    const aiInputs = document.getElementById('ai-name-inputs');
+    const localInputs = document.getElementById('local-name-inputs');
+    const sideSelectSection = document.getElementById('side-select-section');
+    const diffSection = document.getElementById('difficulty-section');
+
+    if (modeAiBtn && modeLocalBtn) {
+        modeAiBtn.addEventListener('click', () => {
+            gameMode = 'ai';
+            modeAiBtn.classList.add('active');
+            modeLocalBtn.classList.remove('active');
+            if (aiInputs) aiInputs.classList.remove('hidden');
+            if (localInputs) localInputs.classList.add('hidden');
+            if (sideSelectSection) sideSelectSection.classList.remove('hidden');
+            if (diffSection) diffSection.classList.remove('hidden');
+            showToast('Mode: vs. Castle AI 🤖');
+        });
+
+        modeLocalBtn.addEventListener('click', () => {
+            gameMode = 'local';
+            modeLocalBtn.classList.add('active');
+            modeAiBtn.classList.remove('active');
+            if (aiInputs) aiInputs.classList.add('hidden');
+            if (localInputs) localInputs.classList.remove('hidden');
+            if (sideSelectSection) sideSelectSection.classList.add('hidden');
+            if (diffSection) diffSection.classList.add('hidden');
+            showToast('Mode: Pass & Play 👥 (2 Human Players)');
+        });
+    }
+    
     // 2-Player Setup Match Form
     document.querySelectorAll('.clock-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1706,7 +1738,7 @@ function setupEventListeners() {
             fourModePassBtn.classList.add('active');
             fourModeAIBtn.classList.remove('active');
             fourModeOnlineBtn.classList.remove('active');
-            showToast('Mode: 👥 Pass & Play');
+            showToast('Mode: 👥 Pass & Play (All 4 Kingdoms Active)');
         });
     }
     if (fourModeOnlineBtn) {
@@ -1852,6 +1884,35 @@ function startNew2PlayerGame() {
     captured = { white: [], black: [] };
     activeHint = null;
     moveHistoryNotation = [];
+    
+    if (gameMode === 'local') {
+        const p1Val = document.getElementById('p1-name-input')?.value.trim();
+        const p2Val = document.getElementById('p2-name-input')?.value.trim();
+        playerNames.white = p1Val || lordProfile.name || 'White Lord';
+        playerNames.black = p2Val || 'Black Lord';
+        
+        const oppAvatar = document.getElementById('top-player-avatar');
+        const oppTag = document.getElementById('opponent-name-tag');
+        const myAvatar = document.getElementById('bottom-player-avatar');
+        const myTag = document.getElementById('player-name-tag');
+        if (oppAvatar) oppAvatar.textContent = '⚫';
+        if (oppTag) oppTag.textContent = playerNames.black;
+        if (myAvatar) myAvatar.textContent = '⚪';
+        if (myTag) myTag.textContent = playerNames.white;
+    } else {
+        const p1Val = document.getElementById('player-name-input')?.value.trim();
+        playerNames.white = p1Val || lordProfile.name || 'Lord Sovereign';
+        playerNames.black = BOT_PERSONALITIES[difficulty].name;
+        
+        const oppAvatar = document.getElementById('top-player-avatar');
+        const oppTag = document.getElementById('opponent-name-tag');
+        const myAvatar = document.getElementById('bottom-player-avatar');
+        const myTag = document.getElementById('player-name-tag');
+        if (oppAvatar) oppAvatar.textContent = '🤖';
+        if (oppTag) oppTag.textContent = playerNames.black;
+        if (myAvatar) myAvatar.textContent = '👑';
+        if (myTag) myTag.textContent = playerNames.white;
+    }
     
     init2PlayerBoard();
     updateHUD();
