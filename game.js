@@ -3,12 +3,13 @@
 // Royal Medieval Chess & Four Kingdoms Engine
 // =========================================================
 
-// --- ROYAL GOLD PARTICLE FX SYSTEM ---
+// --- ROYAL GOLD PARTICLE & LIGHTNING FX SYSTEM ---
 class CastleFX {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
         this.particles = [];
+        this.lightningBolts = [];
         this.animId = null;
         if (this.canvas) {
             this.resize();
@@ -23,11 +24,11 @@ class CastleFX {
         this.canvas.height = rect.height;
     }
 
-    spark(x, y, count = 20, color = '#d4af37') {
+    spark(x, y, count = 18, color = '#ffd700') {
         if (!this.ctx) return;
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 1 + Math.random() * 4;
+            const speed = 1.2 + Math.random() * 3.8;
             this.particles.push({
                 x,
                 y,
@@ -54,9 +55,57 @@ class CastleFX {
                 vy: Math.sin(angle) * speed,
                 life: 1,
                 decay: 0.03,
-                size: 3,
+                size: 3.2,
                 color
             });
+        }
+        if (!this.animId) this.animate();
+    }
+
+    lightningDefeat(x, y, color = '#ffd700', secondary = '#38bdf8') {
+        if (!this.ctx) return;
+        this.resize();
+        
+        // Blast particles around defeated King
+        for (let i = 0; i < 36; i++) {
+            const angle = (i / 36) * Math.PI * 2;
+            const speed = 3.5 + Math.random() * 4;
+            this.particles.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.2,
+                decay: 0.025,
+                size: 3.5 + Math.random() * 3,
+                color: i % 2 === 0 ? color : secondary
+            });
+        }
+        
+        // Multi-branch electrical lightning bolts
+        for (let b = 0; b < 6; b++) {
+            let startX = x + (Math.random() - 0.5) * 80;
+            let startY = Math.max(0, y - 160 + Math.random() * 40);
+            let curX = startX, curY = startY;
+            const steps = 10;
+            const dx = (x - startX) / steps;
+            const dy = (y - startY) / steps;
+            for (let s = 0; s < steps; s++) {
+                const nextX = curX + dx + (Math.random() - 0.5) * 24;
+                const nextY = curY + dy + (Math.random() - 0.5) * 14;
+                this.particles.push({
+                    x: nextX,
+                    y: nextY,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: (Math.random() - 0.5) * 1.5,
+                    life: 0.8 + Math.random() * 0.4,
+                    decay: 0.035,
+                    size: 3.5,
+                    color: '#00f5d4'
+                });
+                curX = nextX;
+                curY = nextY;
+            }
         }
         if (!this.animId) this.animate();
     }
@@ -135,7 +184,7 @@ class CastleAudio {
             osc.start();
             osc.stop(this.ctx.currentTime + duration);
         } catch (e) {
-            console.warn('Audio play error:', e);
+            // Audio policy restriction fallback
         }
     }
 
@@ -151,6 +200,11 @@ class CastleAudio {
     check() {
         this.playTone(587.33, 'triangle', 0.2, 0.25);
         setTimeout(() => this.playTone(880, 'sine', 0.3, 0.25), 100);
+    }
+
+    strike() {
+        this.playTone(150, 'sawtooth', 0.3, 0.25);
+        setTimeout(() => this.playTone(80, 'sine', 0.4, 0.3), 50);
     }
 
     victory() {
@@ -215,10 +269,10 @@ function getPieceSvg(color, type) {
 }
 
 // --- GLOBAL STATE ---
-let currentTab = 'arena';
+let currentTab = 'home'; // App starts on HOME!
 let arenaSubMode = '2p'; // '2p' or '4p'
 let lordProfile = {
-    name: 'Lord Sovereign',
+    name: localStorage.getItem('electro_player_name') || 'Player',
     avatar: '👑',
     avatarUrl: '',
     matches: 0,
@@ -238,24 +292,54 @@ let gameMode = 'ai'; // 'ai', 'local'
 let playerSide = 'white';
 let botSide = 'black';
 let difficulty = 2;
-let playerNames = { white: 'Lord Sovereign', black: 'Sir Galahad 🤖' };
+let playerNames = { white: lordProfile.name, black: 'Sir Galahad' };
 let isGameOver = false;
+let isGamePaused = false;
+let isMatchActive = false;
 let pendingPromotion = null;
 let activeHint = null;
 let clockInterval = null;
-let clockTimes = { white: 180, black: 180 };
-let matchClockLimit = 180;
+let clockTimes = { white: 0, black: 0 };
+let matchClockLimit = 0; // Default: 0 = NONE (Untimed!)
 let moveHistoryNotation = [];
+let aiMoveTimeout = null;
 
 const BOT_PERSONALITIES = {
-    1: { name: 'Squire Leon 🛡️', rating: '~600 Elo' },
-    2: { name: 'Sir Galahad ⚔️', rating: '~1200 Elo' },
-    3: { name: 'Lady Morgana 🏰', rating: '~1700 Elo' },
-    4: { name: 'King Arthur 👑', rating: '~2200 Elo' }
+    1: { name: 'Squire Leon', rating: '~600 Elo', icon: '🛡️' },
+    2: { name: 'Sir Galahad', rating: '~1200 Elo', icon: '⚔️' },
+    3: { name: 'Lady Morgana', rating: '~1700 Elo', icon: '🏰' },
+    4: { name: 'King Arthur', rating: '~2200 Elo', icon: '👑' }
 };
 
+// 4-Player Realm State
+const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
+const FOUR_KINGDOM_NAMES = {
+    red: 'Red Lord',
+    blue: 'Blue Baron',
+    gold: 'Gold Emperor',
+    green: 'Green Duke'
+};
+let fourBoard = [];
+let fourTurn = 'red';
+let fourSelected = null;
+let fourLastMove = null;
+let fourArmies = {
+    red: { alive: true, count: 16 },
+    blue: { alive: true, count: 16 },
+    gold: { alive: true, count: 16 },
+    green: { alive: true, count: 16 }
+};
+let fourMode = 'ai'; // 'ai', 'pass'
+let isHumanDefeated4P = false;
+let isFourMatchActive = false;
+
+// Puzzles & Openings State
+let currentPuzzleIdx = 0;
+let currentOpeningIdx = 0;
+let openingStep = 0;
+
 // =========================================================
-// 1. CLASSIC 2-PLAYER ENGINE
+// 1. BOARD INITIALIZATION & CORE 2-PLAYER ENGINE
 // =========================================================
 
 function init2PlayerBoard() {
@@ -270,72 +354,83 @@ function init2PlayerBoard() {
     }
 }
 
+function cloneBoard(b) {
+    return b.map(row => row.map(cell => (cell ? { ...cell } : null)));
+}
+
 function onBoard(r, c) {
     return r >= 0 && r < 8 && c >= 0 && c < 8;
 }
 
-function getRawMoves(r, c, testBoard = board) {
-    const piece = testBoard[r][c];
+function getPseudoLegalMoves(r, c, b = board) {
+    const piece = b[r][c];
     if (!piece) return [];
     const moves = [];
     const color = piece.color;
-    const enemyColor = color === 'white' ? 'black' : 'white';
+    const opp = color === 'white' ? 'black' : 'white';
     
     if (piece.type === 'p') {
         const dir = color === 'white' ? -1 : 1;
         const startRow = color === 'white' ? 6 : 1;
         
-        if (onBoard(r + dir, c) && !testBoard[r + dir][c]) {
-            moves.push({ r: r + dir, c: c });
-            if (r === startRow && onBoard(r + 2 * dir, c) && !testBoard[r + 2 * dir][c]) {
-                moves.push({ r: r + 2 * dir, c: c });
+        // Single forward move
+        if (onBoard(r + dir, c) && !b[r + dir][c]) {
+            moves.push({ r: r + dir, c });
+            // Double forward move
+            if (r === startRow && !b[r + 2 * dir][c]) {
+                moves.push({ r: r + 2 * dir, c });
             }
         }
+        
+        // Diagonal captures
         [-1, 1].forEach(dc => {
             const tr = r + dir, tc = c + dc;
-            if (onBoard(tr, tc) && testBoard[tr][tc] && testBoard[tr][tc].color === enemyColor) {
+            if (onBoard(tr, tc) && b[tr][tc] && b[tr][tc].color === opp) {
                 moves.push({ r: tr, c: tc });
             }
         });
     } else if (piece.type === 'n') {
-        const knightDeltas = [
+        const deltas = [
             [-2, -1], [-2, 1], [-1, -2], [-1, 2],
             [1, -2], [1, 2], [2, -1], [2, 1]
         ];
-        knightDeltas.forEach(([dr, dc]) => {
+        deltas.forEach(([dr, dc]) => {
             const tr = r + dr, tc = c + dc;
-            if (onBoard(tr, tc) && (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor)) {
+            if (onBoard(tr, tc) && (!b[tr][tc] || b[tr][tc].color === opp)) {
                 moves.push({ r: tr, c: tc });
             }
         });
     } else if (piece.type === 'b') {
-        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1]], testBoard, moves, enemyColor);
+        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1]], moves, opp, b);
     } else if (piece.type === 'r') {
-        slideMoves(r, c, [[-1, 0], [1, 0], [0, -1], [0, 1]], testBoard, moves, enemyColor);
+        slideMoves(r, c, [[-1, 0], [1, 0], [0, -1], [0, 1]], moves, opp, b);
     } else if (piece.type === 'q') {
-        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]], testBoard, moves, enemyColor);
+        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]], moves, opp, b);
     } else if (piece.type === 'k') {
-        const kingDeltas = [
+        const deltas = [
             [-1, -1], [-1, 0], [-1, 1],
             [0, -1],           [0, 1],
             [1, -1],  [1, 0],  [1, 1]
         ];
-        kingDeltas.forEach(([dr, dc]) => {
+        deltas.forEach(([dr, dc]) => {
             const tr = r + dr, tc = c + dc;
-            if (onBoard(tr, tc) && (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor)) {
+            if (onBoard(tr, tc) && (!b[tr][tc] || b[tr][tc].color === opp)) {
                 moves.push({ r: tr, c: tc });
             }
         });
+        
         // Castling
-        if (!piece.hasMoved && !isKingInCheck(color, testBoard)) {
-            if (testBoard[r][7] && !testBoard[r][7].hasMoved && !testBoard[r][5] && !testBoard[r][6]) {
-                if (!isSquareAttackedBy(r, 5, enemyColor, testBoard) && !isSquareAttackedBy(r, 6, enemyColor, testBoard)) {
-                    moves.push({ r, c: 6, isCastle: 'kingside' });
+        if (!piece.hasMoved && !isKingInCheck(color, b)) {
+            // Kingside
+            if (b[r][7] && b[r][7].type === 'r' && !b[r][7].hasMoved && !b[r][5] && !b[r][6]) {
+                if (!isSquareAttacked(r, 5, opp, b) && !isSquareAttacked(r, 6, opp, b)) {
+                    moves.push({ r, c: 6, isCastling: 'kingside' });
                 }
             }
-            if (testBoard[r][0] && !testBoard[r][0].hasMoved && !testBoard[r][1] && !testBoard[r][2] && !testBoard[r][3]) {
-                if (!isSquareAttackedBy(r, 3, enemyColor, testBoard) && !isSquareAttackedBy(r, 2, enemyColor, testBoard)) {
-                    moves.push({ r, c: 2, isCastle: 'queenside' });
+            // Queenside
+            if (b[r][0] && b[r][0].type === 'r' && !b[r][0].hasMoved && !b[r][1] && !b[r][2] && !b[r][3]) {
+                if (!isSquareAttacked(r, 3, opp, b) && !isSquareAttacked(r, 2, opp, b)) {
+                    moves.push({ r, c: 2, isCastling: 'queenside' });
                 }
             }
         }
@@ -344,14 +439,14 @@ function getRawMoves(r, c, testBoard = board) {
     return moves;
 }
 
-function slideMoves(r, c, directions, testBoard, moves, enemyColor) {
+function slideMoves(r, c, directions, moves, opp, b) {
     directions.forEach(([dr, dc]) => {
         let tr = r + dr, tc = c + dc;
         while (onBoard(tr, tc)) {
-            if (!testBoard[tr][tc]) {
+            if (!b[tr][tc]) {
                 moves.push({ r: tr, c: tc });
             } else {
-                if (testBoard[tr][tc].color === enemyColor) {
+                if (b[tr][tc].color === opp) {
                     moves.push({ r: tr, c: tc });
                 }
                 break;
@@ -362,21 +457,17 @@ function slideMoves(r, c, directions, testBoard, moves, enemyColor) {
     });
 }
 
-function isSquareAttackedBy(targetR, targetC, attackerColor, testBoard) {
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const piece = testBoard[r][c];
-            if (piece && piece.color === attackerColor) {
-                if (piece.type === 'p') {
-                    const dir = attackerColor === 'white' ? -1 : 1;
-                    if (r + dir === targetR && (c - 1 === targetC || c + 1 === targetC)) {
-                        return true;
-                    }
-                } else if (piece.type === 'k') {
-                    if (Math.abs(r - targetR) <= 1 && Math.abs(c - targetC) <= 1) return true;
+function isSquareAttacked(r, c, byColor, b) {
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const p = b[row][col];
+            if (p && p.color === byColor) {
+                if (p.type === 'p') {
+                    const dir = byColor === 'white' ? -1 : 1;
+                    if (row + dir === r && (col - 1 === c || col + 1 === c)) return true;
                 } else {
-                    const moves = getRawMoves(r, c, testBoard);
-                    if (moves.some(m => m.r === targetR && m.c === targetC)) return true;
+                    const pMoves = getPseudoLegalMoves(row, col, b);
+                    if (pMoves.some(m => m.r === r && m.c === c)) return true;
                 }
             }
         }
@@ -384,78 +475,79 @@ function isSquareAttackedBy(targetR, targetC, attackerColor, testBoard) {
     return false;
 }
 
-function findKing(color, testBoard = board) {
+function findKing(color, b = board) {
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const p = testBoard[r][c];
-            if (p && p.type === 'k' && p.color === color) return { r, c };
+            if (b[r][c] && b[r][c].type === 'k' && b[r][c].color === color) {
+                return { r, c };
+            }
         }
     }
     return null;
 }
 
-function isKingInCheck(color, testBoard = board) {
-    const k = findKing(color, testBoard);
-    if (!k) return false;
-    const enemy = color === 'white' ? 'black' : 'white';
-    return isSquareAttackedBy(k.r, k.c, enemy, testBoard);
+function isKingInCheck(color, b = board) {
+    const kPos = findKing(color, b);
+    if (!kPos) return false;
+    const opp = color === 'white' ? 'black' : 'white';
+    return isSquareAttacked(kPos.r, kPos.c, opp, b);
 }
 
-function cloneBoard(currentBoard) {
-    return currentBoard.map(row => row.map(cell => cell ? { ...cell } : null));
-}
-
-function getLegalMoves(r, c, testBoard = board) {
-    const piece = testBoard[r][c];
+function getLegalMoves(r, c, b = board) {
+    const piece = b[r][c];
     if (!piece) return [];
-    const raw = getRawMoves(r, c, testBoard);
-    const color = piece.color;
+    const pseudo = getPseudoLegalMoves(r, c, b);
     
-    return raw.filter(m => {
-        const nextBoard = cloneBoard(testBoard);
-        const movingPiece = nextBoard[r][c];
-        nextBoard[m.r][m.c] = { ...movingPiece, hasMoved: true };
-        nextBoard[r][c] = null;
+    return pseudo.filter(m => {
+        const nextB = cloneBoard(b);
+        nextB[m.r][m.c] = nextB[r][c];
+        nextB[r][c] = null;
         
-        if (m.isCastle === 'kingside') {
-            nextBoard[r][5] = { ...nextBoard[r][7], hasMoved: true };
-            nextBoard[r][7] = null;
-        } else if (m.isCastle === 'queenside') {
-            nextBoard[r][3] = { ...nextBoard[r][0], hasMoved: true };
-            nextBoard[r][0] = null;
+        if (m.isCastling === 'kingside') {
+            nextB[r][5] = nextB[r][7];
+            nextB[r][7] = null;
+        } else if (m.isCastling === 'queenside') {
+            nextB[r][3] = nextB[r][0];
+            nextB[r][0] = null;
         }
         
-        return !isKingInCheck(color, nextBoard);
+        return !isKingInCheck(piece.color, nextB);
     });
 }
 
-function getAllLegalMoves(color, testBoard = board) {
+function getAllLegalMoves(color, b = board) {
     const all = [];
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            if (testBoard[r][c] && testBoard[r][c].color === color) {
-                const legals = getLegalMoves(r, c, testBoard);
-                legals.forEach(m => {
-                    all.push({ from: { r, c }, to: m });
-                });
+            if (b[r][c] && b[r][c].color === color) {
+                const moves = getLegalMoves(r, c, b);
+                moves.forEach(m => all.push({ from: { r, c }, to: m }));
             }
         }
     }
     return all;
 }
 
+// =========================================================
+// 2. 2-PLAYER BOARD RENDERING & INTERACTION
+// =========================================================
+
 function draw2PlayerBoard() {
-    const el = document.getElementById('chessboard');
-    if (!el) return;
-    el.innerHTML = '';
+    const boardEl = document.getElementById('chessboard');
+    if (!boardEl) return;
+    boardEl.innerHTML = '';
     
-    const kingInCheckLoc = isKingInCheck(turn, board) ? findKing(turn, board) : null;
-    const selectedMoves = selectedSquare ? getLegalMoves(selectedSquare.r, selectedSquare.c) : [];
+    const isFlipped = playerSide === 'black' && gameMode === 'ai';
+    const kingInCheckPos = isKingInCheck(turn, board) ? findKing(turn, board) : null;
+    const legalMovesForSelected = selectedSquare ? getLegalMoves(selectedSquare.r, selectedSquare.c) : [];
     
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const isLight = (r + c) % 2 === 0;
+    for (let rIdx = 0; rIdx < 8; rIdx++) {
+        for (let cIdx = 0; cIdx < 8; cIdx++) {
+            const r = isFlipped ? 7 - rIdx : rIdx;
+            const c = isFlipped ? 7 - cIdx : cIdx;
+            
             const sq = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
             sq.className = `square ${isLight ? 'light' : 'dark'}`;
             sq.dataset.r = r;
             sq.dataset.c = c;
@@ -466,18 +558,14 @@ function draw2PlayerBoard() {
             if (lastMove && ((lastMove.from.r === r && lastMove.from.c === c) || (lastMove.to.r === r && lastMove.to.c === c))) {
                 sq.classList.add('last-move');
             }
-            if (kingInCheckLoc && kingInCheckLoc.r === r && kingInCheckLoc.c === c) {
-                sq.classList.add('check-square');
+            if (kingInCheckPos && kingInCheckPos.r === r && kingInCheckPos.c === c) {
+                sq.classList.add('check-danger');
             }
-            if (activeHint && activeHint.from.r === r && activeHint.from.c === c) {
-                sq.classList.add('hint-from');
-            }
-            if (activeHint && activeHint.to.r === r && activeHint.to.c === c) {
-                sq.classList.add('hint-to');
+            if (activeHint && activeHint.r === r && activeHint.c === c) {
+                sq.classList.add('hint-square');
             }
             
-            // Move indicator dots
-            const destMove = selectedMoves.find(m => m.r === r && m.c === c);
+            const destMove = legalMovesForSelected.find(m => m.r === r && m.c === c);
             if (destMove) {
                 if (board[r][c]) {
                     const ring = document.createElement('div');
@@ -490,17 +578,16 @@ function draw2PlayerBoard() {
                 }
             }
             
-            // Piece
             const piece = board[r][c];
             if (piece) {
-                const pieceWrapper = document.createElement('div');
-                pieceWrapper.className = 'piece-svg animate-land';
-                pieceWrapper.innerHTML = getPieceSvg(piece.color, piece.type);
-                sq.appendChild(pieceWrapper);
+                const pEl = document.createElement('div');
+                pEl.className = 'piece-svg animate-land';
+                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+                sq.appendChild(pEl);
             }
             
             sq.addEventListener('click', () => handle2PlayerSquareClick(r, c));
-            el.appendChild(sq);
+            boardEl.appendChild(sq);
         }
     }
     
@@ -508,19 +595,33 @@ function draw2PlayerBoard() {
 }
 
 function handle2PlayerSquareClick(r, c) {
-    if (isGameOver) return;
+    if (isGameOver || isGamePaused) return;
     if (gameMode === 'ai' && turn === botSide) return;
     
     const clickedPiece = board[r][c];
     
     if (selectedSquare) {
-        const legalMoves = getLegalMoves(selectedSquare.r, selectedSquare.c);
-        const targetMove = legalMoves.find(m => m.r === r && m.c === c);
-        
-        if (targetMove) {
-            execute2PlayerMove(selectedSquare, targetMove);
+        if (selectedSquare.r === r && selectedSquare.c === c) {
             selectedSquare = null;
-            activeHint = null;
+            draw2PlayerBoard();
+            return;
+        }
+        
+        const legals = getLegalMoves(selectedSquare.r, selectedSquare.c);
+        const chosen = legals.find(m => m.r === r && m.c === c);
+        
+        if (chosen) {
+            const movingPiece = board[selectedSquare.r][selectedSquare.c];
+            const isPawnPromotion = movingPiece.type === 'p' && (r === 0 || r === 7);
+            
+            if (isPawnPromotion) {
+                pendingPromotion = { from: selectedSquare, to: chosen };
+                showPromotionModal(movingPiece.color);
+                return;
+            }
+            
+            execute2PlayerMove(selectedSquare, chosen);
+            selectedSquare = null;
             return;
         }
         
@@ -544,15 +645,17 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     const movingPiece = board[from.r][from.c];
     if (!movingPiece) return;
     
-    if (movingPiece.type === 'p' && (to.r === 0 || to.r === 7) && !promoPiece) {
-        pendingPromotion = { from, to };
-        showPromotionModal(movingPiece.color);
-        return;
-    }
-    
     const capturedPiece = board[to.r][to.c];
     
-    // Sparkle FX on piece landing
+    history.push({
+        board: cloneBoard(board),
+        turn,
+        lastMove,
+        captured: { white: [...captured.white], black: [...captured.black] },
+        clockTimes: { ...clockTimes }
+    });
+    
+    // Sparkle FX on landing square
     const sqEl = document.querySelector(`.square[data-r="${to.r}"][data-c="${to.c}"]`);
     if (sqEl && fx2p) {
         const rect = sqEl.getBoundingClientRect();
@@ -562,7 +665,7 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         if (capturedPiece) {
             fx2p.shockwave(px, py, '#ef4444');
         } else {
-            fx2p.spark(px, py, 14, '#d4af37');
+            fx2p.spark(px, py, 14, '#ffd700');
         }
     }
     
@@ -573,17 +676,11 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         audio.move();
     }
     
-    history.push({
-        board: cloneBoard(board),
-        turn,
-        lastMove,
-        captured: { white: [...captured.white], black: [...captured.black] }
-    });
-    
-    if (to.isCastle === 'kingside') {
+    // Handle Castling Rook move
+    if (to.isCastling === 'kingside') {
         board[from.r][5] = { ...board[from.r][7], hasMoved: true };
         board[from.r][7] = null;
-    } else if (to.isCastle === 'queenside') {
+    } else if (to.isCastling === 'queenside') {
         board[from.r][3] = { ...board[from.r][0], hasMoved: true };
         board[from.r][0] = null;
     }
@@ -593,7 +690,6 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     board[from.r][from.c] = null;
     
     lastMove = { from, to, piece: finalPiece };
-    
     addMoveHistoryNotation(from, to, finalPiece, capturedPiece !== null);
     
     turn = turn === 'white' ? 'black' : 'white';
@@ -611,7 +707,15 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         if (isKingInCheck(turn, board)) {
             const winner = turn === 'white' ? 'black' : 'white';
             const winnerName = playerNames[winner];
-            showGameOverModal(`Checkmate! ${winnerName} reigns victorious!`);
+            
+            // Defeat Lightning on King's square
+            const kingSq = findKing(turn, board);
+            triggerDefeatLightning2P(kingSq);
+            
+            setTimeout(() => {
+                showGameOverModal(`Checkmate! ${winnerName} reigns victorious!`, winnerName);
+            }, 650);
+            
             if (winner === playerSide) {
                 lordProfile.wins++;
                 audio.victory();
@@ -619,7 +723,7 @@ function execute2PlayerMove(from, to, promoPiece = null) {
                 audio.defeat();
             }
         } else {
-            showGameOverModal('Stalemate! The royal duel ends in a draw.');
+            showGameOverModal('Stalemate! The royal duel ends in a draw.', 'Draw');
         }
         lordProfile.matches++;
         saveProfile();
@@ -627,23 +731,39 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     }
     
     if (gameMode === 'ai' && turn === botSide && !isGameOver) {
-        setTimeout(make2PlayerAIMove, 450);
+        aiMoveTimeout = setTimeout(make2PlayerAIMove, 450);
+    }
+}
+
+function triggerDefeatLightning2P(kingSq) {
+    if (!kingSq || !fx2p) return;
+    const sqEl = document.querySelector(`.square[data-r="${kingSq.r}"][data-c="${kingSq.c}"]`);
+    if (sqEl) {
+        const rect = sqEl.getBoundingClientRect();
+        const canvasRect = fx2p.canvas.getBoundingClientRect();
+        const px = rect.left - canvasRect.left + rect.width / 2;
+        const py = rect.top - canvasRect.top + rect.height / 2;
+        fx2p.lightningDefeat(px, py, '#ef4444', '#ffd700');
+        audio.strike();
     }
 }
 
 function make2PlayerAIMove() {
-    if (isGameOver || turn !== botSide) return;
+    if (isGameOver || isGamePaused || turn !== botSide) return;
     const allMoves = getAllLegalMoves(botSide, board);
     if (allMoves.length === 0) return;
     
     let chosenMove = null;
     
     if (difficulty === 1) {
+        // Squire Leon (~600 Elo): Random with occasional capture
         chosenMove = allMoves[Math.floor(Math.random() * allMoves.length)];
     } else if (difficulty === 2) {
+        // Sir Galahad (~1200 Elo): Prefer captures, checks, and center control
         const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c] !== null);
         chosenMove = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
-    } else {
+    } else if (difficulty === 3) {
+        // Lady Morgana (~1700 Elo): Material evaluation with center weighting
         let bestVal = -999999;
         const vals = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
         
@@ -662,7 +782,31 @@ function make2PlayerAIMove() {
                 chosenMove = m;
             }
         });
+        if (!chosenMove) chosenMove = allMoves[0];
+    } else {
+        // King Arthur (~2200 Elo): Deep tactical calculation with king safety
+        let bestVal = -999999;
+        const vals = { p: 100, n: 330, b: 340, r: 520, q: 950, k: 20000 };
         
+        allMoves.forEach(m => {
+            const nextB = cloneBoard(board);
+            const target = nextB[m.to.r][m.to.c];
+            nextB[m.to.r][m.to.c] = nextB[m.from.r][m.from.c];
+            nextB[m.from.r][m.from.c] = null;
+            
+            let moveScore = target ? vals[target.type] : 0;
+            if (isKingInCheck(playerSide, nextB)) moveScore += 80;
+            if (m.to.r >= 3 && m.to.r <= 4 && m.to.c >= 3 && m.to.c <= 4) moveScore += 25;
+            // Penalize leaving pieces under immediate attack
+            if (isSquareAttacked(m.to.r, m.to.c, playerSide, nextB)) {
+                moveScore -= (vals[nextB[m.to.r][m.to.c].type] * 0.8);
+            }
+            
+            if (moveScore > bestVal) {
+                bestVal = moveScore;
+                chosenMove = m;
+            }
+        });
         if (!chosenMove) chosenMove = allMoves[0];
     }
     
@@ -733,24 +877,41 @@ function updateHUD() {
     if (clkB) clkB.classList.toggle('active', turn === 'black' && matchClockLimit > 0);
 }
 
+// =========================================================
+// 3. CLOCK TIMERS WITH STRICT BACKGROUND PAUSE (NO TIME LOSS)
+// =========================================================
+
 function startClock() {
     stopClock();
     if (matchClockLimit <= 0) {
-        document.getElementById('time-white').textContent = '♾️';
-        document.getElementById('time-black').textContent = '♾️';
+        const tw = document.getElementById('time-white');
+        const tb = document.getElementById('time-black');
+        if (tw) tw.textContent = '∞';
+        if (tb) tb.textContent = '∞';
         return;
     }
+    
     clockTimes = { white: matchClockLimit, black: matchClockLimit };
     updateClockDisplay();
+    
+    resumeClockTicker();
+}
+
+function resumeClockTicker() {
+    stopClock();
+    if (matchClockLimit <= 0 || isGameOver || isGamePaused) return;
+    
     clockInterval = setInterval(() => {
-        if (isGameOver) return;
+        if (isGameOver || isGamePaused) return;
         clockTimes[turn]--;
         updateClockDisplay();
+        
         if (clockTimes[turn] <= 0) {
             stopClock();
             isGameOver = true;
             const winner = turn === 'white' ? 'black' : 'white';
-            showGameOverModal(`Time expired! ${playerNames[winner]} wins on time!`);
+            const winnerName = playerNames[winner];
+            showGameOverModal(`Time expired! ${winnerName} wins on time!`, winnerName);
             audio.defeat();
         }
     }, 1000);
@@ -762,9 +923,17 @@ function stopClock() {
 }
 
 function updateClockDisplay() {
+    if (matchClockLimit <= 0) {
+        const tw = document.getElementById('time-white');
+        const tb = document.getElementById('time-black');
+        if (tw) tw.textContent = '∞';
+        if (tb) tb.textContent = '∞';
+        return;
+    }
+    
     const format = t => {
-        const m = Math.floor(t / 60);
-        const s = t % 60;
+        const m = Math.floor(Math.max(0, t) / 60);
+        const s = Math.max(0, t) % 60;
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
     const tw = document.getElementById('time-white');
@@ -773,13 +942,79 @@ function updateClockDisplay() {
     if (tb) tb.textContent = format(clockTimes.black);
 }
 
+// Pause and Resume APIs for Android lifecycle and UI
+function pauseGame() {
+    isGamePaused = true;
+    stopClock();
+    if (aiMoveTimeout) {
+        clearTimeout(aiMoveTimeout);
+        aiMoveTimeout = null;
+    }
+    const banner = document.getElementById('turn-message');
+    if (banner && isMatchActive) {
+        banner.textContent = 'Match Paused ⏸️';
+    }
+}
+
+function resumeGame() {
+    isGamePaused = false;
+    updateHUD();
+    if (matchClockLimit > 0 && isMatchActive && !isGameOver) {
+        resumeClockTicker();
+    }
+    if (gameMode === 'ai' && turn === botSide && isMatchActive && !isGameOver) {
+        aiMoveTimeout = setTimeout(make2PlayerAIMove, 400);
+    }
+}
+
+function handleAndroidBack() {
+    // If an overlay modal is active, close it
+    const openModal = document.querySelector('.modal-overlay:not(.hidden)');
+    if (openModal) {
+        openModal.classList.add('hidden');
+        if (openModal.id === 'pause-modal') resumeGame();
+        return true;
+    }
+    
+    // If in active Arena match, show Pause Modal
+    if (currentTab === 'arena' && isMatchActive && !isGameOver) {
+        pauseGame();
+        const pModal = document.getElementById('pause-modal');
+        if (pModal) pModal.classList.remove('hidden');
+        return true;
+    }
+    
+    // If on Tactics or Profile, return to Home
+    if (currentTab !== 'home') {
+        switchTab('home');
+        return true;
+    }
+    
+    return false; // Let Android show exit confirmation
+}
+window.handleAndroidBack = handleAndroidBack;
+window.pauseGame = pauseGame;
+window.resumeGame = resumeGame;
+
+// Background tab / screen visibility handler
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        pauseGame();
+    }
+});
+window.addEventListener('blur', () => {
+    pauseGame();
+});
+
+// Promotion Dialog
 function showPromotionModal(color) {
     const modal = document.getElementById('promotion-modal');
     const container = document.getElementById('promo-options');
     if (!modal || !container) return;
     container.innerHTML = '';
     
-    ['q', 'r', 'b', 'n'].forEach(type => {
+    const pieces = ['q', 'r', 'b', 'n'];
+    pieces.forEach(type => {
         const btn = document.createElement('button');
         btn.className = 'promo-btn';
         btn.innerHTML = getPieceSvg(color, type);
@@ -792,41 +1027,22 @@ function showPromotionModal(color) {
         });
         container.appendChild(btn);
     });
-    
     modal.classList.remove('hidden');
 }
 
-function showGameOverModal(msg) {
+function showGameOverModal(msg, victor = 'Player') {
     const modal = document.getElementById('gameover-modal');
-    const desc = document.getElementById('gameover-msg');
-    if (!modal || !desc) return;
-    desc.textContent = msg;
+    const msgEl = document.getElementById('gameover-msg');
+    const scoreEl = document.getElementById('gameover-score');
+    if (!modal || !msgEl) return;
+    msgEl.textContent = msg;
+    if (scoreEl) scoreEl.textContent = victor;
     modal.classList.remove('hidden');
 }
 
 // =========================================================
-// 2. FOUR KINGDOMS / 4-PLAYER INTEGRATED ENGINE
+// 4. 14x14 FOUR KINGDOMS CHESS ENGINE & BOARD
 // =========================================================
-
-const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
-const FOUR_KINGDOM_NAMES = {
-    red: 'Red Lord (South)',
-    blue: 'Blue Baron (West)',
-    gold: 'Gold Emperor (North)',
-    green: 'Green Duke (East)'
-};
-
-let fourBoard = [];
-let fourTurn = 'red';
-let fourSelected = null;
-let fourLastMove = null;
-let fourArmies = {
-    red: { alive: true, count: 16 },
-    blue: { alive: true, count: 16 },
-    gold: { alive: true, count: 16 },
-    green: { alive: true, count: 16 }
-};
-let fourMode = 'ai';
 
 function isVoidSquare(r, c) {
     if (r < 3 && c < 3) return true;
@@ -845,6 +1061,9 @@ function initFourPlayerBoard() {
     fourTurn = 'red';
     fourSelected = null;
     fourLastMove = null;
+    isHumanDefeated4P = false;
+    isFourMatchActive = true;
+    
     fourArmies = {
         red: { alive: true, count: 16 },
         blue: { alive: true, count: 16 },
@@ -855,25 +1074,25 @@ function initFourPlayerBoard() {
     const backPieces = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
     const backPiecesMirror = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'];
     
-    // Red (South)
+    // Red (South) - Rows 13 & 12, Columns 3..10
     for (let c = 3; c <= 10; c++) {
         fourBoard[12][c] = { type: 'p', color: 'red', dir: 'up', hasMoved: false };
         fourBoard[13][c] = { type: backPieces[c - 3], color: 'red', hasMoved: false };
     }
     
-    // Gold (North)
+    // Gold (North) - Rows 0 & 1, Columns 3..10
     for (let c = 3; c <= 10; c++) {
         fourBoard[1][c] = { type: 'p', color: 'gold', dir: 'down', hasMoved: false };
         fourBoard[0][c] = { type: backPieces[c - 3], color: 'gold', hasMoved: false };
     }
     
-    // Blue (West)
+    // Blue (West) - Columns 0 & 1, Rows 3..10
     for (let r = 3; r <= 10; r++) {
         fourBoard[r][1] = { type: 'p', color: 'blue', dir: 'right', hasMoved: false };
         fourBoard[r][0] = { type: backPiecesMirror[r - 3], color: 'blue', hasMoved: false };
     }
     
-    // Green (East)
+    // Green (East) - Columns 13 & 12, Rows 3..10
     for (let r = 3; r <= 10; r++) {
         fourBoard[r][12] = { type: 'p', color: 'green', dir: 'left', hasMoved: false };
         fourBoard[r][13] = { type: backPiecesMirror[r - 3], color: 'green', hasMoved: false };
@@ -968,7 +1187,7 @@ function drawFourBoard() {
     if (!el) return;
     el.innerHTML = '';
     
-    const selectedMoves = fourSelected ? getFourMoves(fourSelected.r, fourSelected.c) : [];
+    const selectedMoves = (fourSelected && (!isHumanDefeated4P || fourMode === 'pass')) ? getFourMoves(fourSelected.r, fourSelected.c) : [];
     
     for (let r = 0; r < 14; r++) {
         for (let c = 0; c < 14; c++) {
@@ -1020,17 +1239,26 @@ function drawFourBoard() {
 }
 
 function handleFourSquareClick(r, c) {
-    if (isVoidSquare(r, c)) return;
-    if (fourMode === 'ai' && fourTurn !== 'red') return;
+    if (isGameOver || isGamePaused) return;
+    if (fourMode === 'ai') {
+        if (isHumanDefeated4P) return; // Human eliminated, prevent all moves!
+        if (fourTurn !== 'red') return; // Not human turn
+    }
     
     const clickedPiece = fourBoard[r][c];
     
     if (fourSelected) {
-        const moves = getFourMoves(fourSelected.r, fourSelected.c);
-        const targetMove = moves.find(m => m.r === r && m.c === c);
+        if (fourSelected.r === r && fourSelected.c === c) {
+            fourSelected = null;
+            drawFourBoard();
+            return;
+        }
         
-        if (targetMove) {
-            executeFourMove(fourSelected, targetMove);
+        const legals = getFourMoves(fourSelected.r, fourSelected.c);
+        const chosen = legals.find(m => m.r === r && m.c === c);
+        
+        if (chosen) {
+            executeFourMove(fourSelected, chosen);
             fourSelected = null;
             return;
         }
@@ -1100,7 +1328,7 @@ function executeFourMove(from, to) {
     const aliveKingdoms = FOUR_KINGDOMS.filter(k => fourArmies[k].alive);
     if (aliveKingdoms.length === 1) {
         const victor = aliveKingdoms[0];
-        showGameOverModal(`🏆 ${FOUR_KINGDOM_NAMES[victor]} has conquered the Four Kingdoms Realm!`);
+        showGameOverModal(`🏆 ${FOUR_KINGDOM_NAMES[victor]} has conquered the Realm!`, FOUR_KINGDOM_NAMES[victor]);
         if (victor === 'red') {
             lordProfile.fourWins++;
             saveProfile();
@@ -1109,7 +1337,7 @@ function executeFourMove(from, to) {
         return;
     }
     
-    if (fourMode === 'ai' && fourTurn !== 'red') {
+    if (fourMode === 'ai' && fourTurn !== 'red' && !isGameOver) {
         setTimeout(makeFourAIMove, 450);
     }
 }
@@ -1128,7 +1356,32 @@ function advanceFourTurn() {
 
 function eliminateKingdom(color) {
     fourArmies[color].alive = false;
-    showToast(`${FOUR_KINGDOM_NAMES[color]} King was captured! Kingdom Eliminated!`, 'error');
+    showToast(`${FOUR_KINGDOM_NAMES[color]} King was captured!`, 'error');
+    
+    // Find King coordinates for lightning defeat effect
+    let kingSq = null;
+    for (let r = 0; r < 14; r++) {
+        for (let c = 0; c < 14; c++) {
+            if (fourBoard[r][c] && fourBoard[r][c].color === color && fourBoard[r][c].type === 'k') {
+                kingSq = { r, c };
+                break;
+            }
+        }
+    }
+    
+    if (kingSq && fx4p) {
+        const sqEl = document.querySelector(`.four-square[data-r="${kingSq.r}"][data-c="${kingSq.c}"]`);
+        if (sqEl) {
+            const rect = sqEl.getBoundingClientRect();
+            const canvasRect = fx4p.canvas.getBoundingClientRect();
+            const px = rect.left - canvasRect.left + rect.width / 2;
+            const py = rect.top - canvasRect.top + rect.height / 2;
+            fx4p.lightningDefeat(px, py, '#ef4444', '#ffd700');
+            audio.strike();
+        }
+    }
+    
+    // Clear defeated army pieces
     for (let r = 0; r < 14; r++) {
         for (let c = 0; c < 14; c++) {
             if (fourBoard[r][c] && fourBoard[r][c].color === color) {
@@ -1136,10 +1389,25 @@ function eliminateKingdom(color) {
             }
         }
     }
+    
+    // IF HUMAN (RED) IS ELIMINATED: STOP ACTIVE GAMEPLAY IMMEDIATELY!
+    if (color === 'red' && fourMode === 'ai') {
+        isHumanDefeated4P = true;
+        fourSelected = null;
+        setTimeout(() => {
+            showFourDefeatModal();
+        }, 700);
+    }
+}
+
+function showFourDefeatModal() {
+    const modal = document.getElementById('four-defeat-modal');
+    if (modal) modal.classList.remove('hidden');
+    audio.defeat();
 }
 
 function makeFourAIMove() {
-    if (fourTurn === 'red' || !fourArmies[fourTurn].alive) return;
+    if (fourTurn === 'red' || !fourArmies[fourTurn].alive || isGamePaused || isGameOver) return;
     
     const allMoves = [];
     for (let r = 0; r < 14; r++) {
@@ -1178,108 +1446,83 @@ function makeFourAIMove() {
 }
 
 function updateFourHUD() {
-    const badge = document.getElementById('four-turn-badge');
-    const text = document.getElementById('four-turn-text');
-    if (text) text.textContent = `${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn`;
-    if (badge) {
-        const dot = badge.querySelector('.kingdom-dot');
-        if (dot) dot.className = `kingdom-dot ${fourTurn}`;
-    }
+    const turnMsg = document.getElementById('turn-message');
+    const turnDot = document.getElementById('turn-dot');
+    const kColors = { red: '#ef4444', blue: '#38bdf8', gold: '#facc15', green: '#22c55e' };
+    
+    if (turnMsg) turnMsg.textContent = `${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn`;
+    if (turnDot) turnDot.style.backgroundColor = kColors[fourTurn] || 'var(--primary)';
     
     FOUR_KINGDOMS.forEach(k => {
         const card = document.getElementById(`hud-k-${k}`);
-        const statusEl = document.getElementById(`k-status-${k}`);
+        const status = document.getElementById(`k-status-${k}`);
         if (card) {
             card.classList.toggle('active-turn', fourTurn === k && fourArmies[k].alive);
             card.classList.toggle('eliminated', !fourArmies[k].alive);
         }
-        if (statusEl) {
-            statusEl.textContent = fourArmies[k].alive ? `${fourArmies[k].count} Army` : 'Fallen';
+        if (status) {
+            status.textContent = fourArmies[k].alive ? `${fourArmies[k].count} Army` : 'Defeated';
         }
     });
 }
 
 // =========================================================
-// 3. CASTLE TACTICS & OPENINGS MASTER
+// 5. PUZZLES & OPENINGS MASTER
 // =========================================================
 
 const PUZZLES = [
     {
-        title: 'Puzzle #1: Scholar\'s Mate',
-        instruction: '⚪ White Queen to move & checkmate on f7',
-        board: [
-            ['r', null, 'b', 'q', 'k', 'b', 'n', 'r'],
-            ['p', 'p', 'p', 'p', null, 'p', 'p', 'p'],
-            [null, null, 'n', null, null, null, null, null],
-            [null, null, null, null, 'p', null, null, null],
-            [null, null, 'B', null, 'P', null, null, null],
-            [null, null, null, null, null, null, null, null],
-            ['P', 'P', 'P', 'P', null, 'P', 'P', 'P'],
-            ['R', 'N', 'B', null, 'K', null, 'N', 'R']
-        ],
-        extraWhiteQueen: { r: 4, c: 7 },
-        solution: { from: { r: 4, c: 7 }, to: { r: 1, c: 5 } }
+        title: "Puzzle #1: Mate in 1",
+        turn: "⚪ White to move & checkmate",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[0][7] = { type: 'k', color: 'black' };
+            b[1][7] = { type: 'p', color: 'black' };
+            b[1][6] = { type: 'p', color: 'black' };
+            b[7][0] = { type: 'r', color: 'white' };
+            b[7][4] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 7, c: 0 }, to: { r: 0, c: 0 } },
+        hint: "Look for Back-Rank checkmate along row 8!"
     },
     {
-        title: 'Puzzle #2: Back-Rank Mate',
-        instruction: '⚪ White Rook to move & checkmate on d8',
-        board: [
-            [null, null, null, null, null, 'r', 'k', null],
-            ['p', 'p', 'p', null, null, 'p', 'p', 'p'],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            ['P', 'P', 'P', null, null, 'P', 'P', 'P'],
-            [null, null, null, 'R', null, null, 'K', null]
-        ],
-        solution: { from: { r: 7, c: 3 }, to: { r: 0, c: 3 } }
+        title: "Puzzle #2: Royal Fork",
+        turn: "⚪ White Knight forks King & Queen",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[0][4] = { type: 'k', color: 'black' };
+            b[0][2] = { type: 'q', color: 'black' };
+            b[4][3] = { type: 'n', color: 'white' };
+            b[7][4] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 4, c: 3 }, to: { r: 2, c: 2 } },
+        hint: "Jump your Knight to c6 to fork both King and Queen!"
     }
 ];
 
-let currentPuzzleIdx = 0;
-let puzzleBoardState = [];
-let puzzleSelected = null;
-
 function renderCurrentPuzzle() {
-    const p = PUZZLES[currentPuzzleIdx];
-    document.getElementById('puzzle-level-tag').textContent = p.title;
-    document.getElementById('puzzle-turn-text').textContent = p.instruction;
-    document.getElementById('puzzle-feedback').textContent = '';
+    const pz = PUZZLES[currentPuzzleIdx];
+    const lvlTag = document.getElementById('puzzle-level-tag');
+    const turnText = document.getElementById('puzzle-turn-text');
+    const boardEl = document.getElementById('puzzle-board');
+    if (!lvlTag || !turnText || !boardEl) return;
     
-    puzzleBoardState = Array(8).fill(null).map(() => Array(8).fill(null));
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const sym = p.board[r][c];
-            if (sym) {
-                const isW = sym === sym.toUpperCase();
-                puzzleBoardState[r][c] = { type: sym.toLowerCase(), color: isW ? 'white' : 'black' };
-            }
-        }
-    }
-    if (p.extraWhiteQueen) {
-        puzzleBoardState[p.extraWhiteQueen.r][p.extraWhiteQueen.c] = { type: 'q', color: 'white' };
-    }
+    lvlTag.textContent = pz.title;
+    turnText.textContent = pz.turn;
+    boardEl.innerHTML = '';
     
-    drawPuzzleBoard();
-}
-
-function drawPuzzleBoard() {
-    const el = document.getElementById('puzzle-board');
-    if (!el) return;
-    el.innerHTML = '';
+    const pzBoard = pz.setup();
+    let pzSelected = null;
     
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const isLight = (r + c) % 2 === 0;
             const sq = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
             sq.className = `square ${isLight ? 'light' : 'dark'}`;
             
-            if (puzzleSelected && puzzleSelected.r === r && puzzleSelected.c === c) {
-                sq.classList.add('selected');
-            }
-            
-            const piece = puzzleBoardState[r][c];
+            const piece = pzBoard[r][c];
             if (piece) {
                 const pEl = document.createElement('div');
                 pEl.className = 'piece-svg';
@@ -1287,83 +1530,35 @@ function drawPuzzleBoard() {
                 sq.appendChild(pEl);
             }
             
-            sq.addEventListener('click', () => handlePuzzleClick(r, c));
-            el.appendChild(sq);
+            sq.addEventListener('click', () => {
+                if (pzSelected) {
+                    if (pzSelected.r === pz.solution.from.r && pzSelected.c === pz.solution.from.c &&
+                        r === pz.solution.to.r && c === pz.solution.to.c) {
+                        showToast('🎉 Brilliant Move! Puzzle Solved!', 'success');
+                        audio.victory();
+                        lordProfile.puzzles++;
+                        saveProfile();
+                        pzSelected = null;
+                        renderCurrentPuzzle();
+                    } else {
+                        showToast('❌ Incorrect move. Try again!', 'error');
+                        audio.defeat();
+                        pzSelected = null;
+                    }
+                } else if (piece && piece.color === 'white') {
+                    pzSelected = { r, c };
+                    sq.classList.add('selected');
+                }
+            });
+            boardEl.appendChild(sq);
         }
     }
 }
 
-function handlePuzzleClick(r, c) {
-    const p = PUZZLES[currentPuzzleIdx];
-    const piece = puzzleBoardState[r][c];
-    
-    if (puzzleSelected) {
-        if (puzzleSelected.r === p.solution.from.r && puzzleSelected.c === p.solution.from.c &&
-            r === p.solution.to.r && c === p.solution.to.c) {
-            puzzleBoardState[r][c] = puzzleBoardState[puzzleSelected.r][puzzleSelected.c];
-            puzzleBoardState[puzzleSelected.r][puzzleSelected.c] = null;
-            puzzleSelected = null;
-            drawPuzzleBoard();
-            document.getElementById('puzzle-feedback').innerHTML = '<span style="color:#22c55e;">👑 Masterful! Brilliant Checkmate!</span>';
-            audio.victory();
-            lordProfile.puzzles++;
-            saveProfile();
-            return;
-        } else {
-            document.getElementById('puzzle-feedback').innerHTML = '<span style="color:#ef4444;">❌ Incorrect move, rethink your tactic!</span>';
-            puzzleSelected = null;
-            drawPuzzleBoard();
-        }
-    } else {
-        if (piece && piece.color === 'white') {
-            puzzleSelected = { r, c };
-            drawPuzzleBoard();
-        }
-    }
-}
-
-// Openings Master
-const OPENINGS_DATA = {
-    italian: {
-        title: 'Italian Game (Giuoco Piano)',
-        desc: 'One of the oldest chess openings. Develops the Bishop to c4 to target the weak f7 square.',
-        moves: ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4'],
-        notation: '1. e4 e5 2. Nf3 Nc6 3. Bc4'
-    },
-    sicilian: {
-        title: 'Sicilian Defense (Open)',
-        desc: 'The most popular counter-attacking defense against White’s 1. e4.',
-        moves: ['e2e4', 'c7c5', 'g1f3', 'd7d6', 'd2d4'],
-        notation: '1. e4 c5 2. Nf3 d6 3. d4'
-    },
-    queens_gambit: {
-        title: 'Queen\'s Gambit',
-        desc: 'White offers the c4 pawn to dominate the critical central board squares.',
-        moves: ['d2d4', 'd7d5', 'c2c4'],
-        notation: '1. d4 d5 2. c4'
-    },
-    ruy_lopez: {
-        title: 'Ruy Lopez (Spanish Opening)',
-        desc: 'Classical mastery. White pins the knight guarding Black’s e5 pawn.',
-        moves: ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'],
-        notation: '1. e4 e5 2. Nf3 Nc6 3. Bb5'
-    },
-    french: {
-        title: 'French Defense',
-        desc: 'Solid pawn structure preparing immediate counterplay with ...d5.',
-        moves: ['e2e4', 'e7e6', 'd2d4', 'd7d5'],
-        notation: '1. e4 e6 2. d4 d5'
-    },
-    scandinavian: {
-        title: 'Scandinavian Defense',
-        desc: 'Directly challenges White\'s center pawn on move 1.',
-        moves: ['e2e4', 'd7d5'],
-        notation: '1. e4 d5'
-    }
-};
-
-let currentOpeningKey = 'italian';
-let currentOpeningStep = 0;
+const OPENINGS = [
+    { name: "Italian Game", desc: "Classic open game developing Bishop to c4 targeting f7.", notation: "1. e4 e5 2. Nf3 Nc6 3. Bc4", moves: [{ from: { r: 6, c: 4 }, to: { r: 4, c: 4 } }, { from: { r: 1, c: 4 }, to: { r: 3, c: 4 } }, { from: { r: 7, c: 6 }, to: { r: 5, c: 5 } }, { from: { r: 0, c: 1 }, to: { r: 2, c: 2 } }, { from: { r: 7, c: 5 }, to: { r: 4, c: 2 } }] },
+    { name: "Sicilian Defense", desc: "Aggressive counter-attacking response against 1. e4.", notation: "1. e4 c5 2. Nf3 d6 3. d4", moves: [{ from: { r: 6, c: 4 }, to: { r: 4, c: 4 } }, { from: { r: 1, c: 2 }, to: { r: 3, c: 2 } }, { from: { r: 7, c: 6 }, to: { r: 5, c: 5 } }] }
+];
 let openingsBoardState = [];
 
 function initOpeningsBoard() {
@@ -1375,28 +1570,18 @@ function initOpeningsBoard() {
         openingsBoardState[6][c] = { type: 'p', color: 'white' };
         openingsBoardState[7][c] = { type: backRow[c], color: 'white' };
     }
+    renderOpeningsBoard();
 }
 
-function parseAlgToCoord(str) {
-    const files = { a:0, b:1, c:2, d:3, e:4, f:5, g:6, h:7 };
-    const fc = files[str[0]];
-    const fr = 8 - parseInt(str[1]);
-    const tc = files[str[2]];
-    const tr = 8 - parseInt(str[3]);
-    return { from: { r: fr, c: fc }, to: { r: tr, c: tc } };
-}
-
-function drawOpeningsBoard() {
+function renderOpeningsBoard() {
     const el = document.getElementById('openings-board');
     if (!el) return;
     el.innerHTML = '';
-    
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const isLight = (r + c) % 2 === 0;
             const sq = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
             sq.className = `square ${isLight ? 'light' : 'dark'}`;
-            
             const piece = openingsBoardState[r][c];
             if (piece) {
                 const pEl = document.createElement('div');
@@ -1410,106 +1595,62 @@ function drawOpeningsBoard() {
 }
 
 function stepOpeningMove(direction) {
-    const opening = OPENINGS_DATA[currentOpeningKey];
-    if (direction === 'next' && currentOpeningStep < opening.moves.length) {
-        const move = parseAlgToCoord(opening.moves[currentOpeningStep]);
-        openingsBoardState[move.to.r][move.to.c] = openingsBoardState[move.from.r][move.from.c];
-        openingsBoardState[move.from.r][move.from.c] = null;
-        currentOpeningStep++;
-        audio.move();
-    } else if (direction === 'reset') {
+    const op = OPENINGS[currentOpeningIdx];
+    if (direction === 'reset') {
+        openingStep = 0;
         initOpeningsBoard();
-        currentOpeningStep = 0;
+        return;
     }
-    drawOpeningsBoard();
+    if (direction === 'next' && openingStep < op.moves.length) {
+        const m = op.moves[openingStep];
+        openingsBoardState[m.to.r][m.to.c] = openingsBoardState[m.from.r][m.from.c];
+        openingsBoardState[m.from.r][m.from.c] = null;
+        openingStep++;
+        audio.move();
+        renderOpeningsBoard();
+    }
 }
 
 // =========================================================
-// 4. PROFILE & LOCALSTORAGE PERSISTENCE
+// 6. NAVIGATION & TAB SWITCHING
 // =========================================================
-
-function loadProfile() {
-    try {
-        const raw = localStorage.getItem('electro_king_lord_profile');
-        if (raw) {
-            lordProfile = { ...lordProfile, ...JSON.parse(raw) };
-        }
-    } catch (e) {
-        console.warn('Could not load profile:', e);
-    }
-    updateProfileUI();
-}
-
-function saveProfile() {
-    try {
-        localStorage.setItem('electro_king_lord_profile', JSON.stringify(lordProfile));
-    } catch (e) {
-        console.warn('Could not save profile:', e);
-    }
-    updateProfileUI();
-}
-
-function updateProfileUI() {
-    const pName = document.getElementById('profile-name');
-    const hudName = document.getElementById('hud-lord-name');
-    const pNameTag = document.getElementById('player-name-tag');
-    const pMatches = document.getElementById('stat-matches');
-    const pWins = document.getElementById('stat-wins');
-    const pRate = document.getElementById('stat-winrate');
-    const pFourWins = document.getElementById('stat-four-wins');
-    const avatarEl = document.getElementById('profile-avatar');
-    
-    if (pName) pName.textContent = lordProfile.name;
-    if (hudName) hudName.textContent = lordProfile.name;
-    if (pNameTag) pNameTag.textContent = lordProfile.name;
-    if (pMatches) pMatches.textContent = lordProfile.matches;
-    if (pWins) pWins.textContent = lordProfile.wins;
-    if (pFourWins) pFourWins.textContent = lordProfile.fourWins;
-    if (avatarEl) avatarEl.textContent = lordProfile.avatar;
-    
-    if (pRate) {
-        const rate = lordProfile.matches > 0 ? Math.round((lordProfile.wins / lordProfile.matches) * 100) : 0;
-        pRate.textContent = `${rate}%`;
-    }
-    
-    playerNames.white = lordProfile.name;
-}
-
-// =========================================================
-// 5. TOAST & NAVIGATION
-// =========================================================
-
-function showToast(msg, type = 'info', duration = 2800) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 250);
-    }, duration);
-}
 
 function switchTab(tabId) {
     currentTab = tabId;
+    
     document.querySelectorAll('.tab-screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     
-    const screen = document.getElementById(`screen-${tabId}`);
-    const navBtn = document.getElementById(`nav-btn-${tabId}`);
-    if (screen) screen.classList.add('active');
-    if (navBtn) navBtn.classList.add('active');
+    const targetScreen = document.getElementById(`screen-${tabId}`);
+    const targetNavBtn = document.getElementById(`nav-btn-${tabId}`);
     
-    if (tabId === 'arena') {
+    if (targetScreen) targetScreen.classList.add('active');
+    if (targetNavBtn) targetNavBtn.classList.add('active');
+    
+    const headerSub = document.getElementById('header-mode-subtitle');
+    
+    if (tabId === 'home') {
+        if (headerSub) headerSub.textContent = 'Castle Battle Setup';
+        pauseGame();
+    } else if (tabId === 'arena') {
         if (arenaSubMode === '2p') {
+            if (headerSub) headerSub.textContent = 'Classic 2-Player Duel';
             draw2PlayerBoard();
         } else {
+            if (headerSub) headerSub.textContent = 'Four Kingdoms Realm';
             drawFourBoard();
         }
+        if (isMatchActive && !isGameOver) {
+            resumeGame();
+        }
     } else if (tabId === 'puzzles') {
+        if (headerSub) headerSub.textContent = 'Castle Tactics Academy';
+        pauseGame();
         renderCurrentPuzzle();
+    } else if (tabId === 'profile') {
+        if (headerSub) headerSub.textContent = 'Player Honor & Records';
+        pauseGame();
+        updateProfileUI();
     }
 }
 
@@ -1535,7 +1676,7 @@ function switchArenaSubMode(mode) {
 }
 
 // =========================================================
-// 6. EVENT LISTENERS INITIALIZATION
+// 7. EVENT LISTENERS & INITIALIZATION
 // =========================================================
 
 function setupEventListeners() {
@@ -1547,20 +1688,154 @@ function setupEventListeners() {
         });
     });
     
+    // HOME SCREEN CONTROLS
+    // Variation: 2-Player vs 4-Player
+    const cat2p = document.getElementById('home-cat-2p');
+    const cat4p = document.getElementById('home-cat-4p');
+    const group2p = document.getElementById('home-2p-group');
+    const group4p = document.getElementById('home-4p-group');
+    
+    if (cat2p && cat4p) {
+        cat2p.addEventListener('click', () => {
+            cat2p.classList.add('active');
+            cat4p.classList.remove('active');
+            group2p.classList.remove('hidden');
+            group4p.classList.add('hidden');
+            arenaSubMode = '2p';
+        });
+        cat4p.addEventListener('click', () => {
+            cat4p.classList.add('active');
+            cat2p.classList.remove('active');
+            group4p.classList.remove('hidden');
+            group2p.classList.add('hidden');
+            arenaSubMode = '4p';
+        });
+    }
+    
+    // 2P Play Mode: vs AI vs Pass & Play
+    const modeAiBtn = document.getElementById('home-2p-mode-ai');
+    const modeLocalBtn = document.getElementById('home-2p-mode-local');
+    const pNameSec = document.getElementById('home-player-name-section');
+    const localNamesSec = document.getElementById('home-local-names-section');
+    const sideSec = document.getElementById('home-side-select-section');
+    const diffSec = document.getElementById('home-ai-difficulty-section');
+    
+    if (modeAiBtn && modeLocalBtn) {
+        modeAiBtn.addEventListener('click', () => {
+            modeAiBtn.classList.add('active');
+            modeLocalBtn.classList.remove('active');
+            gameMode = 'ai';
+            if (pNameSec) pNameSec.classList.remove('hidden');
+            if (localNamesSec) localNamesSec.classList.add('hidden');
+            if (sideSec) sideSec.classList.remove('hidden');
+            if (diffSec) diffSec.classList.remove('hidden');
+        });
+        modeLocalBtn.addEventListener('click', () => {
+            modeLocalBtn.classList.add('active');
+            modeAiBtn.classList.remove('active');
+            gameMode = 'local';
+            if (pNameSec) pNameSec.classList.add('hidden');
+            if (localNamesSec) localNamesSec.classList.remove('hidden');
+            if (sideSec) sideSec.classList.add('hidden');
+            if (diffSec) diffSec.classList.add('hidden');
+        });
+    }
+    
+    // Timer speed selection (Default: None = 0)
+    document.querySelectorAll('#home-timer-group .clock-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#home-timer-group .clock-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            matchClockLimit = parseInt(btn.dataset.time, 10) || 0;
+        });
+    });
+    
+    // Command Colors (White, Random, Black)
+    const sideWhite = document.getElementById('home-side-white');
+    const sideRand = document.getElementById('home-side-random');
+    const sideBlack = document.getElementById('home-side-black');
+    if (sideWhite && sideRand && sideBlack) {
+        [sideWhite, sideRand, sideBlack].forEach(btn => {
+            btn.addEventListener('click', () => {
+                [sideWhite, sideRand, sideBlack].forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const s = btn.dataset.side;
+                if (s === 'random') {
+                    playerSide = Math.random() < 0.5 ? 'white' : 'black';
+                } else {
+                    playerSide = s;
+                }
+                botSide = playerSide === 'white' ? 'black' : 'white';
+            });
+        });
+    }
+    
+    // Bot Knight selection
+    document.querySelectorAll('.bot-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            difficulty = parseInt(card.dataset.diff, 10) || 2;
+        });
+    });
+    
+    // 4P Mode (vs 3 Bots vs Pass & Play)
+    const fourAiBtn = document.getElementById('home-4p-ai-btn');
+    const fourPassBtn = document.getElementById('home-4p-pass-btn');
+    if (fourAiBtn && fourPassBtn) {
+        fourAiBtn.addEventListener('click', () => {
+            fourAiBtn.classList.add('active');
+            fourPassBtn.classList.remove('active');
+            fourMode = 'ai';
+        });
+        fourPassBtn.addEventListener('click', () => {
+            fourPassBtn.classList.add('active');
+            fourAiBtn.classList.remove('active');
+            fourMode = 'pass';
+        });
+    }
+    
+    // COMMENCE BATTLE ⚔️ (HOME START BUTTON)
+    const homeStartBtn = document.getElementById('home-start-btn');
+    if (homeStartBtn) {
+        homeStartBtn.addEventListener('click', () => {
+            // Save player name
+            const nameInput = document.getElementById('home-player-name');
+            const fourNameInput = document.getElementById('home-4p-player-name');
+            const customName = (arenaSubMode === '4p' ? fourNameInput?.value : nameInput?.value)?.trim();
+            if (customName) {
+                lordProfile.name = customName;
+                saveProfile();
+            }
+            
+            if (arenaSubMode === '2p') {
+                startNew2PlayerGame();
+                switchArenaSubMode('2p');
+            } else {
+                startNew4PlayerGame();
+                switchArenaSubMode('4p');
+            }
+            switchTab('arena');
+        });
+    }
+    
     // In-game Action Buttons
     const undoBtn = document.getElementById('undo-btn');
     if (undoBtn) {
         undoBtn.addEventListener('click', () => {
-            if (history.length > 0 && !isGameOver) {
+            if (history.length > 0 && !isGameOver && !isGamePaused) {
                 const prev = history.pop();
                 board = prev.board;
                 turn = prev.turn;
                 lastMove = prev.lastMove;
                 captured = prev.captured;
-                selectedSquare = null;
-                activeHint = null;
+                clockTimes = prev.clockTimes;
+                if (moveHistoryNotation.length > 0) moveHistoryNotation.pop();
+                
                 updateHUD();
+                updateClockDisplay();
                 draw2PlayerBoard();
+                audio.move();
                 showToast('Move Undone ↩️');
             }
         });
@@ -1569,23 +1844,27 @@ function setupEventListeners() {
     const hintBtn = document.getElementById('hint-btn');
     if (hintBtn) {
         hintBtn.addEventListener('click', () => {
+            if (isGameOver || isGamePaused) return;
             const legals = getAllLegalMoves(turn, board);
             if (legals.length > 0) {
-                activeHint = legals[Math.floor(Math.random() * legals.length)];
+                const m = legals[Math.floor(Math.random() * legals.length)];
+                activeHint = m.from;
                 draw2PlayerBoard();
-                showToast('💡 Tactical Advisor illuminated a move!');
+                audio.powerup();
+                showToast('💡 Hint: Consider moving the highlighted piece!');
+                setTimeout(() => {
+                    activeHint = null;
+                    draw2PlayerBoard();
+                }, 3000);
             }
         });
     }
     
-    const strikeBtn = document.getElementById('powerup-btn');
-    if (strikeBtn) {
-        strikeBtn.addEventListener('click', () => {
-            audio.powerup();
-            if (fx2p) {
-                fx2p.shockwave(fx2p.canvas.width / 2, fx2p.canvas.height / 2, '#d4af37');
-            }
-            showToast('⚡ Royal Strike unleashed on the battlefield!');
+    const powerupBtn = document.getElementById('powerup-btn');
+    if (powerupBtn) {
+        powerupBtn.addEventListener('click', () => {
+            audio.strike();
+            showToast('⚡ Royal Lightning Ready!');
         });
     }
     
@@ -1593,259 +1872,88 @@ function setupEventListeners() {
     if (soundBtn) {
         soundBtn.addEventListener('click', () => {
             audio.enabled = !audio.enabled;
-            document.getElementById('sound-icon').textContent = audio.enabled ? '🔊' : '🔇';
-            showToast(audio.enabled ? 'Sound enabled 🔊' : 'Sound muted 🔇');
+            const icon = document.getElementById('sound-icon');
+            if (icon) icon.textContent = audio.enabled ? '🔊' : '🔇';
+            showToast(audio.enabled ? 'Sound Enabled 🔊' : 'Sound Muted 🔇');
         });
     }
     
+    // In-Game Menu Button -> PAUSE & RETURN TO HOME
     const menuBtn = document.getElementById('menu-btn');
     if (menuBtn) {
         menuBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.remove('hidden');
+            pauseGame();
+            const pModal = document.getElementById('pause-modal');
+            if (pModal) pModal.classList.remove('hidden');
         });
     }
     
-    const setupCloseBtn = document.getElementById('setup-close-btn');
-    if (setupCloseBtn) {
-        setupCloseBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.add('hidden');
+    // Pause Modal Buttons
+    const pauseResumeBtn = document.getElementById('pause-resume-btn');
+    const pauseHomeBtn = document.getElementById('pause-home-btn');
+    if (pauseResumeBtn) {
+        pauseResumeBtn.addEventListener('click', () => {
+            document.getElementById('pause-modal').classList.add('hidden');
+            resumeGame();
         });
     }
-
-    // Master Setup Modal - Game Variation Selector (2P vs 4P)
-    let selectedSetupCategory = '2p';
-    const setupCat2p = document.getElementById('setup-cat-2p');
-    const setupCat4p = document.getElementById('setup-cat-4p');
-    const setup2pGroup = document.getElementById('setup-2player-group');
-    const setup4pGroup = document.getElementById('setup-4player-group');
-
-    if (setupCat2p && setupCat4p) {
-        setupCat2p.addEventListener('click', () => {
-            selectedSetupCategory = '2p';
-            setupCat2p.classList.add('active');
-            setupCat4p.classList.remove('active');
-            if (setup2pGroup) setup2pGroup.classList.remove('hidden');
-            if (setup4pGroup) setup4pGroup.classList.add('hidden');
-        });
-
-        setupCat4p.addEventListener('click', () => {
-            selectedSetupCategory = '4p';
-            setupCat4p.classList.add('active');
-            setupCat2p.classList.remove('active');
-            if (setup4pGroup) setup4pGroup.classList.remove('hidden');
-            if (setup2pGroup) setup2pGroup.classList.add('hidden');
-        });
-    }
-
-    // 2-Player Mode Selector in Setup (vs AI or Pass & Play)
-    const modeAiBtn = document.getElementById('mode-ai-btn');
-    const modeLocalBtn = document.getElementById('mode-local-btn');
-    const aiInputs = document.getElementById('ai-name-inputs');
-    const localInputs = document.getElementById('local-name-inputs');
-    const sideSelectSection = document.getElementById('side-select-section');
-    const diffSection = document.getElementById('difficulty-section');
-
-    if (modeAiBtn && modeLocalBtn) {
-        modeAiBtn.addEventListener('click', () => {
-            gameMode = 'ai';
-            modeAiBtn.classList.add('active');
-            modeLocalBtn.classList.remove('active');
-            if (aiInputs) aiInputs.classList.remove('hidden');
-            if (localInputs) localInputs.classList.add('hidden');
-            if (sideSelectSection) sideSelectSection.classList.remove('hidden');
-            if (diffSection) diffSection.classList.remove('hidden');
-            showToast('Mode: vs. Castle AI 🤖');
-        });
-
-        modeLocalBtn.addEventListener('click', () => {
-            gameMode = 'local';
-            modeLocalBtn.classList.add('active');
-            modeAiBtn.classList.remove('active');
-            if (aiInputs) aiInputs.classList.add('hidden');
-            if (localInputs) localInputs.classList.remove('hidden');
-            if (sideSelectSection) sideSelectSection.classList.add('hidden');
-            if (diffSection) diffSection.classList.add('hidden');
-            showToast('Mode: Pass & Play 👥 (2 Human Players)');
-        });
-    }
-
-    // 4-Player Battle Mode Selector in Setup
-    const setup4pAiBtn = document.getElementById('setup-4p-ai-btn');
-    const setup4pPassBtn = document.getElementById('setup-4p-pass-btn');
-    const setup4pOnlineBtn = document.getElementById('setup-4p-online-btn');
-
-    if (setup4pAiBtn) {
-        setup4pAiBtn.addEventListener('click', () => {
-            fourMode = 'ai';
-            setup4pAiBtn.classList.add('active');
-            if (setup4pPassBtn) setup4pPassBtn.classList.remove('active');
-            if (setup4pOnlineBtn) setup4pOnlineBtn.classList.remove('active');
-            showToast('Mode: 🤖 vs 3 Kingdom Bots');
-        });
-    }
-    if (setup4pPassBtn) {
-        setup4pPassBtn.addEventListener('click', () => {
-            fourMode = 'pass';
-            setup4pPassBtn.classList.add('active');
-            if (setup4pAiBtn) setup4pAiBtn.classList.remove('active');
-            if (setup4pOnlineBtn) setup4pOnlineBtn.classList.remove('active');
-            showToast('Mode: 👥 Pass & Play (All 4 Kingdoms Active)');
-        });
-    }
-    if (setup4pOnlineBtn) {
-        setup4pOnlineBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.add('hidden');
-            document.getElementById('four-lobby-modal').classList.remove('hidden');
+    if (pauseHomeBtn) {
+        pauseHomeBtn.addEventListener('click', () => {
+            document.getElementById('pause-modal').classList.add('hidden');
+            switchTab('home');
         });
     }
     
-    // 2-Player Clocks, Colors, and Bots
-    document.querySelectorAll('.clock-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.clock-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            matchClockLimit = parseInt(btn.dataset.time);
-        });
-    });
+    // 4-Player Rules
+    const rulesBtn = document.getElementById('four-rules-btn');
+    const rulesModal = document.getElementById('four-rules-modal');
+    const rulesOkBtn = document.getElementById('four-rules-ok-btn');
+    const rulesClose = document.getElementById('four-rules-close-btn');
+    if (rulesBtn) rulesBtn.addEventListener('click', () => rulesModal.classList.remove('hidden'));
+    if (rulesOkBtn) rulesOkBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
+    if (rulesClose) rulesClose.addEventListener('click', () => rulesModal.classList.add('hidden'));
     
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            playerSide = btn.dataset.side === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : btn.dataset.side;
-            botSide = playerSide === 'white' ? 'black' : 'white';
-        });
-    });
-    
-    document.querySelectorAll('.bot-card').forEach(card => {
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.bot-card').forEach(b => b.classList.remove('active'));
-            card.classList.add('active');
-            difficulty = parseInt(card.dataset.diff);
-            playerNames.black = `${BOT_PERSONALITIES[difficulty].name}`;
-            const oppTag = document.getElementById('opponent-name-tag');
-            if (oppTag) oppTag.textContent = playerNames.black;
-        });
-    });
-    
-    // COMMENCE MATCH BUTTON
-    const startMatchBtn = document.getElementById('start-match-btn');
-    if (startMatchBtn) {
-        startMatchBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.add('hidden');
-            if (selectedSetupCategory === '4p') {
-                const custom4pName = document.getElementById('setup-4p-name-input')?.value.trim();
-                if (custom4pName) {
-                    lordProfile.name = custom4pName;
-                    saveProfile();
-                }
-                switchArenaSubMode('4p');
-                initFourPlayerBoard();
-                showToast('⚔️ Four Kingdoms Realm Commenced!');
-            } else {
-                switchArenaSubMode('2p');
-                startNew2PlayerGame();
-                showToast('⚔️ Classic Castle Duel Commenced!');
-            }
-        });
-    }
-    
-    // 4-Player Board Quick Actions
     const fourResetBtn = document.getElementById('four-reset-btn');
-    if (fourResetBtn) {
-        fourResetBtn.addEventListener('click', () => {
+    if (fourResetBtn) fourResetBtn.addEventListener('click', () => initFourPlayerBoard());
+    
+    const fourAiStepBtn = document.getElementById('four-ai-step-btn');
+    if (fourAiStepBtn) fourAiStepBtn.addEventListener('click', () => makeFourAIMove());
+    
+    // 4-Player Defeat Modal Buttons
+    const fourDefeatHomeBtn = document.getElementById('four-defeat-home-btn');
+    const fourDefeatRestartBtn = document.getElementById('four-defeat-restart-btn');
+    if (fourDefeatHomeBtn) {
+        fourDefeatHomeBtn.addEventListener('click', () => {
+            document.getElementById('four-defeat-modal').classList.add('hidden');
+            switchTab('home');
+        });
+    }
+    if (fourDefeatRestartBtn) {
+        fourDefeatRestartBtn.addEventListener('click', () => {
+            document.getElementById('four-defeat-modal').classList.add('hidden');
             initFourPlayerBoard();
-            showToast('Four Kingdoms Realm Reset 🔄');
         });
     }
     
-    const fourAIStepBtn = document.getElementById('four-ai-step-btn');
-    if (fourAIStepBtn) {
-        fourAIStepBtn.addEventListener('click', () => {
-            makeFourAIMove();
-        });
-    }
-    
-    const fourRulesBtn = document.getElementById('four-rules-btn');
-    if (fourRulesBtn) {
-        fourRulesBtn.addEventListener('click', () => {
-            document.getElementById('four-rules-modal').classList.remove('hidden');
-        });
-    }
-    
-    const fourRulesClose = document.getElementById('four-rules-close-btn');
-    const fourRulesOk = document.getElementById('four-rules-ok-btn');
-    if (fourRulesClose) fourRulesClose.addEventListener('click', () => document.getElementById('four-rules-modal').classList.add('hidden'));
-    if (fourRulesOk) fourRulesOk.addEventListener('click', () => document.getElementById('four-rules-modal').classList.add('hidden'));
-    
-    // 4-Player Online Lobby
-    const lobbyClose = document.getElementById('four-lobby-close-btn');
-    if (lobbyClose) lobbyClose.addEventListener('click', () => document.getElementById('four-lobby-modal').classList.add('hidden'));
-    
-    const hostTabBtn = document.getElementById('lobby-host-tab-btn');
-    const joinTabBtn = document.getElementById('lobby-join-tab-btn');
-    const hostView = document.getElementById('lobby-host-view');
-    const joinView = document.getElementById('lobby-join-view');
-    
-    if (hostTabBtn && joinTabBtn) {
-        hostTabBtn.addEventListener('click', () => {
-            hostTabBtn.classList.add('active');
-            joinTabBtn.classList.remove('active');
-            if (hostView) hostView.classList.remove('hidden');
-            if (joinView) joinView.classList.add('hidden');
-        });
-        joinTabBtn.addEventListener('click', () => {
-            joinTabBtn.classList.add('active');
-            hostTabBtn.classList.remove('active');
-            if (joinView) joinView.classList.remove('hidden');
-            if (hostView) hostView.classList.add('hidden');
-        });
-    }
-    
-    const hostLaunchBtn = document.getElementById('host-launch-match-btn');
-    if (hostLaunchBtn) {
-        hostLaunchBtn.addEventListener('click', () => {
-            document.getElementById('four-lobby-modal').classList.add('hidden');
-            switchArenaSubMode('4p');
-            initFourPlayerBoard();
-            showToast('⚔️ Royal Realm Battle Commenced!');
-        });
-    }
-    
-    const joinActionBtn = document.getElementById('join-room-action-btn');
-    if (joinActionBtn) {
-        joinActionBtn.addEventListener('click', () => {
-            const code = document.getElementById('join-code-input').value.trim();
-            if (code) {
-                document.getElementById('four-lobby-modal').classList.add('hidden');
-                switchArenaSubMode('4p');
-                initFourPlayerBoard();
-                showToast(`🛡️ Entered Realm Room: ${code}!`);
-            } else {
-                showToast('Please enter room code', 'error');
-            }
-        });
-    }
-    
-    // Unified Tactics Mode Dropdown
+    // Tactics Academy Switcher
     const tacticsDropdown = document.getElementById('tactics-mode-dropdown');
-    const puzzlesView = document.getElementById('puzzles-view-container');
-    const openingsView = document.getElementById('openings-view-container');
-    
     if (tacticsDropdown) {
-        tacticsDropdown.addEventListener('change', (e) => {
+        tacticsDropdown.addEventListener('change', e => {
             const val = e.target.value;
+            const pzView = document.getElementById('puzzles-view-container');
+            const opView = document.getElementById('openings-view-container');
             if (val === 'puzzles') {
-                if (puzzlesView) puzzlesView.classList.remove('hidden');
-                if (openingsView) openingsView.classList.add('hidden');
+                pzView.classList.remove('hidden');
+                opView.classList.add('hidden');
                 renderCurrentPuzzle();
             } else {
-                if (puzzlesView) puzzlesView.classList.add('hidden');
-                if (openingsView) openingsView.classList.remove('hidden');
-                currentOpeningKey = val;
-                const op = OPENINGS_DATA[currentOpeningKey];
-                if (op) {
-                    document.getElementById('opening-title').textContent = op.title;
+                pzView.classList.add('hidden');
+                opView.classList.remove('hidden');
+                const idx = OPENINGS.findIndex(o => o.name.toLowerCase().includes(val));
+                if (idx !== -1) {
+                    currentOpeningIdx = idx;
+                    const op = OPENINGS[idx];
+                    document.getElementById('opening-title').textContent = op.name;
                     document.getElementById('opening-desc').textContent = op.desc;
                     document.getElementById('opening-move-notation').textContent = op.notation;
                     stepOpeningMove('reset');
@@ -1886,22 +1994,35 @@ function setupEventListeners() {
                 lordProfile.name = val;
                 saveProfile();
                 authModal.classList.add('hidden');
-                showToast(`Title saved: ${val} 👑`, 'success');
+                showToast(`Name saved: ${val} 👑`, 'success');
             }
         });
     }
     
+    const gameoverHomeBtn = document.getElementById('gameover-home-btn');
     const restartBtn = document.getElementById('gameover-restart-btn');
+    if (gameoverHomeBtn) {
+        gameoverHomeBtn.addEventListener('click', () => {
+            document.getElementById('gameover-modal').classList.add('hidden');
+            switchTab('home');
+        });
+    }
     if (restartBtn) {
         restartBtn.addEventListener('click', () => {
             document.getElementById('gameover-modal').classList.add('hidden');
-            startNew2PlayerGame();
+            if (arenaSubMode === '2p') {
+                startNew2PlayerGame();
+            } else {
+                startNew4PlayerGame();
+            }
         });
     }
 }
 
 function startNew2PlayerGame() {
     isGameOver = false;
+    isGamePaused = false;
+    isMatchActive = true;
     turn = 'white';
     selectedSquare = null;
     lastMove = null;
@@ -1910,33 +2031,45 @@ function startNew2PlayerGame() {
     activeHint = null;
     moveHistoryNotation = [];
     
+    const bot = BOT_PERSONALITIES[difficulty];
+    
     if (gameMode === 'local') {
-        const p1Val = document.getElementById('p1-name-input')?.value.trim();
-        const p2Val = document.getElementById('p2-name-input')?.value.trim();
-        playerNames.white = p1Val || lordProfile.name || 'White Lord';
-        playerNames.black = p2Val || 'Black Lord';
+        const p1Val = document.getElementById('home-p1-name')?.value.trim();
+        const p2Val = document.getElementById('home-p2-name')?.value.trim();
+        playerNames.white = p1Val || lordProfile.name || 'Player 1';
+        playerNames.black = p2Val || 'Player 2';
         
         const oppAvatar = document.getElementById('top-player-avatar');
         const oppTag = document.getElementById('opponent-name-tag');
+        const oppSub = document.getElementById('opponent-sub-tag');
         const myAvatar = document.getElementById('bottom-player-avatar');
         const myTag = document.getElementById('player-name-tag');
+        const mySub = document.getElementById('player-sub-tag');
+        
         if (oppAvatar) oppAvatar.textContent = '⚫';
         if (oppTag) oppTag.textContent = playerNames.black;
+        if (oppSub) oppSub.textContent = 'Black Army';
         if (myAvatar) myAvatar.textContent = '⚪';
         if (myTag) myTag.textContent = playerNames.white;
+        if (mySub) mySub.textContent = 'White Army';
     } else {
-        const p1Val = document.getElementById('player-name-input')?.value.trim();
-        playerNames.white = p1Val || lordProfile.name || 'Lord Sovereign';
-        playerNames.black = BOT_PERSONALITIES[difficulty].name;
+        const pName = lordProfile.name || 'Player';
+        playerNames[playerSide] = pName;
+        playerNames[botSide] = bot.name;
         
         const oppAvatar = document.getElementById('top-player-avatar');
         const oppTag = document.getElementById('opponent-name-tag');
+        const oppSub = document.getElementById('opponent-sub-tag');
         const myAvatar = document.getElementById('bottom-player-avatar');
         const myTag = document.getElementById('player-name-tag');
-        if (oppAvatar) oppAvatar.textContent = '🤖';
-        if (oppTag) oppTag.textContent = playerNames.black;
+        const mySub = document.getElementById('player-sub-tag');
+        
+        if (oppAvatar) oppAvatar.textContent = bot.icon;
+        if (oppTag) oppTag.textContent = bot.name;
+        if (oppSub) oppSub.textContent = `AI Knight • ${bot.rating}`;
         if (myAvatar) myAvatar.textContent = '👑';
-        if (myTag) myTag.textContent = playerNames.white;
+        if (myTag) myTag.textContent = pName;
+        if (mySub) mySub.textContent = 'Grandmaster';
     }
     
     init2PlayerBoard();
@@ -1945,11 +2078,83 @@ function startNew2PlayerGame() {
     startClock();
     
     if (gameMode === 'ai' && botSide === 'white') {
-        setTimeout(make2PlayerAIMove, 500);
+        aiMoveTimeout = setTimeout(make2PlayerAIMove, 500);
     }
 }
 
-// Bootstrapping
+function startNew4PlayerGame() {
+    isGameOver = false;
+    isGamePaused = false;
+    isHumanDefeated4P = false;
+    isFourMatchActive = true;
+    
+    const pName = lordProfile.name || 'Player';
+    const redNameEl = document.getElementById('k-name-red');
+    if (redNameEl) redNameEl.textContent = pName;
+    
+    initFourPlayerBoard();
+}
+
+function loadProfile() {
+    const savedName = localStorage.getItem('electro_player_name');
+    if (savedName && savedName !== 'Lord Sovereign') {
+        lordProfile.name = savedName;
+    } else {
+        lordProfile.name = 'Player';
+    }
+    
+    const homeInput = document.getElementById('home-player-name');
+    const fourInput = document.getElementById('home-4p-player-name');
+    const authInput = document.getElementById('auth-username-input');
+    
+    if (homeInput) homeInput.value = lordProfile.name;
+    if (fourInput) fourInput.value = lordProfile.name;
+    if (authInput) authInput.value = lordProfile.name;
+    
+    updateProfileUI();
+}
+
+function saveProfile() {
+    if (lordProfile.name) {
+        localStorage.setItem('electro_player_name', lordProfile.name);
+    }
+    updateProfileUI();
+}
+
+function updateProfileUI() {
+    const pName = document.getElementById('profile-name');
+    const statMatches = document.getElementById('stat-matches');
+    const statWins = document.getElementById('stat-wins');
+    const statWinrate = document.getElementById('stat-winrate');
+    const statFourWins = document.getElementById('stat-four-wins');
+    
+    if (pName) pName.textContent = lordProfile.name;
+    if (statMatches) statMatches.textContent = lordProfile.matches;
+    if (statWins) statWins.textContent = lordProfile.wins;
+    if (statWinrate) {
+        const rate = lordProfile.matches > 0 ? Math.round((lordProfile.wins / lordProfile.matches) * 100) : 0;
+        statWinrate.textContent = `${rate}%`;
+    }
+    if (statFourWins) statFourWins.textContent = lordProfile.fourWins;
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 2400);
+}
+
+// =========================================================
+// 8. BOOTSTRAPPING (STARTS CLEANLY ON HOME)
+// =========================================================
+
 window.addEventListener('DOMContentLoaded', () => {
     fx2p = new CastleFX('fx-canvas');
     fx4p = new CastleFX('four-fx-canvas');
@@ -1959,7 +2164,8 @@ window.addEventListener('DOMContentLoaded', () => {
     init2PlayerBoard();
     initFourPlayerBoard();
     initOpeningsBoard();
-    draw2PlayerBoard();
-    startClock();
-    console.log('Electro King: Castle Realm Edition initialized successfully!');
+    
+    // Open HOME SCREEN FIRST on launch!
+    switchTab('home');
+    console.log('Electro King: Castle Realm Chess initialized successfully on Home screen!');
 });
