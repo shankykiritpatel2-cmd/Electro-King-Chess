@@ -93,35 +93,38 @@ body {
 .logo-group {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.royal-crest-icon {
-    font-size: 1.35rem;
-    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
-    animation: crest-float 3s ease-in-out infinite;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
 }
 
 .logo-text-block {
     display: flex;
     flex-direction: column;
+    background: transparent;
+    border: none;
 }
 
 .logo-title {
-    font-family: 'Cinzel', serif;
-    font-size: 1.12rem;
+    font-family: 'Outfit', 'Cinzel', sans-serif;
+    font-size: 1.16rem;
     font-weight: 900;
     letter-spacing: 1.2px;
-    background: linear-gradient(135deg, #fff5c0 0%, #d4af37 50%, #aa8210 100%);
+    background: linear-gradient(135deg, #fff9d6 0%, #ffd700 35%, #d4af37 70%, #aa8210 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.45));
     line-height: 1.1;
+    text-transform: uppercase;
 }
 
 .logo-subtitle {
+    font-family: 'Outfit', sans-serif;
     font-size: 0.6rem;
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.8px;
     text-transform: uppercase;
 }
