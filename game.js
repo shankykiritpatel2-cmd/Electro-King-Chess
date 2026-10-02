@@ -1,10 +1,106 @@
 // =========================================================
 // ELECTRO KING 👑 - CASTLE REALM EDITION
 // Royal Medieval Chess & Four Kingdoms Engine
-// Created by Viaan Patel
 // =========================================================
 
-// --- AUDIO SYNTHESIS SYSTEM (Zero external dependency) ---
+// --- ROYAL GOLD PARTICLE FX SYSTEM ---
+class CastleFX {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+        this.particles = [];
+        this.animId = null;
+        if (this.canvas) {
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        }
+    }
+
+    resize() {
+        if (!this.canvas) return;
+        const rect = this.canvas.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+    }
+
+    spark(x, y, count = 20, color = '#d4af37') {
+        if (!this.ctx) return;
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1 + Math.random() * 4;
+            this.particles.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1,
+                decay: 0.02 + Math.random() * 0.03,
+                size: 2 + Math.random() * 3,
+                color
+            });
+        }
+        if (!this.animId) this.animate();
+    }
+
+    shockwave(x, y, color = '#ef4444') {
+        if (!this.ctx) return;
+        for (let i = 0; i < 28; i++) {
+            const angle = (i / 28) * Math.PI * 2;
+            const speed = 3.5;
+            this.particles.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1,
+                decay: 0.03,
+                size: 3,
+                color
+            });
+        }
+        if (!this.animId) this.animate();
+    }
+
+    animate() {
+        if (!this.ctx) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= p.decay;
+            p.size = Math.max(0.5, p.size * 0.96);
+            
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+                continue;
+            }
+            
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = p.color;
+            this.ctx.globalAlpha = p.life;
+            this.ctx.shadowBlur = 8;
+            this.ctx.shadowColor = p.color;
+            this.ctx.fill();
+        }
+        
+        this.ctx.globalAlpha = 1;
+        this.ctx.shadowBlur = 0;
+        
+        if (this.particles.length > 0) {
+            this.animId = requestAnimationFrame(() => this.animate());
+        } else {
+            this.animId = null;
+        }
+    }
+}
+
+let fx2p = null;
+let fx4p = null;
+
+// --- AUDIO SYNTHESIS SYSTEM ---
 class CastleAudio {
     constructor() {
         this.ctx = null;
@@ -53,12 +149,12 @@ class CastleAudio {
     }
 
     check() {
-        this.playTone(587.33, 'triangle', 0.2, 0.25); // D5
-        setTimeout(() => this.playTone(880, 'sine', 0.3, 0.25), 100); // A5
+        this.playTone(587.33, 'triangle', 0.2, 0.25);
+        setTimeout(() => this.playTone(880, 'sine', 0.3, 0.25), 100);
     }
 
     victory() {
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C - E - G - C
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((n, i) => {
             setTimeout(() => this.playTone(n, 'triangle', 0.35, 0.3), i * 140);
         });
@@ -118,10 +214,11 @@ function getPieceSvg(color, type) {
     return fn ? fn(fill, stroke) : '';
 }
 
-// --- STATE MANAGEMENT ---
+// --- GLOBAL STATE ---
 let currentTab = 'arena';
+let arenaSubMode = '2p'; // '2p' or '4p'
 let lordProfile = {
-    name: 'Lord Viaan',
+    name: 'Lord Sovereign',
     avatar: '👑',
     avatarUrl: '',
     matches: 0,
@@ -140,8 +237,8 @@ let captured = { white: [], black: [] };
 let gameMode = 'ai'; // 'ai', 'local'
 let playerSide = 'white';
 let botSide = 'black';
-let difficulty = 2; // 1 to 4
-let playerNames = { white: 'Lord Viaan', black: 'Sir Galahad 🤖' };
+let difficulty = 2;
+let playerNames = { white: 'Lord Sovereign', black: 'Sir Galahad 🤖' };
 let isGameOver = false;
 let pendingPromotion = null;
 let activeHint = null;
@@ -188,15 +285,12 @@ function getRawMoves(r, c, testBoard = board) {
         const dir = color === 'white' ? -1 : 1;
         const startRow = color === 'white' ? 6 : 1;
         
-        // 1 step
         if (onBoard(r + dir, c) && !testBoard[r + dir][c]) {
             moves.push({ r: r + dir, c: c });
-            // 2 steps
             if (r === startRow && onBoard(r + 2 * dir, c) && !testBoard[r + 2 * dir][c]) {
                 moves.push({ r: r + 2 * dir, c: c });
             }
         }
-        // Captures
         [-1, 1].forEach(dc => {
             const tr = r + dir, tc = c + dc;
             if (onBoard(tr, tc) && testBoard[tr][tc] && testBoard[tr][tc].color === enemyColor) {
@@ -210,10 +304,8 @@ function getRawMoves(r, c, testBoard = board) {
         ];
         knightDeltas.forEach(([dr, dc]) => {
             const tr = r + dr, tc = c + dc;
-            if (onBoard(tr, tc)) {
-                if (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor) {
-                    moves.push({ r: tr, c: tc });
-                }
+            if (onBoard(tr, tc) && (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor)) {
+                moves.push({ r: tr, c: tc });
             }
         });
     } else if (piece.type === 'b') {
@@ -230,21 +322,17 @@ function getRawMoves(r, c, testBoard = board) {
         ];
         kingDeltas.forEach(([dr, dc]) => {
             const tr = r + dr, tc = c + dc;
-            if (onBoard(tr, tc)) {
-                if (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor) {
-                    moves.push({ r: tr, c: tc });
-                }
+            if (onBoard(tr, tc) && (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor)) {
+                moves.push({ r: tr, c: tc });
             }
         });
         // Castling
         if (!piece.hasMoved && !isKingInCheck(color, testBoard)) {
-            // Kingside
             if (testBoard[r][7] && !testBoard[r][7].hasMoved && !testBoard[r][5] && !testBoard[r][6]) {
                 if (!isSquareAttackedBy(r, 5, enemyColor, testBoard) && !isSquareAttackedBy(r, 6, enemyColor, testBoard)) {
                     moves.push({ r, c: 6, isCastle: 'kingside' });
                 }
             }
-            // Queenside
             if (testBoard[r][0] && !testBoard[r][0].hasMoved && !testBoard[r][1] && !testBoard[r][2] && !testBoard[r][3]) {
                 if (!isSquareAttackedBy(r, 3, enemyColor, testBoard) && !isSquareAttackedBy(r, 2, enemyColor, testBoard)) {
                     moves.push({ r, c: 2, isCastle: 'queenside' });
@@ -356,7 +444,6 @@ function getAllLegalMoves(color, testBoard = board) {
     return all;
 }
 
-// Draw 2-Player Board
 function draw2PlayerBoard() {
     const el = document.getElementById('chessboard');
     if (!el) return;
@@ -407,7 +494,7 @@ function draw2PlayerBoard() {
             const piece = board[r][c];
             if (piece) {
                 const pieceWrapper = document.createElement('div');
-                pieceWrapper.className = 'piece-svg';
+                pieceWrapper.className = 'piece-svg animate-land';
                 pieceWrapper.innerHTML = getPieceSvg(piece.color, piece.type);
                 sq.appendChild(pieceWrapper);
             }
@@ -427,7 +514,6 @@ function handle2PlayerSquareClick(r, c) {
     const clickedPiece = board[r][c];
     
     if (selectedSquare) {
-        // Move attempt
         const legalMoves = getLegalMoves(selectedSquare.r, selectedSquare.c);
         const targetMove = legalMoves.find(m => m.r === r && m.c === c);
         
@@ -438,7 +524,6 @@ function handle2PlayerSquareClick(r, c) {
             return;
         }
         
-        // Select different own piece
         if (clickedPiece && clickedPiece.color === turn) {
             selectedSquare = { r, c };
             draw2PlayerBoard();
@@ -459,7 +544,6 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     const movingPiece = board[from.r][from.c];
     if (!movingPiece) return;
     
-    // Check promotion
     if (movingPiece.type === 'p' && (to.r === 0 || to.r === 7) && !promoPiece) {
         pendingPromotion = { from, to };
         showPromotionModal(movingPiece.color);
@@ -467,6 +551,21 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     }
     
     const capturedPiece = board[to.r][to.c];
+    
+    // Sparkle FX on piece landing
+    const sqEl = document.querySelector(`.square[data-r="${to.r}"][data-c="${to.c}"]`);
+    if (sqEl && fx2p) {
+        const rect = sqEl.getBoundingClientRect();
+        const canvasRect = fx2p.canvas.getBoundingClientRect();
+        const px = rect.left - canvasRect.left + rect.width / 2;
+        const py = rect.top - canvasRect.top + rect.height / 2;
+        if (capturedPiece) {
+            fx2p.shockwave(px, py, '#ef4444');
+        } else {
+            fx2p.spark(px, py, 14, '#d4af37');
+        }
+    }
+    
     if (capturedPiece) {
         captured[movingPiece.color].push(capturedPiece);
         audio.capture();
@@ -481,7 +580,6 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         captured: { white: [...captured.white], black: [...captured.black] }
     });
     
-    // Handle Castling
     if (to.isCastle === 'kingside') {
         board[from.r][5] = { ...board[from.r][7], hasMoved: true };
         board[from.r][7] = null;
@@ -496,15 +594,12 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     
     lastMove = { from, to, piece: finalPiece };
     
-    // Record notation
     addMoveHistoryNotation(from, to, finalPiece, capturedPiece !== null);
     
-    // Switch turn
     turn = turn === 'white' ? 'black' : 'white';
     updateHUD();
     draw2PlayerBoard();
     
-    // Check check/gameover
     if (isKingInCheck(turn, board)) {
         audio.check();
     }
@@ -516,7 +611,7 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         if (isKingInCheck(turn, board)) {
             const winner = turn === 'white' ? 'black' : 'white';
             const winnerName = playerNames[winner];
-            showGameOverModal(`Checkmate! ${winnerName} reigns supreme!`);
+            showGameOverModal(`Checkmate! ${winnerName} reigns victorious!`);
             if (winner === playerSide) {
                 lordProfile.wins++;
                 audio.victory();
@@ -524,14 +619,13 @@ function execute2PlayerMove(from, to, promoPiece = null) {
                 audio.defeat();
             }
         } else {
-            showGameOverModal('Stalemate! The duel ends in a peaceful draw.');
+            showGameOverModal('Stalemate! The royal duel ends in a draw.');
         }
         lordProfile.matches++;
         saveProfile();
         return;
     }
     
-    // AI Move trigger
     if (gameMode === 'ai' && turn === botSide && !isGameOver) {
         setTimeout(make2PlayerAIMove, 450);
     }
@@ -545,14 +639,11 @@ function make2PlayerAIMove() {
     let chosenMove = null;
     
     if (difficulty === 1) {
-        // Random
         chosenMove = allMoves[Math.floor(Math.random() * allMoves.length)];
     } else if (difficulty === 2) {
-        // Prioritize capture or random
         const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c] !== null);
         chosenMove = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
     } else {
-        // Evaluated 1-ply search with piece values
         let bestVal = -999999;
         const vals = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
         
@@ -564,7 +655,6 @@ function make2PlayerAIMove() {
             
             let moveScore = target ? vals[target.type] : 0;
             if (isKingInCheck(playerSide, nextB)) moveScore += 50;
-            // Center control bonus
             if (m.to.r >= 3 && m.to.r <= 4 && m.to.c >= 3 && m.to.c <= 4) moveScore += 15;
             
             if (moveScore > bestVal) {
@@ -603,6 +693,7 @@ function addMoveHistoryNotation(from, to, piece, isCapture) {
 
 function updateEvalBar() {
     const fill = document.getElementById('eval-bar-fill');
+    const badge = document.getElementById('eval-bar-score');
     if (!fill) return;
     const vals = { p: 1, n: 3, b: 3.1, r: 5, q: 9, k: 0 };
     let score = 0;
@@ -616,6 +707,7 @@ function updateEvalBar() {
     }
     const percent = Math.min(95, Math.max(5, 50 + score * 4));
     fill.style.height = `${percent}%`;
+    if (badge) badge.textContent = `${score > 0 ? '+' : ''}${score.toFixed(1)}`;
 }
 
 function updateHUD() {
@@ -626,7 +718,6 @@ function updateHUD() {
         turnDot.style.backgroundColor = turn === 'white' ? 'var(--primary)' : 'var(--accent)';
     }
     
-    // Captured pieces list
     const capWhite = document.getElementById('captured-by-white');
     const capBlack = document.getElementById('captured-by-black');
     if (capWhite) {
@@ -636,14 +727,12 @@ function updateHUD() {
         capBlack.innerHTML = captured.black.map(p => `<div class="captured-piece-mini">${getPieceSvg('white', p.type)}</div>`).join('');
     }
     
-    // Clocks active class
     const clkW = document.getElementById('clock-white');
     const clkB = document.getElementById('clock-black');
     if (clkW) clkW.classList.toggle('active', turn === 'white' && matchClockLimit > 0);
     if (clkB) clkB.classList.toggle('active', turn === 'black' && matchClockLimit > 0);
 }
 
-// Clocks
 function startClock() {
     stopClock();
     if (matchClockLimit <= 0) {
@@ -716,7 +805,7 @@ function showGameOverModal(msg) {
 }
 
 // =========================================================
-// 2. FOUR KINGDOMS / 4-PLAYER CHESS ENGINE
+// 2. FOUR KINGDOMS / 4-PLAYER INTEGRATED ENGINE
 // =========================================================
 
 const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
@@ -727,7 +816,7 @@ const FOUR_KINGDOM_NAMES = {
     green: 'Green Duke (East)'
 };
 
-let fourBoard = []; // 14x14 grid
+let fourBoard = [];
 let fourTurn = 'red';
 let fourSelected = null;
 let fourLastMove = null;
@@ -737,10 +826,9 @@ let fourArmies = {
     gold: { alive: true, count: 16 },
     green: { alive: true, count: 16 }
 };
-let fourMode = 'ai'; // 'ai', 'pass', 'online'
+let fourMode = 'ai';
 
 function isVoidSquare(r, c) {
-    // 4 corners of 3x3 each
     if (r < 3 && c < 3) return true;
     if (r < 3 && c > 10) return true;
     if (r > 10 && c < 3) return true;
@@ -767,25 +855,25 @@ function initFourPlayerBoard() {
     const backPieces = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
     const backPiecesMirror = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'];
     
-    // Red (South - Rows 12, 13, Cols 3-10)
+    // Red (South)
     for (let c = 3; c <= 10; c++) {
         fourBoard[12][c] = { type: 'p', color: 'red', dir: 'up', hasMoved: false };
         fourBoard[13][c] = { type: backPieces[c - 3], color: 'red', hasMoved: false };
     }
     
-    // Gold (North - Rows 0, 1, Cols 3-10)
+    // Gold (North)
     for (let c = 3; c <= 10; c++) {
         fourBoard[1][c] = { type: 'p', color: 'gold', dir: 'down', hasMoved: false };
         fourBoard[0][c] = { type: backPieces[c - 3], color: 'gold', hasMoved: false };
     }
     
-    // Blue (West - Rows 3-10, Cols 0, 1)
+    // Blue (West)
     for (let r = 3; r <= 10; r++) {
         fourBoard[r][1] = { type: 'p', color: 'blue', dir: 'right', hasMoved: false };
         fourBoard[r][0] = { type: backPiecesMirror[r - 3], color: 'blue', hasMoved: false };
     }
     
-    // Green (East - Rows 3-10, Cols 12, 13)
+    // Green (East)
     for (let r = 3; r <= 10; r++) {
         fourBoard[r][12] = { type: 'p', color: 'green', dir: 'left', hasMoved: false };
         fourBoard[r][13] = { type: backPiecesMirror[r - 3], color: 'green', hasMoved: false };
@@ -808,24 +896,15 @@ function getFourMoves(r, c) {
         else if (piece.dir === 'right') dc = 1;
         else if (piece.dir === 'left') dc = -1;
         
-        // 1 step forward
         const nr = r + dr, nc = c + dc;
         if (onFourBoard(nr, nc) && !fourBoard[nr][nc]) {
             moves.push({ r: nr, c: nc });
-            // 2 step forward if not moved
             if (!piece.hasMoved && onFourBoard(r + 2 * dr, c + 2 * dc) && !fourBoard[r + 2 * dr][c + 2 * dc]) {
                 moves.push({ r: r + 2 * dr, c: c + 2 * dc });
             }
         }
         
-        // Diagonal Captures
-        let capDeltas = [];
-        if (dr !== 0) {
-            capDeltas = [[dr, -1], [dr, 1]];
-        } else {
-            capDeltas = [[-1, dc], [1, dc]];
-        }
-        
+        let capDeltas = dr !== 0 ? [[dr, -1], [dr, 1]] : [[-1, dc], [1, dc]];
         capDeltas.forEach(([cdr, cdc]) => {
             const tr = r + cdr, tc = c + cdc;
             if (onFourBoard(tr, tc) && fourBoard[tr][tc] && fourBoard[tr][tc].color !== color) {
@@ -913,7 +992,6 @@ function drawFourBoard() {
                 sq.classList.add('last-move');
             }
             
-            // Move indicators
             const destMove = selectedMoves.find(m => m.r === r && m.c === c);
             if (destMove) {
                 if (fourBoard[r][c]) {
@@ -927,11 +1005,10 @@ function drawFourBoard() {
                 }
             }
             
-            // Piece
             const piece = fourBoard[r][c];
             if (piece) {
                 const pEl = document.createElement('div');
-                pEl.className = 'piece-svg';
+                pEl.className = 'piece-svg animate-land';
                 pEl.innerHTML = getPieceSvg(piece.color, piece.type);
                 sq.appendChild(pEl);
             }
@@ -944,7 +1021,7 @@ function drawFourBoard() {
 
 function handleFourSquareClick(r, c) {
     if (isVoidSquare(r, c)) return;
-    if (fourMode === 'ai' && fourTurn !== 'red') return; // Only player Red plays in AI mode
+    if (fourMode === 'ai' && fourTurn !== 'red') return;
     
     const clickedPiece = fourBoard[r][c];
     
@@ -979,6 +1056,21 @@ function executeFourMove(from, to) {
     if (!movingPiece) return;
     
     const targetPiece = fourBoard[to.r][to.c];
+    
+    // Sparkle FX on 4-Player board
+    const sqEl = document.querySelector(`.four-square[data-r="${to.r}"][data-c="${to.c}"]`);
+    if (sqEl && fx4p) {
+        const rect = sqEl.getBoundingClientRect();
+        const canvasRect = fx4p.canvas.getBoundingClientRect();
+        const px = rect.left - canvasRect.left + rect.width / 2;
+        const py = rect.top - canvasRect.top + rect.height / 2;
+        if (targetPiece) {
+            fx4p.shockwave(px, py, '#ef4444');
+        } else {
+            fx4p.spark(px, py, 12, '#d4af37');
+        }
+    }
+    
     if (targetPiece) {
         audio.capture();
         fourArmies[targetPiece.color].count--;
@@ -989,7 +1081,6 @@ function executeFourMove(from, to) {
         audio.move();
     }
     
-    // Pawn promotion (after crossing 8 ranks)
     let finalPiece = { ...movingPiece, hasMoved: true };
     if (movingPiece.type === 'p') {
         if (movingPiece.dir === 'up' && to.r <= 5) finalPiece.type = 'q';
@@ -1006,7 +1097,6 @@ function executeFourMove(from, to) {
     updateFourHUD();
     drawFourBoard();
     
-    // Check Realm Victory
     const aliveKingdoms = FOUR_KINGDOMS.filter(k => fourArmies[k].alive);
     if (aliveKingdoms.length === 1) {
         const victor = aliveKingdoms[0];
@@ -1019,7 +1109,6 @@ function executeFourMove(from, to) {
         return;
     }
     
-    // If next turn is bot in vs Bots mode
     if (fourMode === 'ai' && fourTurn !== 'red') {
         setTimeout(makeFourAIMove, 450);
     }
@@ -1040,7 +1129,6 @@ function advanceFourTurn() {
 function eliminateKingdom(color) {
     fourArmies[color].alive = false;
     showToast(`${FOUR_KINGDOM_NAMES[color]} King was captured! Kingdom Eliminated!`, 'error');
-    // Clear dead kingdom pieces
     for (let r = 0; r < 14; r++) {
         for (let c = 0; c < 14; c++) {
             if (fourBoard[r][c] && fourBoard[r][c].color === color) {
@@ -1074,7 +1162,6 @@ function makeFourAIMove() {
         return;
     }
     
-    // Prioritize capturing Kings or pieces
     const kingCaptures = allMoves.filter(m => fourBoard[m.to.r][m.to.c] && fourBoard[m.to.r][m.to.c].type === 'k');
     const pieceCaptures = allMoves.filter(m => fourBoard[m.to.r][m.to.c] !== null);
     
@@ -1107,7 +1194,7 @@ function updateFourHUD() {
             card.classList.toggle('eliminated', !fourArmies[k].alive);
         }
         if (statusEl) {
-            statusEl.textContent = fourArmies[k].alive ? `Active • ${fourArmies[k].count} Army` : 'Fallen / Eliminated';
+            statusEl.textContent = fourArmies[k].alive ? `${fourArmies[k].count} Army` : 'Fallen';
         }
     });
 }
@@ -1130,7 +1217,7 @@ const PUZZLES = [
             ['P', 'P', 'P', 'P', null, 'P', 'P', 'P'],
             ['R', 'N', 'B', null, 'K', null, 'N', 'R']
         ],
-        extraWhiteQueen: { r: 4, c: 7 }, // Qh5
+        extraWhiteQueen: { r: 4, c: 7 },
         solution: { from: { r: 4, c: 7 }, to: { r: 1, c: 5 } }
     },
     {
@@ -1389,7 +1476,7 @@ function updateProfileUI() {
 }
 
 // =========================================================
-// 5. TOAST & UI UTILITIES
+// 5. TOAST & NAVIGATION
 // =========================================================
 
 function showToast(msg, type = 'info', duration = 2800) {
@@ -1415,12 +1502,38 @@ function switchTab(tabId) {
     if (screen) screen.classList.add('active');
     if (navBtn) navBtn.classList.add('active');
     
-    if (tabId === 'four-player') {
-        drawFourBoard();
-    } else if (tabId === 'arena') {
-        draw2PlayerBoard();
+    if (tabId === 'arena') {
+        if (arenaSubMode === '2p') {
+            draw2PlayerBoard();
+        } else {
+            drawFourBoard();
+        }
     } else if (tabId === 'puzzles') {
         renderCurrentPuzzle();
+    }
+}
+
+function switchArenaSubMode(mode) {
+    arenaSubMode = mode;
+    const btn2p = document.getElementById('arena-toggle-2p');
+    const btn4p = document.getElementById('arena-toggle-4p');
+    const view2p = document.getElementById('view-2player-arena');
+    const view4p = document.getElementById('view-4player-arena');
+    
+    if (mode === '2p') {
+        if (btn2p) btn2p.classList.add('active');
+        if (btn4p) btn4p.classList.remove('active');
+        if (view2p) view2p.classList.remove('hidden');
+        if (view4p) view4p.classList.add('hidden');
+        draw2PlayerBoard();
+        if (fx2p) fx2p.resize();
+    } else {
+        if (btn4p) btn4p.classList.add('active');
+        if (btn2p) btn2p.classList.remove('active');
+        if (view4p) view4p.classList.remove('hidden');
+        if (view2p) view2p.classList.add('hidden');
+        drawFourBoard();
+        if (fx4p) fx4p.resize();
     }
 }
 
@@ -1429,7 +1542,13 @@ function switchTab(tabId) {
 // =========================================================
 
 function setupEventListeners() {
-    // Navigation Tabs
+    // Mode Switcher Widget in Arena
+    const arena2pBtn = document.getElementById('arena-toggle-2p');
+    const arena4pBtn = document.getElementById('arena-toggle-4p');
+    if (arena2pBtn) arena2pBtn.addEventListener('click', () => switchArenaSubMode('2p'));
+    if (arena4pBtn) arena4pBtn.addEventListener('click', () => switchArenaSubMode('4p'));
+    
+    // Bottom Navigation Tabs
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
@@ -1463,7 +1582,7 @@ function setupEventListeners() {
             if (legals.length > 0) {
                 activeHint = legals[Math.floor(Math.random() * legals.length)];
                 draw2PlayerBoard();
-                showToast('💡 Tactical Advisor has illuminated a move!');
+                showToast('💡 Tactical Advisor illuminated a move!');
             }
         });
     }
@@ -1472,6 +1591,9 @@ function setupEventListeners() {
     if (strikeBtn) {
         strikeBtn.addEventListener('click', () => {
             audio.powerup();
+            if (fx2p) {
+                fx2p.shockwave(fx2p.canvas.width / 2, fx2p.canvas.height / 2, '#d4af37');
+            }
             showToast('⚡ Royal Strike unleashed on the battlefield!');
         });
     }
@@ -1743,6 +1865,9 @@ function startNew2PlayerGame() {
 
 // Bootstrapping
 window.addEventListener('DOMContentLoaded', () => {
+    fx2p = new CastleFX('fx-canvas');
+    fx4p = new CastleFX('four-fx-canvas');
+    
     loadProfile();
     setupEventListeners();
     init2PlayerBoard();
