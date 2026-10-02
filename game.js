@@ -1515,23 +1515,20 @@ function switchTab(tabId) {
 
 function switchArenaSubMode(mode) {
     arenaSubMode = mode;
-    const btn2p = document.getElementById('arena-toggle-2p');
-    const btn4p = document.getElementById('arena-toggle-4p');
     const view2p = document.getElementById('view-2player-arena');
     const view4p = document.getElementById('view-4player-arena');
+    const subTitle = document.getElementById('header-mode-subtitle');
     
     if (mode === '2p') {
-        if (btn2p) btn2p.classList.add('active');
-        if (btn4p) btn4p.classList.remove('active');
         if (view2p) view2p.classList.remove('hidden');
         if (view4p) view4p.classList.add('hidden');
+        if (subTitle) subTitle.textContent = 'Classic 2-Player Duel';
         draw2PlayerBoard();
         if (fx2p) fx2p.resize();
     } else {
-        if (btn4p) btn4p.classList.add('active');
-        if (btn2p) btn2p.classList.remove('active');
         if (view4p) view4p.classList.remove('hidden');
         if (view2p) view2p.classList.add('hidden');
+        if (subTitle) subTitle.textContent = 'Four Kingdoms Realm';
         drawFourBoard();
         if (fx4p) fx4p.resize();
     }
@@ -1542,12 +1539,6 @@ function switchArenaSubMode(mode) {
 // =========================================================
 
 function setupEventListeners() {
-    // Mode Switcher Widget in Arena
-    const arena2pBtn = document.getElementById('arena-toggle-2p');
-    const arena4pBtn = document.getElementById('arena-toggle-4p');
-    if (arena2pBtn) arena2pBtn.addEventListener('click', () => switchArenaSubMode('2p'));
-    if (arena4pBtn) arena4pBtn.addEventListener('click', () => switchArenaSubMode('4p'));
-    
     // Bottom Navigation Tabs
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1620,8 +1611,33 @@ function setupEventListeners() {
             document.getElementById('setup-modal').classList.add('hidden');
         });
     }
-    
-    // 2-Player Mode Selector (vs AI or Pass & Play)
+
+    // Master Setup Modal - Game Variation Selector (2P vs 4P)
+    let selectedSetupCategory = '2p';
+    const setupCat2p = document.getElementById('setup-cat-2p');
+    const setupCat4p = document.getElementById('setup-cat-4p');
+    const setup2pGroup = document.getElementById('setup-2player-group');
+    const setup4pGroup = document.getElementById('setup-4player-group');
+
+    if (setupCat2p && setupCat4p) {
+        setupCat2p.addEventListener('click', () => {
+            selectedSetupCategory = '2p';
+            setupCat2p.classList.add('active');
+            setupCat4p.classList.remove('active');
+            if (setup2pGroup) setup2pGroup.classList.remove('hidden');
+            if (setup4pGroup) setup4pGroup.classList.add('hidden');
+        });
+
+        setupCat4p.addEventListener('click', () => {
+            selectedSetupCategory = '4p';
+            setupCat4p.classList.add('active');
+            setupCat2p.classList.remove('active');
+            if (setup4pGroup) setup4pGroup.classList.remove('hidden');
+            if (setup2pGroup) setup2pGroup.classList.add('hidden');
+        });
+    }
+
+    // 2-Player Mode Selector in Setup (vs AI or Pass & Play)
     const modeAiBtn = document.getElementById('mode-ai-btn');
     const modeLocalBtn = document.getElementById('mode-local-btn');
     const aiInputs = document.getElementById('ai-name-inputs');
@@ -1652,8 +1668,38 @@ function setupEventListeners() {
             showToast('Mode: Pass & Play 👥 (2 Human Players)');
         });
     }
+
+    // 4-Player Battle Mode Selector in Setup
+    const setup4pAiBtn = document.getElementById('setup-4p-ai-btn');
+    const setup4pPassBtn = document.getElementById('setup-4p-pass-btn');
+    const setup4pOnlineBtn = document.getElementById('setup-4p-online-btn');
+
+    if (setup4pAiBtn) {
+        setup4pAiBtn.addEventListener('click', () => {
+            fourMode = 'ai';
+            setup4pAiBtn.classList.add('active');
+            if (setup4pPassBtn) setup4pPassBtn.classList.remove('active');
+            if (setup4pOnlineBtn) setup4pOnlineBtn.classList.remove('active');
+            showToast('Mode: 🤖 vs 3 Kingdom Bots');
+        });
+    }
+    if (setup4pPassBtn) {
+        setup4pPassBtn.addEventListener('click', () => {
+            fourMode = 'pass';
+            setup4pPassBtn.classList.add('active');
+            if (setup4pAiBtn) setup4pAiBtn.classList.remove('active');
+            if (setup4pOnlineBtn) setup4pOnlineBtn.classList.remove('active');
+            showToast('Mode: 👥 Pass & Play (All 4 Kingdoms Active)');
+        });
+    }
+    if (setup4pOnlineBtn) {
+        setup4pOnlineBtn.addEventListener('click', () => {
+            document.getElementById('setup-modal').classList.add('hidden');
+            document.getElementById('four-lobby-modal').classList.remove('hidden');
+        });
+    }
     
-    // 2-Player Setup Match Form
+    // 2-Player Clocks, Colors, and Bots
     document.querySelectorAll('.clock-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.clock-btn').forEach(b => b.classList.remove('active'));
@@ -1682,15 +1728,29 @@ function setupEventListeners() {
         });
     });
     
+    // COMMENCE MATCH BUTTON
     const startMatchBtn = document.getElementById('start-match-btn');
     if (startMatchBtn) {
         startMatchBtn.addEventListener('click', () => {
             document.getElementById('setup-modal').classList.add('hidden');
-            startNew2PlayerGame();
+            if (selectedSetupCategory === '4p') {
+                const custom4pName = document.getElementById('setup-4p-name-input')?.value.trim();
+                if (custom4pName) {
+                    lordProfile.name = custom4pName;
+                    saveProfile();
+                }
+                switchArenaSubMode('4p');
+                initFourPlayerBoard();
+                showToast('⚔️ Four Kingdoms Realm Commenced!');
+            } else {
+                switchArenaSubMode('2p');
+                startNew2PlayerGame();
+                showToast('⚔️ Classic Castle Duel Commenced!');
+            }
         });
     }
     
-    // 4-Player Controls
+    // 4-Player Board Quick Actions
     const fourResetBtn = document.getElementById('four-reset-btn');
     if (fourResetBtn) {
         fourResetBtn.addEventListener('click', () => {
@@ -1718,35 +1778,7 @@ function setupEventListeners() {
     if (fourRulesClose) fourRulesClose.addEventListener('click', () => document.getElementById('four-rules-modal').classList.add('hidden'));
     if (fourRulesOk) fourRulesOk.addEventListener('click', () => document.getElementById('four-rules-modal').classList.add('hidden'));
     
-    // 4-Player Mode buttons
-    const fourModeAIBtn = document.getElementById('four-mode-ai-btn');
-    const fourModePassBtn = document.getElementById('four-mode-pass-btn');
-    const fourModeOnlineBtn = document.getElementById('four-mode-online-btn');
-    
-    if (fourModeAIBtn) {
-        fourModeAIBtn.addEventListener('click', () => {
-            fourMode = 'ai';
-            fourModeAIBtn.classList.add('active');
-            fourModePassBtn.classList.remove('active');
-            fourModeOnlineBtn.classList.remove('active');
-            showToast('Mode: 🤖 vs 3 Kingdom Bots');
-        });
-    }
-    if (fourModePassBtn) {
-        fourModePassBtn.addEventListener('click', () => {
-            fourMode = 'pass';
-            fourModePassBtn.classList.add('active');
-            fourModeAIBtn.classList.remove('active');
-            fourModeOnlineBtn.classList.remove('active');
-            showToast('Mode: 👥 Pass & Play (All 4 Kingdoms Active)');
-        });
-    }
-    if (fourModeOnlineBtn) {
-        fourModeOnlineBtn.addEventListener('click', () => {
-            document.getElementById('four-lobby-modal').classList.remove('hidden');
-        });
-    }
-    
+    // 4-Player Online Lobby
     const lobbyClose = document.getElementById('four-lobby-close-btn');
     if (lobbyClose) lobbyClose.addEventListener('click', () => document.getElementById('four-lobby-modal').classList.add('hidden'));
     
@@ -1759,14 +1791,14 @@ function setupEventListeners() {
         hostTabBtn.addEventListener('click', () => {
             hostTabBtn.classList.add('active');
             joinTabBtn.classList.remove('active');
-            hostView.classList.remove('hidden');
-            joinView.classList.add('hidden');
+            if (hostView) hostView.classList.remove('hidden');
+            if (joinView) joinView.classList.add('hidden');
         });
         joinTabBtn.addEventListener('click', () => {
             joinTabBtn.classList.add('active');
             hostTabBtn.classList.remove('active');
-            joinView.classList.remove('hidden');
-            hostView.classList.add('hidden');
+            if (joinView) joinView.classList.remove('hidden');
+            if (hostView) hostView.classList.add('hidden');
         });
     }
     
@@ -1774,6 +1806,7 @@ function setupEventListeners() {
     if (hostLaunchBtn) {
         hostLaunchBtn.addEventListener('click', () => {
             document.getElementById('four-lobby-modal').classList.add('hidden');
+            switchArenaSubMode('4p');
             initFourPlayerBoard();
             showToast('⚔️ Royal Realm Battle Commenced!');
         });
@@ -1785,6 +1818,7 @@ function setupEventListeners() {
             const code = document.getElementById('join-code-input').value.trim();
             if (code) {
                 document.getElementById('four-lobby-modal').classList.add('hidden');
+                switchArenaSubMode('4p');
                 initFourPlayerBoard();
                 showToast(`🛡️ Entered Realm Room: ${code}!`);
             } else {
@@ -1793,26 +1827,30 @@ function setupEventListeners() {
         });
     }
     
-    // Puzzles Tab Subnav
-    const subPuzzlesBtn = document.getElementById('subnav-puzzles-btn');
-    const subOpeningsBtn = document.getElementById('subnav-openings-btn');
+    // Unified Tactics Mode Dropdown
+    const tacticsDropdown = document.getElementById('tactics-mode-dropdown');
     const puzzlesView = document.getElementById('puzzles-view-container');
     const openingsView = document.getElementById('openings-view-container');
     
-    if (subPuzzlesBtn && subOpeningsBtn) {
-        subPuzzlesBtn.addEventListener('click', () => {
-            subPuzzlesBtn.classList.add('active');
-            subOpeningsBtn.classList.remove('active');
-            puzzlesView.classList.remove('hidden');
-            openingsView.classList.add('hidden');
-        });
-        subOpeningsBtn.addEventListener('click', () => {
-            subOpeningsBtn.classList.add('active');
-            subPuzzlesBtn.classList.remove('active');
-            openingsView.classList.remove('hidden');
-            puzzlesView.classList.add('hidden');
-            initOpeningsBoard();
-            drawOpeningsBoard();
+    if (tacticsDropdown) {
+        tacticsDropdown.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val === 'puzzles') {
+                if (puzzlesView) puzzlesView.classList.remove('hidden');
+                if (openingsView) openingsView.classList.add('hidden');
+                renderCurrentPuzzle();
+            } else {
+                if (puzzlesView) puzzlesView.classList.add('hidden');
+                if (openingsView) openingsView.classList.remove('hidden');
+                currentOpeningKey = val;
+                const op = OPENINGS_DATA[currentOpeningKey];
+                if (op) {
+                    document.getElementById('opening-title').textContent = op.title;
+                    document.getElementById('opening-desc').textContent = op.desc;
+                    document.getElementById('opening-move-notation').textContent = op.notation;
+                    stepOpeningMove('reset');
+                }
+            }
         });
     }
     
@@ -1826,19 +1864,6 @@ function setupEventListeners() {
     const puzzleResetBtn = document.getElementById('puzzle-reset-btn');
     if (puzzleResetBtn) {
         puzzleResetBtn.addEventListener('click', () => renderCurrentPuzzle());
-    }
-    
-    // Openings
-    const openDropdown = document.getElementById('openings-dropdown');
-    if (openDropdown) {
-        openDropdown.addEventListener('change', (e) => {
-            currentOpeningKey = e.target.value;
-            const op = OPENINGS_DATA[currentOpeningKey];
-            document.getElementById('opening-title').textContent = op.title;
-            document.getElementById('opening-desc').textContent = op.desc;
-            document.getElementById('opening-move-notation').textContent = op.notation;
-            stepOpeningMove('reset');
-        });
     }
     
     const openNextBtn = document.getElementById('opening-next-btn');
