@@ -1,8 +1,8 @@
 {
-  "id": "electro-king-chess-pwa",
-  "name": "Electro King Chess",
-  "short_name": "Electro King",
-  "description": "Stunning cyber-neon chess game featuring multiple AI difficulties, electric particle effects, and gamified career scoring.",
+  "id": "royal-chess-realm-pwa",
+  "name": "Royal Chess",
+  "short_name": "Royal Chess",
+  "description": "Stunning Royal Castle chess game featuring 2-Player duel and 4-Player Four Kingdoms Realm modes with brilliant animations and tactical master challenges.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./index.html",
@@ -14,8 +14,8 @@
     "minimal-ui"
   ],
   "orientation": "portrait",
-  "background_color": "#0b071e",
-  "theme_color": "#0b071e",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
   "categories": [
     "games",
     "entertainment",
@@ -60,27 +60,11 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "screenshot_phone.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Electro King Cyber Chess Board"
-    },
-    {
-      "src": "screenshot_wide.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Electro King Cyber Match View"
-    }
-  ],
   "shortcuts": [
     {
-      "name": "Play vs Computer",
-      "short_name": "vs Bot",
-      "description": "Start a quick chess match against AI",
+      "name": "Play Royal Chess",
+      "short_name": "Battle",
+      "description": "Launch a royal match in the arena",
       "url": "./index.html",
       "icons": [
         {

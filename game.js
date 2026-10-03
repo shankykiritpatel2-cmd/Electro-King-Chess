@@ -1782,16 +1782,23 @@ function setupEventListeners() {
     // 4P Mode (vs 3 Bots vs Pass & Play)
     const fourAiBtn = document.getElementById('home-4p-ai-btn');
     const fourPassBtn = document.getElementById('home-4p-pass-btn');
+    const fourAiNameSec = document.getElementById('home-4p-ai-name-section');
+    const fourPassNamesSec = document.getElementById('home-4p-pass-names-section');
+    
     if (fourAiBtn && fourPassBtn) {
         fourAiBtn.addEventListener('click', () => {
             fourAiBtn.classList.add('active');
             fourPassBtn.classList.remove('active');
             fourMode = 'ai';
+            if (fourAiNameSec) fourAiNameSec.classList.remove('hidden');
+            if (fourPassNamesSec) fourPassNamesSec.classList.add('hidden');
         });
         fourPassBtn.addEventListener('click', () => {
             fourPassBtn.classList.add('active');
             fourAiBtn.classList.remove('active');
             fourMode = 'pass';
+            if (fourAiNameSec) fourAiNameSec.classList.add('hidden');
+            if (fourPassNamesSec) fourPassNamesSec.classList.remove('hidden');
         });
     }
     
@@ -1802,7 +1809,8 @@ function setupEventListeners() {
             // Save player name
             const nameInput = document.getElementById('home-player-name');
             const fourNameInput = document.getElementById('home-4p-player-name');
-            const customName = (arenaSubMode === '4p' ? fourNameInput?.value : nameInput?.value)?.trim();
+            const fourRedInput = document.getElementById('home-4p-name-red');
+            const customName = (arenaSubMode === '4p' ? (fourMode === 'pass' ? fourRedInput?.value : fourNameInput?.value) : nameInput?.value)?.trim();
             if (customName) {
                 lordProfile.name = customName;
                 saveProfile();
@@ -2088,15 +2096,49 @@ function startNew4PlayerGame() {
     isHumanDefeated4P = false;
     isFourMatchActive = true;
     
-    const pName = lordProfile.name || 'Player';
-    const redNameEl = document.getElementById('k-name-red');
-    if (redNameEl) redNameEl.textContent = pName;
+    if (fourMode === 'pass') {
+        const nRed = document.getElementById('home-4p-name-red')?.value.trim() || lordProfile.name || 'Player 1';
+        const nBlue = document.getElementById('home-4p-name-blue')?.value.trim() || 'Player 2';
+        const nGold = document.getElementById('home-4p-name-gold')?.value.trim() || 'Player 3';
+        const nGreen = document.getElementById('home-4p-name-green')?.value.trim() || 'Player 4';
+        
+        FOUR_KINGDOM_NAMES.red = nRed;
+        FOUR_KINGDOM_NAMES.blue = nBlue;
+        FOUR_KINGDOM_NAMES.gold = nGold;
+        FOUR_KINGDOM_NAMES.green = nGreen;
+        
+        const redEl = document.getElementById('k-name-red');
+        const blueEl = document.getElementById('k-name-blue');
+        const goldEl = document.getElementById('k-name-gold');
+        const greenEl = document.getElementById('k-name-green');
+        
+        if (redEl) redEl.textContent = nRed;
+        if (blueEl) blueEl.textContent = nBlue;
+        if (goldEl) goldEl.textContent = nGold;
+        if (greenEl) greenEl.textContent = nGreen;
+    } else {
+        const pName = document.getElementById('home-4p-player-name')?.value.trim() || lordProfile.name || 'Player';
+        FOUR_KINGDOM_NAMES.red = pName;
+        FOUR_KINGDOM_NAMES.blue = 'Blue Baron 🤖';
+        FOUR_KINGDOM_NAMES.gold = 'Gold Emperor 🤖';
+        FOUR_KINGDOM_NAMES.green = 'Green Duke 🤖';
+        
+        const redEl = document.getElementById('k-name-red');
+        const blueEl = document.getElementById('k-name-blue');
+        const goldEl = document.getElementById('k-name-gold');
+        const greenEl = document.getElementById('k-name-green');
+        
+        if (redEl) redEl.textContent = pName;
+        if (blueEl) blueEl.textContent = 'Blue Baron';
+        if (goldEl) goldEl.textContent = 'Gold Emperor';
+        if (greenEl) greenEl.textContent = 'Green Duke';
+    }
     
     initFourPlayerBoard();
 }
 
 function loadProfile() {
-    const savedName = localStorage.getItem('electro_player_name');
+    const savedName = localStorage.getItem('royal_player_name') || localStorage.getItem('electro_player_name');
     if (savedName && savedName !== 'Lord Sovereign') {
         lordProfile.name = savedName;
     } else {
@@ -2105,10 +2147,12 @@ function loadProfile() {
     
     const homeInput = document.getElementById('home-player-name');
     const fourInput = document.getElementById('home-4p-player-name');
+    const fourRedInput = document.getElementById('home-4p-name-red');
     const authInput = document.getElementById('auth-username-input');
     
     if (homeInput) homeInput.value = lordProfile.name;
     if (fourInput) fourInput.value = lordProfile.name;
+    if (fourRedInput) fourRedInput.value = lordProfile.name;
     if (authInput) authInput.value = lordProfile.name;
     
     updateProfileUI();
@@ -2116,6 +2160,7 @@ function loadProfile() {
 
 function saveProfile() {
     if (lordProfile.name) {
+        localStorage.setItem('royal_player_name', lordProfile.name);
         localStorage.setItem('electro_player_name', lordProfile.name);
     }
     updateProfileUI();

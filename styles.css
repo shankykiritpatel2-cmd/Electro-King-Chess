@@ -108,25 +108,39 @@ body {
 }
 
 .logo-title {
-    font-family: 'Outfit', 'Cinzel', sans-serif;
-    font-size: 1.16rem;
+    font-family: 'Cinzel', 'Outfit', serif;
+    font-size: 1.22rem;
     font-weight: 900;
-    letter-spacing: 1.2px;
-    background: linear-gradient(135deg, #fff9d6 0%, #ffd700 35%, #d4af37 70%, #aa8210 100%);
+    letter-spacing: 1.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #fff2b2 25%, #ffd700 50%, #d4af37 75%, #aa8210 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.45));
+    filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.55));
     line-height: 1.1;
     text-transform: uppercase;
 }
 
 .logo-subtitle {
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.6rem;
+    font-family: 'Cinzel', 'Outfit', sans-serif;
+    font-size: 0.62rem;
     color: var(--text-muted);
     font-weight: 700;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
     text-transform: uppercase;
+}
+
+.name-grid-4p {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.setup-sub-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    display: block;
 }
 
 /* Turn Status Widget */

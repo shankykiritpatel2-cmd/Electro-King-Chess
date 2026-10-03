@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electro King 👑 - Castle Realm Chess</title>
+    <title>Royal Chess 👑 - Castle Realm</title>
     <!-- Royal Medieval Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=36">
+    <link rel="stylesheet" href="styles.css?v=37">
     <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b0f17">
@@ -22,8 +22,8 @@
             <div class="header-left">
                 <div class="logo-group">
                     <div class="logo-text-block">
-                        <h1 class="logo-title">ELECTRO KING 👑</h1>
-                        <span class="logo-subtitle" id="header-mode-subtitle">Castle Realm Chess</span>
+                        <h1 class="logo-title">ROYAL CHESS 👑</h1>
+                        <span class="logo-subtitle" id="header-mode-subtitle">Castle Realm</span>
                     </div>
                 </div>
             </div>
@@ -146,9 +146,33 @@
                             </div>
                         </div>
 
-                        <div class="home-card-section">
+                        <!-- 4P vs 3 Bots Single Name Section -->
+                        <div class="home-card-section" id="home-4p-ai-name-section">
                             <label class="setup-label" for="home-4p-player-name">🔴 Your Name (South Red Lord)</label>
                             <input type="text" id="home-4p-player-name" class="setup-input" placeholder="Enter your name">
+                        </div>
+
+                        <!-- 4P Pass & Play 4-Player Names Grid -->
+                        <div class="home-card-section hidden" id="home-4p-pass-names-section">
+                            <label class="setup-label">👥 4-Player Kingdom Names</label>
+                            <div class="name-grid-4p">
+                                <div>
+                                    <label class="setup-sub-label" for="home-4p-name-red">🔴 Red Lord (South)</label>
+                                    <input type="text" id="home-4p-name-red" class="setup-input" placeholder="Player 1">
+                                </div>
+                                <div>
+                                    <label class="setup-sub-label" for="home-4p-name-blue">🔵 Blue Baron (West)</label>
+                                    <input type="text" id="home-4p-name-blue" class="setup-input" placeholder="Player 2">
+                                </div>
+                                <div>
+                                    <label class="setup-sub-label" for="home-4p-name-gold">🟡 Gold Emperor (North)</label>
+                                    <input type="text" id="home-4p-name-gold" class="setup-input" placeholder="Player 3">
+                                </div>
+                                <div>
+                                    <label class="setup-sub-label" for="home-4p-name-green">🟢 Green Duke (East)</label>
+                                    <input type="text" id="home-4p-name-green" class="setup-input" placeholder="Player 4">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="rules-scroll-content" style="margin-top:6px;">
