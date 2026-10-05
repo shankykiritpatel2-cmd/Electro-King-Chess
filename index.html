@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Chess 👑 - Castle Realm</title>
+    <title>Electro King 👑 - Castle Realm Chess</title>
     <!-- Royal Medieval Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=37">
+    <link rel="stylesheet" href="styles.css?v=38">
     <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0b0f17">
+    <meta name="theme-color" content="#0b071e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body class="theme-castle">
+<body class="theme-cyber">
     <div class="game-container">
         <!-- ROYAL CASTLE HEADER -->
         <header class="game-header">
             <div class="header-left">
                 <div class="logo-group">
                     <div class="logo-text-block">
-                        <h1 class="logo-title">ROYAL CHESS 👑</h1>
-                        <span class="logo-subtitle" id="header-mode-subtitle">Castle Realm</span>
+                        <h1 class="logo-title">ELECTRO KING 👑</h1>
+                        <span class="logo-subtitle" id="header-mode-subtitle">Castle Realm Chess</span>
                     </div>
                 </div>
             </div>
@@ -105,6 +105,29 @@
                                 <button type="button" class="color-btn active" id="home-side-white" data-side="white">⚪ White Army</button>
                                 <button type="button" class="color-btn" id="home-side-random" data-side="random">🎲 Random</button>
                                 <button type="button" class="color-btn" id="home-side-black" data-side="black">⚫ Black Army</button>
+                            </div>
+                        </div>
+
+                        <!-- BOARD THEME SELECTION -->
+                        <div class="home-card-section">
+                            <label class="setup-label">🎨 Board Theme</label>
+                            <div class="theme-toggle-grid">
+                                <button type="button" class="theme-card-btn active" data-theme="cyber">
+                                    <span class="theme-swatch cyber"></span>
+                                    <span class="theme-name">⚡ Electro</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="obsidian">
+                                    <span class="theme-swatch obsidian"></span>
+                                    <span class="theme-name">🌌 Obsidian</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="gold">
+                                    <span class="theme-swatch gold"></span>
+                                    <span class="theme-name">👑 Gold</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="matrix">
+                                    <span class="theme-swatch matrix"></span>
+                                    <span class="theme-name">🌲 Matrix</span>
+                                </button>
                             </div>
                         </div>
 
@@ -200,7 +223,10 @@
                                 <span class="player-sub-tag" id="opponent-sub-tag">AI Knight • ~1200 Elo</span>
                             </div>
                         </div>
-                        <div class="captured-list horizontal" id="captured-by-black"></div>
+                        <div class="captured-tray-wrapper" id="tray-black">
+                            <div class="captured-list horizontal" id="captured-by-black"></div>
+                            <span class="material-advantage-badge hidden" id="advantage-black">+0</span>
+                        </div>
                         <div class="clock-badge-widget" id="clock-black" title="Opponent Sandglass">
                             <span class="clock-icon">⏳</span>
                             <span class="clock-time" id="time-black">∞</span>
@@ -225,7 +251,7 @@
                         </div>
                     </section>
 
-                    <!-- LIVE MOVE HISTORY SCROLL WIDGET -->
+                    <!-- LIVE MOVE HISTORY SCROLL WIDGET & REPLAY CONTROLS -->
                     <div class="move-history-widget" id="move-history-ribbon">
                         <div class="history-header-tag">
                             <span>📜 Moves</span>
@@ -233,6 +259,18 @@
                         <div class="history-chips-container" id="history-chips">
                             <span class="history-empty-placeholder">Royal duel ready to commence...</span>
                         </div>
+                        <div class="replay-controls-group">
+                            <button type="button" class="replay-step-btn" id="replay-start-btn" title="Start of Match">⏮️</button>
+                            <button type="button" class="replay-step-btn" id="replay-prev-btn" title="Previous Move">◀</button>
+                            <button type="button" class="replay-step-btn" id="replay-next-btn" title="Next Move">▶</button>
+                            <button type="button" class="replay-step-btn" id="replay-end-btn" title="Live Position">⏭️</button>
+                        </div>
+                    </div>
+
+                    <!-- REPLAY READ-ONLY NOTICE BANNER -->
+                    <div class="replay-notice-banner hidden" id="replay-notice-banner">
+                        <span>🔍 Reviewing Move <b id="replay-move-label">1</b> (Read-Only)</span>
+                        <button type="button" class="replay-return-btn" id="replay-return-btn">Return to Live ⚡</button>
                     </div>
 
                     <!-- YOUR PLAYER BAR -->
@@ -244,7 +282,10 @@
                                 <span class="player-sub-tag" id="player-sub-tag">Grandmaster</span>
                             </div>
                         </div>
-                        <div class="captured-list horizontal" id="captured-by-white"></div>
+                        <div class="captured-tray-wrapper" id="tray-white">
+                            <div class="captured-list horizontal" id="captured-by-white"></div>
+                            <span class="material-advantage-badge hidden" id="advantage-white">+0</span>
+                        </div>
                         <div class="clock-badge-widget" id="clock-white" title="Your Sandglass">
                             <span class="clock-icon">⏳</span>
                             <span class="clock-time" id="time-white">∞</span>
@@ -286,20 +327,29 @@
                         </div>
                     </div>
 
+                    <!-- REALM TURN INDICATOR BANNER -->
+                    <div class="four-turn-banner red" id="four-turn-banner">
+                        <span class="four-turn-dot" id="four-turn-dot"></span>
+                        <span class="four-turn-text" id="four-turn-text">🔴 Red Lord's Turn (South)</span>
+                    </div>
+
                     <!-- 14x14 FOUR KINGDOMS CHESSBOARD -->
                     <div class="four-board-outer-wrapper">
-                        <div class="four-board-frame">
+                        <div class="four-board-frame turn-red" id="four-board-frame">
                             <div class="four-board" id="four-chessboard">
                                 <!-- 14x14 grid dynamically rendered -->
                             </div>
                             <canvas id="four-fx-canvas" class="fx-canvas"></canvas>
+                            <div class="four-elimination-banner hidden" id="four-elim-banner">
+                                <span class="elim-icon">💀</span>
+                                <span class="elim-text" id="four-elim-text">Blue Baron Has Fallen!</span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- 4-PLAYER ACTIONS WIDGET -->
                     <div class="four-quick-actions-widget">
                         <button id="four-reset-btn" class="secondary-btn btn-sm">🔄 Reset Realm</button>
-                        <button id="four-ai-step-btn" class="primary-btn btn-sm">⚡ Auto-Play AI</button>
                         <button id="four-rules-btn" class="secondary-btn btn-sm">📜 Rules</button>
                     </div>
                 </div>
@@ -316,14 +366,19 @@
                         <span class="action-txt">Hint</span>
                     </button>
                     
-                    <button id="powerup-btn" class="clean-action-btn powerup-action" title="Royal Lightning Strike">
-                        <span class="action-icon">⚡</span>
-                        <span class="action-txt">Strike</span>
+                    <button id="draw-btn" class="clean-action-btn" title="Offer Draw">
+                        <span class="action-icon">🤝</span>
+                        <span class="action-txt">Draw</span>
                     </button>
 
-                    <button id="sound-btn" class="clean-action-btn" title="Sound Effects">
-                        <span class="action-icon" id="sound-icon">🔊</span>
-                        <span class="action-txt">Sound</span>
+                    <button id="resign-btn" class="clean-action-btn" title="Resign Match">
+                        <span class="action-icon">🏳️</span>
+                        <span class="action-txt">Resign</span>
+                    </button>
+
+                    <button id="match-options-btn" class="clean-action-btn" title="Match Settings & Theme">
+                        <span class="action-icon">⚙️</span>
+                        <span class="action-txt">Options</span>
                     </button>
 
                     <button id="menu-btn" class="clean-action-btn" title="Return to Home">
@@ -333,28 +388,40 @@
                 </div>
             </section>
 
-            <!-- TAB 3: CASTLE TACTICS (PUZZLES & OPENINGS MASTER) -->
+            <!-- TAB 2: 5 DAILY CASTLE PUZZLES -->
             <section class="tab-screen" id="screen-puzzles">
-                <div class="puzzle-view-card">
-                    <!-- PUZZLE HEADER & SWITCHER -->
-                    <div class="puzzle-academy-header">
-                        <div class="openings-selector-row">
-                            <select id="tactics-mode-dropdown" class="cyber-select">
-                                <option value="puzzles">🧩 Daily Castle Puzzles</option>
-                                <option value="italian">⚔️ Italian Game (Giuoco Piano)</option>
-                                <option value="sicilian">🛡️ Sicilian Defense (Open)</option>
-                                <option value="queens_gambit">👑 Queen's Gambit</option>
-                                <option value="ruy_lopez">⚡ Ruy Lopez (Spanish Opening)</option>
-                                <option value="french">🏰 French Defense</option>
-                                <option value="scandinavian">🌊 Scandinavian Defense</option>
-                            </select>
+                <div class="scrollable-screen-content puzzle-screen-container">
+                    <div class="home-header-banner">
+                        <h2 class="glow-text">5 DAILY CASTLE PUZZLES 🧩</h2>
+                        <p class="home-subtext">Solve today's 5 tactical challenges. Refreshes every day!</p>
+                    </div>
+
+                    <!-- DAILY STREAK BANNER -->
+                    <div class="puzzle-streak-card" id="puzzle-streak-card">
+                        <div class="streak-flame-wrapper">
+                            <span class="streak-flame-icon">🔥</span>
+                        </div>
+                        <div class="streak-details">
+                            <div class="streak-title-row">
+                                <span class="streak-count" id="puzzle-streak-count">0 Day Streak</span>
+                                <span class="streak-tier-badge" id="puzzle-streak-tier">⭐ Squire Tactician</span>
+                            </div>
+                            <p class="streak-sub" id="puzzle-streak-sub">Clear all 5 puzzles today to advance your streak!</p>
                         </div>
                     </div>
 
-                    <!-- PUZZLES VIEW -->
+                    <!-- 5 DAILY PROGRESS PILLS -->
+                    <div class="puzzle-progress-row" id="puzzle-progress-pills">
+                        <!-- 5 puzzle indicator pills dynamically rendered -->
+                    </div>
+
+                    <!-- PUZZLES VIEW BOX -->
                     <div id="puzzles-view-container" class="puzzle-challenge-box">
                         <div class="puzzle-info-bar">
-                            <span class="puzzle-level-tag" id="puzzle-level-tag">Puzzle #1: Mate in 1</span>
+                            <div class="puzzle-title-row">
+                                <span class="puzzle-level-tag" id="puzzle-level-tag">Daily Puzzle #1: Back-Rank Mate</span>
+                                <span class="puzzle-solved-tag hidden" id="puzzle-solved-badge">✅ Solved Today</span>
+                            </div>
                             <span class="puzzle-instruction" id="puzzle-turn-text">⚪ White to move & checkmate</span>
                         </div>
                         
@@ -365,32 +432,12 @@
                         </div>
 
                         <div class="puzzle-actions">
-                            <button id="puzzle-hint-btn" class="secondary-btn">💡 Hint</button>
-                            <button id="puzzle-reset-btn" class="secondary-btn">🔄 Reset</button>
-                            <button id="puzzle-next-btn" class="primary-btn pulse-btn">Next Puzzle ➡️</button>
+                            <button id="puzzle-prev-btn" class="secondary-btn btn-sm">⬅️ Prev</button>
+                            <button id="puzzle-hint-btn" class="secondary-btn btn-sm">💡 Hint</button>
+                            <button id="puzzle-reset-btn" class="secondary-btn btn-sm">🔄 Reset</button>
+                            <button id="puzzle-next-btn" class="primary-btn btn-sm">Next ➡️</button>
                         </div>
                         <div class="puzzle-status-feedback" id="puzzle-feedback"></div>
-                    </div>
-
-                    <!-- OPENINGS MASTER VIEW -->
-                    <div id="openings-view-container" class="openings-challenge-box hidden">
-                        <div class="puzzle-board-container">
-                            <div class="board-border mini-border">
-                                <div class="board" id="openings-board"></div>
-                            </div>
-                        </div>
-
-                        <div class="opening-explanation-card">
-                            <h4 id="opening-title">Italian Game</h4>
-                            <p id="opening-desc">One of the oldest chess openings. Develops the Bishop to c4 to target the weak f7 square.</p>
-                            <span id="opening-move-notation" class="opening-moves-pill">1. e4 e5 2. Nf3 Nc6 3. Bc4</span>
-                        </div>
-
-                        <div class="puzzle-actions">
-                            <button id="opening-prev-btn" class="secondary-btn">⬅️ Prev</button>
-                            <button id="opening-reset-btn" class="secondary-btn">🔄 Start</button>
-                            <button id="opening-next-btn" class="primary-btn">Next Move ➡️</button>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -438,12 +485,63 @@
                         </div>
                     </div>
 
+                    <!-- HEAD-TO-HEAD BOT OPPONENTS RECORD -->
+                    <div class="settings-card" style="margin-top: 12px;">
+                        <h4 class="settings-heading">🛡️ Opponent Knights Record</h4>
+                        <div class="bot-records-grid">
+                            <div class="bot-record-row">
+                                <span class="bot-rec-icon">🛡️</span>
+                                <div class="bot-rec-name-group">
+                                    <span class="bot-rec-name">Squire Leon</span>
+                                    <span class="bot-rec-sub">~600 Elo</span>
+                                </div>
+                                <span class="bot-rec-score" id="rec-bot-1">0W - 0L</span>
+                            </div>
+                            <div class="bot-record-row">
+                                <span class="bot-rec-icon">⚔️</span>
+                                <div class="bot-rec-name-group">
+                                    <span class="bot-rec-name">Sir Galahad</span>
+                                    <span class="bot-rec-sub">~1200 Elo</span>
+                                </div>
+                                <span class="bot-rec-score" id="rec-bot-2">0W - 0L</span>
+                            </div>
+                            <div class="bot-record-row">
+                                <span class="bot-rec-icon">🏰</span>
+                                <div class="bot-rec-name-group">
+                                    <span class="bot-rec-name">Lady Morgana</span>
+                                    <span class="bot-rec-sub">~1700 Elo</span>
+                                </div>
+                                <span class="bot-rec-score" id="rec-bot-3">0W - 0L</span>
+                            </div>
+                            <div class="bot-record-row">
+                                <span class="bot-rec-icon">👑</span>
+                                <div class="bot-rec-name-group">
+                                    <span class="bot-rec-name">King Arthur</span>
+                                    <span class="bot-rec-sub">~2200 Elo</span>
+                                </div>
+                                <span class="bot-rec-score" id="rec-bot-4">0W - 0L</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROYAL HONOR ACHIEVEMENTS -->
+                    <div class="settings-card" style="margin-top: 12px;">
+                        <h4 class="settings-heading">🏆 Royal Honor Badges</h4>
+                        <div class="achievements-grid" id="achievements-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
                     <!-- PREFERENCES SETTINGS -->
                     <div class="settings-card">
                         <h4 class="settings-heading">⚙️ Castle Preferences</h4>
                         <div class="pref-row">
                             <span>🔊 Sound Effects & Fanfare</span>
                             <input type="checkbox" id="pref-sound-toggle" checked>
+                        </div>
+                        <div class="pref-row">
+                            <span>📳 Haptic Vibration</span>
+                            <input type="checkbox" id="pref-vibrate-toggle" checked>
                         </div>
                         <div class="pref-row">
                             <span>📐 Chessboard Coordinates</span>
@@ -453,20 +551,37 @@
                             <span>📊 Position Advantage Eval Bar</span>
                             <input type="checkbox" id="pref-eval-toggle" checked>
                         </div>
+                        <div style="margin-top: 14px;">
+                            <label class="setup-label">🎨 Board Theme</label>
+                            <div class="theme-toggle-grid">
+                                <button type="button" class="theme-card-btn active" data-theme="cyber">
+                                    <span class="theme-swatch cyber"></span>
+                                    <span class="theme-name">⚡ Electro</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="obsidian">
+                                    <span class="theme-swatch obsidian"></span>
+                                    <span class="theme-name">🌌 Obsidian</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="gold">
+                                    <span class="theme-swatch gold"></span>
+                                    <span class="theme-name">👑 Gold</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="matrix">
+                                    <span class="theme-swatch matrix"></span>
+                                    <span class="theme-name">🌲 Matrix</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
         </div>
 
-        <!-- PERSISTENT STREAMLINED 4-TAB BOTTOM NAVIGATION DOCK -->
+        <!-- PERSISTENT STREAMLINED BOTTOM NAVIGATION DOCK -->
         <nav class="bottom-nav-dock">
             <button class="nav-tab active" id="nav-btn-home" data-tab="home">
                 <span class="nav-icon">🏰</span>
                 <span class="nav-label">Home</span>
-            </button>
-            <button class="nav-tab" id="nav-btn-arena" data-tab="arena">
-                <span class="nav-icon">⚔️</span>
-                <span class="nav-label">Arena</span>
             </button>
             <button class="nav-tab" id="nav-btn-puzzles" data-tab="puzzles">
                 <span class="nav-icon">🧩</span>
@@ -506,6 +621,48 @@
             <div style="display:flex; gap:8px; margin-top:14px;">
                 <button id="four-defeat-home-btn" class="secondary-btn" style="flex:1;">🏠 RETURN HOME</button>
                 <button id="four-defeat-restart-btn" class="start-btn" style="flex:1;">⚔️ NEW GAME</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4-PLAYER VICTORY PODIUM MODAL -->
+    <div class="modal-overlay hidden" id="four-podium-modal">
+        <div class="modal-card text-center podium-modal-card">
+            <h2 class="glow-text">REALM CONQUERED! 👑</h2>
+            <p class="modal-sub" id="four-podium-sub">The great Four Kingdoms battle has concluded.</p>
+            
+            <div class="podium-container">
+                <!-- 1st Place (Conqueror) -->
+                <div class="podium-champion-card" id="podium-pos-1">
+                    <span class="podium-crown-icon">👑</span>
+                    <div class="podium-crest-large" id="podium-crest-1">🔴</div>
+                    <span class="podium-champ-name" id="podium-name-1">Red Lord</span>
+                    <span class="podium-badge gold">🥇 1st Place • Realm Champion</span>
+                </div>
+                
+                <!-- Runners Up 2nd, 3rd, 4th -->
+                <div class="podium-runners-grid">
+                    <div class="podium-runner-card" id="podium-pos-2">
+                        <span class="runner-rank silver">🥈 2nd</span>
+                        <div class="podium-crest-mini" id="podium-crest-2">🔵</div>
+                        <span class="runner-name" id="podium-name-2">Blue Baron</span>
+                    </div>
+                    <div class="podium-runner-card" id="podium-pos-3">
+                        <span class="runner-rank bronze">🥉 3rd</span>
+                        <div class="podium-crest-mini" id="podium-crest-3">🟡</div>
+                        <span class="runner-name" id="podium-name-3">Gold Emperor</span>
+                    </div>
+                    <div class="podium-runner-card" id="podium-pos-4">
+                        <span class="runner-rank fallen">💀 4th</span>
+                        <div class="podium-crest-mini" id="podium-crest-4">🟢</div>
+                        <span class="runner-name" id="podium-name-4">Green Duke</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" id="podium-restart-btn" class="start-btn" style="flex:1;">⚔️ NEW BATTLE</button>
+                <button type="button" id="podium-home-btn" class="secondary-btn" style="flex:1;">🏠 HOME</button>
             </div>
         </div>
     </div>
@@ -560,6 +717,97 @@
                 </div>
 
                 <button type="button" class="start-btn" id="auth-submit-btn">SAVE NAME 🛡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MATCH OPTIONS & THEME MODAL -->
+    <div class="modal-overlay hidden" id="match-options-modal">
+        <div class="modal-card">
+            <button type="button" class="modal-close-btn" id="match-options-close-btn">&times;</button>
+            <h2 class="glow-text">⚙️ MATCH OPTIONS</h2>
+            <p class="modal-sub">Customize your battlefield aesthetic & controls</p>
+            
+            <div style="margin-top: 10px;">
+                <label class="setup-label">🎨 Board Theme</label>
+                <div class="theme-toggle-grid">
+                    <button type="button" class="theme-card-btn active" data-theme="cyber">
+                        <span class="theme-swatch cyber"></span>
+                        <span class="theme-name">⚡ Electro</span>
+                    </button>
+                    <button type="button" class="theme-card-btn" data-theme="obsidian">
+                        <span class="theme-swatch obsidian"></span>
+                        <span class="theme-name">🌌 Obsidian</span>
+                    </button>
+                    <button type="button" class="theme-card-btn" data-theme="gold">
+                        <span class="theme-swatch gold"></span>
+                        <span class="theme-name">👑 Gold</span>
+                    </button>
+                    <button type="button" class="theme-card-btn" data-theme="matrix">
+                        <span class="theme-swatch matrix"></span>
+                        <span class="theme-name">🌲 Matrix</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-card" style="margin-top: 12px; padding: 10px 12px;">
+                <div class="pref-row">
+                    <span>🔊 Sound Effects</span>
+                    <input type="checkbox" id="modal-sound-toggle" checked>
+                </div>
+                <div class="pref-row">
+                    <span>📳 Haptic Vibration</span>
+                    <input type="checkbox" id="modal-vibrate-toggle" checked>
+                </div>
+                <div class="pref-row">
+                    <span>📐 Coordinates</span>
+                    <input type="checkbox" id="modal-coords-toggle" checked>
+                </div>
+                <div class="pref-row">
+                    <span>📊 Advantage Bar</span>
+                    <input type="checkbox" id="modal-eval-toggle" checked>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+                <button type="button" id="flip-board-btn" class="secondary-btn" style="flex: 1;">🔄 Flip Board</button>
+                <button type="button" id="match-options-done-btn" class="start-btn" style="flex: 1;">DONE ⚔️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESIGN CONFIRMATION MODAL -->
+    <div class="modal-overlay hidden" id="resign-modal">
+        <div class="modal-card text-center">
+            <h2 class="glow-text">CONCEDE DUEL? 🏳️</h2>
+            <p class="modal-sub" id="resign-modal-sub">Are you sure you wish to resign? Victory will be conceded to your opponent.</p>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button id="resign-confirm-btn" class="secondary-btn" style="flex:1; border-color:#ef4444; color:#ef4444;">YES, RESIGN</button>
+                <button id="resign-cancel-btn" class="start-btn" style="flex:1;">CONTINUE DUEL ⚔️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAW OFFER MODAL -->
+    <div class="modal-overlay hidden" id="draw-modal">
+        <div class="modal-card text-center">
+            <h2 class="glow-text">OFFER ROYAL DRAW? 🤝</h2>
+            <p class="modal-sub" id="draw-modal-desc">Propose an honorable draw to end this contest peacefully.</p>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button id="draw-confirm-btn" class="start-btn" style="flex:1;">OFFER DRAW 🤝</button>
+                <button id="draw-cancel-btn" class="secondary-btn" style="flex:1;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OPPONENT DRAW RESPONSE MODAL (PASS & PLAY) -->
+    <div class="modal-overlay hidden" id="draw-respond-modal">
+        <div class="modal-card text-center">
+            <h2 class="glow-text">DRAW OFFERED 🤝</h2>
+            <p class="modal-sub" id="draw-respond-desc">Your opponent has proposed an honorable peace treaty. Do you accept?</p>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button id="draw-accept-btn" class="start-btn" style="flex:1;">ACCEPT DRAW 🤝</button>
+                <button id="draw-decline-btn" class="secondary-btn" style="flex:1;">DECLINE ⚔️</button>
             </div>
         </div>
     </div>
