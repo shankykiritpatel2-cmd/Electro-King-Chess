@@ -3,12 +3,13 @@
 // Royal Medieval Chess & Four Kingdoms Engine
 // =========================================================
 
-// --- ROYAL GOLD PARTICLE FX SYSTEM ---
+// --- ROYAL GOLD PARTICLE & LIGHTNING FX SYSTEM ---
 class CastleFX {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
         this.particles = [];
+        this.lightningBolts = [];
         this.animId = null;
         if (this.canvas) {
             this.resize();
@@ -23,11 +24,11 @@ class CastleFX {
         this.canvas.height = rect.height;
     }
 
-    spark(x, y, count = 20, color = '#d4af37') {
+    spark(x, y, count = 18, color = '#ffd700') {
         if (!this.ctx) return;
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 1 + Math.random() * 4;
+            const speed = 1.2 + Math.random() * 3.8;
             this.particles.push({
                 x,
                 y,
@@ -54,9 +55,57 @@ class CastleFX {
                 vy: Math.sin(angle) * speed,
                 life: 1,
                 decay: 0.03,
-                size: 3,
+                size: 3.2,
                 color
             });
+        }
+        if (!this.animId) this.animate();
+    }
+
+    lightningDefeat(x, y, color = '#ffd700', secondary = '#38bdf8') {
+        if (!this.ctx) return;
+        this.resize();
+        
+        // Blast particles around defeated King
+        for (let i = 0; i < 36; i++) {
+            const angle = (i / 36) * Math.PI * 2;
+            const speed = 3.5 + Math.random() * 4;
+            this.particles.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.2,
+                decay: 0.025,
+                size: 3.5 + Math.random() * 3,
+                color: i % 2 === 0 ? color : secondary
+            });
+        }
+        
+        // Multi-branch electrical lightning bolts
+        for (let b = 0; b < 6; b++) {
+            let startX = x + (Math.random() - 0.5) * 80;
+            let startY = Math.max(0, y - 160 + Math.random() * 40);
+            let curX = startX, curY = startY;
+            const steps = 10;
+            const dx = (x - startX) / steps;
+            const dy = (y - startY) / steps;
+            for (let s = 0; s < steps; s++) {
+                const nextX = curX + dx + (Math.random() - 0.5) * 24;
+                const nextY = curY + dy + (Math.random() - 0.5) * 14;
+                this.particles.push({
+                    x: nextX,
+                    y: nextY,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: (Math.random() - 0.5) * 1.5,
+                    life: 0.8 + Math.random() * 0.4,
+                    decay: 0.035,
+                    size: 3.5,
+                    color: '#00f5d4'
+                });
+                curX = nextX;
+                curY = nextY;
+            }
         }
         if (!this.animId) this.animate();
     }
@@ -135,7 +184,7 @@ class CastleAudio {
             osc.start();
             osc.stop(this.ctx.currentTime + duration);
         } catch (e) {
-            console.warn('Audio play error:', e);
+            // Audio policy restriction fallback
         }
     }
 
@@ -151,6 +200,11 @@ class CastleAudio {
     check() {
         this.playTone(587.33, 'triangle', 0.2, 0.25);
         setTimeout(() => this.playTone(880, 'sine', 0.3, 0.25), 100);
+    }
+
+    strike() {
+        this.playTone(150, 'sawtooth', 0.3, 0.25);
+        setTimeout(() => this.playTone(80, 'sine', 0.4, 0.3), 50);
     }
 
     victory() {
@@ -215,17 +269,66 @@ function getPieceSvg(color, type) {
 }
 
 // --- GLOBAL STATE ---
-let currentTab = 'arena';
+let currentTab = 'home'; // App starts on HOME!
 let arenaSubMode = '2p'; // '2p' or '4p'
 let lordProfile = {
-    name: 'Lord Sovereign',
+    name: localStorage.getItem('electro_player_name') || 'Player',
     avatar: '👑',
     avatarUrl: '',
     matches: 0,
     wins: 0,
     fourWins: 0,
-    puzzles: 0
+    puzzles: 0,
+    botRecords: {
+        1: { w: 0, l: 0 },
+        2: { w: 0, l: 0 },
+        3: { w: 0, l: 0 },
+        4: { w: 0, l: 0 }
+    }
 };
+
+// --- ROYAL SETTINGS & HAPTIC ENGINE ---
+const royalSettings = {
+    theme: localStorage.getItem('royal_chess_theme') || 'castle',
+    sound: localStorage.getItem('royal_chess_sound') !== 'false',
+    vibration: localStorage.getItem('royal_chess_vibration') !== 'false',
+    coords: localStorage.getItem('royal_chess_coords') !== 'false',
+    evalBar: localStorage.getItem('royal_chess_eval') !== 'false'
+};
+
+const PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+let replayIndex = -1; // -1 for live game, 0..N-1 for historical snapshot review
+let isManualFlipped = false;
+
+function triggerHaptic(type = 'move') {
+    if (!royalSettings.vibration) return;
+    try {
+        let ms = 15;
+        if (type === 'capture') ms = 45;
+        else if (type === 'check') ms = 75;
+        else if (type === 'victory') ms = 150;
+        
+        if (window.AndroidBridge && typeof window.AndroidBridge.vibrate === 'function') {
+            window.AndroidBridge.vibrate(ms);
+        } else if (navigator.vibrate) {
+            if (type === 'victory') {
+                navigator.vibrate([60, 60, 60, 60, 140]);
+            } else {
+                navigator.vibrate(ms);
+            }
+        }
+    } catch (e) {}
+}
+
+function applyTheme(themeName) {
+    if (!['castle', 'wood', 'obsidian', 'cyber'].includes(themeName)) themeName = 'castle';
+    royalSettings.theme = themeName;
+    localStorage.setItem('royal_chess_theme', themeName);
+    document.body.className = `theme-${themeName}`;
+    document.querySelectorAll('.theme-card-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === themeName);
+    });
+}
 
 // 2-Player Match State
 let board = [];
@@ -238,24 +341,55 @@ let gameMode = 'ai'; // 'ai', 'local'
 let playerSide = 'white';
 let botSide = 'black';
 let difficulty = 2;
-let playerNames = { white: 'Lord Sovereign', black: 'Sir Galahad 🤖' };
+let playerNames = { white: lordProfile.name, black: 'Sir Galahad' };
 let isGameOver = false;
+let isGamePaused = false;
+let isMatchActive = false;
 let pendingPromotion = null;
 let activeHint = null;
 let clockInterval = null;
-let clockTimes = { white: 180, black: 180 };
-let matchClockLimit = 180;
+let clockTimes = { white: 0, black: 0 };
+let matchClockLimit = 0; // Default: 0 = NONE (Untimed!)
 let moveHistoryNotation = [];
+let aiMoveTimeout = null;
 
 const BOT_PERSONALITIES = {
-    1: { name: 'Squire Leon 🛡️', rating: '~600 Elo' },
-    2: { name: 'Sir Galahad ⚔️', rating: '~1200 Elo' },
-    3: { name: 'Lady Morgana 🏰', rating: '~1700 Elo' },
-    4: { name: 'King Arthur 👑', rating: '~2200 Elo' }
+    1: { name: 'Squire Leon', rating: '~600 Elo', icon: '🛡️' },
+    2: { name: 'Sir Galahad', rating: '~1200 Elo', icon: '⚔️' },
+    3: { name: 'Lady Morgana', rating: '~1700 Elo', icon: '🏰' },
+    4: { name: 'King Arthur', rating: '~2200 Elo', icon: '👑' }
 };
 
+// 4-Player Realm State
+const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
+const FOUR_KINGDOM_NAMES = {
+    red: 'Red Lord',
+    blue: 'Blue Baron',
+    gold: 'Gold Emperor',
+    green: 'Green Duke'
+};
+let fourBoard = [];
+let fourTurn = 'red';
+let fourSelected = null;
+let fourLastMove = null;
+let fourArmies = {
+    red: { alive: true, count: 16 },
+    blue: { alive: true, count: 16 },
+    gold: { alive: true, count: 16 },
+    green: { alive: true, count: 16 }
+};
+let fourMode = 'ai'; // 'ai', 'pass'
+let isHumanDefeated4P = false;
+let isFourMatchActive = false;
+let fourEliminationOrder = [];
+
+// Puzzles & Openings State
+let currentPuzzleIdx = 0;
+let currentOpeningIdx = 0;
+let openingStep = 0;
+
 // =========================================================
-// 1. CLASSIC 2-PLAYER ENGINE
+// 1. BOARD INITIALIZATION & CORE 2-PLAYER ENGINE
 // =========================================================
 
 function init2PlayerBoard() {
@@ -270,72 +404,83 @@ function init2PlayerBoard() {
     }
 }
 
+function cloneBoard(b) {
+    return b.map(row => row.map(cell => (cell ? { ...cell } : null)));
+}
+
 function onBoard(r, c) {
     return r >= 0 && r < 8 && c >= 0 && c < 8;
 }
 
-function getRawMoves(r, c, testBoard = board) {
-    const piece = testBoard[r][c];
+function getPseudoLegalMoves(r, c, b = board, allowCastling = true) {
+    const piece = b[r][c];
     if (!piece) return [];
     const moves = [];
     const color = piece.color;
-    const enemyColor = color === 'white' ? 'black' : 'white';
+    const opp = color === 'white' ? 'black' : 'white';
     
     if (piece.type === 'p') {
         const dir = color === 'white' ? -1 : 1;
         const startRow = color === 'white' ? 6 : 1;
         
-        if (onBoard(r + dir, c) && !testBoard[r + dir][c]) {
-            moves.push({ r: r + dir, c: c });
-            if (r === startRow && onBoard(r + 2 * dir, c) && !testBoard[r + 2 * dir][c]) {
-                moves.push({ r: r + 2 * dir, c: c });
+        // Single forward move
+        if (onBoard(r + dir, c) && !b[r + dir][c]) {
+            moves.push({ r: r + dir, c });
+            // Double forward move
+            if (r === startRow && !b[r + 2 * dir][c]) {
+                moves.push({ r: r + 2 * dir, c });
             }
         }
+        
+        // Diagonal captures
         [-1, 1].forEach(dc => {
             const tr = r + dir, tc = c + dc;
-            if (onBoard(tr, tc) && testBoard[tr][tc] && testBoard[tr][tc].color === enemyColor) {
+            if (onBoard(tr, tc) && b[tr][tc] && b[tr][tc].color === opp) {
                 moves.push({ r: tr, c: tc });
             }
         });
     } else if (piece.type === 'n') {
-        const knightDeltas = [
+        const deltas = [
             [-2, -1], [-2, 1], [-1, -2], [-1, 2],
             [1, -2], [1, 2], [2, -1], [2, 1]
         ];
-        knightDeltas.forEach(([dr, dc]) => {
+        deltas.forEach(([dr, dc]) => {
             const tr = r + dr, tc = c + dc;
-            if (onBoard(tr, tc) && (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor)) {
+            if (onBoard(tr, tc) && (!b[tr][tc] || b[tr][tc].color === opp)) {
                 moves.push({ r: tr, c: tc });
             }
         });
     } else if (piece.type === 'b') {
-        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1]], testBoard, moves, enemyColor);
+        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1]], moves, opp, b);
     } else if (piece.type === 'r') {
-        slideMoves(r, c, [[-1, 0], [1, 0], [0, -1], [0, 1]], testBoard, moves, enemyColor);
+        slideMoves(r, c, [[-1, 0], [1, 0], [0, -1], [0, 1]], moves, opp, b);
     } else if (piece.type === 'q') {
-        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]], testBoard, moves, enemyColor);
+        slideMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]], moves, opp, b);
     } else if (piece.type === 'k') {
-        const kingDeltas = [
+        const deltas = [
             [-1, -1], [-1, 0], [-1, 1],
             [0, -1],           [0, 1],
             [1, -1],  [1, 0],  [1, 1]
         ];
-        kingDeltas.forEach(([dr, dc]) => {
+        deltas.forEach(([dr, dc]) => {
             const tr = r + dr, tc = c + dc;
-            if (onBoard(tr, tc) && (!testBoard[tr][tc] || testBoard[tr][tc].color === enemyColor)) {
+            if (onBoard(tr, tc) && (!b[tr][tc] || b[tr][tc].color === opp)) {
                 moves.push({ r: tr, c: tc });
             }
         });
-        // Castling
-        if (!piece.hasMoved && !isKingInCheck(color, testBoard)) {
-            if (testBoard[r][7] && !testBoard[r][7].hasMoved && !testBoard[r][5] && !testBoard[r][6]) {
-                if (!isSquareAttackedBy(r, 5, enemyColor, testBoard) && !isSquareAttackedBy(r, 6, enemyColor, testBoard)) {
-                    moves.push({ r, c: 6, isCastle: 'kingside' });
+        
+        // Castling (only evaluated when allowCastling is true)
+        if (allowCastling && !piece.hasMoved && !isKingInCheck(color, b)) {
+            // Kingside
+            if (b[r][7] && b[r][7].type === 'r' && !b[r][7].hasMoved && !b[r][5] && !b[r][6]) {
+                if (!isSquareAttacked(r, 5, opp, b) && !isSquareAttacked(r, 6, opp, b)) {
+                    moves.push({ r, c: 6, isCastling: 'kingside' });
                 }
             }
-            if (testBoard[r][0] && !testBoard[r][0].hasMoved && !testBoard[r][1] && !testBoard[r][2] && !testBoard[r][3]) {
-                if (!isSquareAttackedBy(r, 3, enemyColor, testBoard) && !isSquareAttackedBy(r, 2, enemyColor, testBoard)) {
-                    moves.push({ r, c: 2, isCastle: 'queenside' });
+            // Queenside
+            if (b[r][0] && b[r][0].type === 'r' && !b[r][0].hasMoved && !b[r][1] && !b[r][2] && !b[r][3]) {
+                if (!isSquareAttacked(r, 3, opp, b) && !isSquareAttacked(r, 2, opp, b)) {
+                    moves.push({ r, c: 2, isCastling: 'queenside' });
                 }
             }
         }
@@ -344,14 +489,14 @@ function getRawMoves(r, c, testBoard = board) {
     return moves;
 }
 
-function slideMoves(r, c, directions, testBoard, moves, enemyColor) {
+function slideMoves(r, c, directions, moves, opp, b) {
     directions.forEach(([dr, dc]) => {
         let tr = r + dr, tc = c + dc;
         while (onBoard(tr, tc)) {
-            if (!testBoard[tr][tc]) {
+            if (!b[tr][tc]) {
                 moves.push({ r: tr, c: tc });
             } else {
-                if (testBoard[tr][tc].color === enemyColor) {
+                if (b[tr][tc].color === opp) {
                     moves.push({ r: tr, c: tc });
                 }
                 break;
@@ -362,100 +507,139 @@ function slideMoves(r, c, directions, testBoard, moves, enemyColor) {
     });
 }
 
-function isSquareAttackedBy(targetR, targetC, attackerColor, testBoard) {
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const piece = testBoard[r][c];
-            if (piece && piece.color === attackerColor) {
-                if (piece.type === 'p') {
-                    const dir = attackerColor === 'white' ? -1 : 1;
-                    if (r + dir === targetR && (c - 1 === targetC || c + 1 === targetC)) {
-                        return true;
-                    }
-                } else if (piece.type === 'k') {
-                    if (Math.abs(r - targetR) <= 1 && Math.abs(c - targetC) <= 1) return true;
-                } else {
-                    const moves = getRawMoves(r, c, testBoard);
-                    if (moves.some(m => m.r === targetR && m.c === targetC)) return true;
-                }
+function isSquareAttacked(r, c, byColor, b) {
+    // 1. Check Pawns attacking (r, c)
+    const pRow = r - (byColor === 'white' ? -1 : 1);
+    if (onBoard(pRow, c - 1) && b[pRow][c - 1] && b[pRow][c - 1].color === byColor && b[pRow][c - 1].type === 'p') return true;
+    if (onBoard(pRow, c + 1) && b[pRow][c + 1] && b[pRow][c + 1].color === byColor && b[pRow][c + 1].type === 'p') return true;
+    
+    // 2. Check Knights attacking (r, c)
+    const nDeltas = [
+        [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+        [1, -2], [1, 2], [2, -1], [2, 1]
+    ];
+    for (let i = 0; i < nDeltas.length; i++) {
+        const nr = r + nDeltas[i][0], nc = c + nDeltas[i][1];
+        if (onBoard(nr, nc) && b[nr][nc] && b[nr][nc].color === byColor && b[nr][nc].type === 'n') return true;
+    }
+    
+    // 3. Check Kings (1-step radius)
+    const kDeltas = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1],           [0, 1],
+        [1, -1],  [1, 0],  [1, 1]
+    ];
+    for (let i = 0; i < kDeltas.length; i++) {
+        const kr = r + kDeltas[i][0], kc = c + kDeltas[i][1];
+        if (onBoard(kr, kc) && b[kr][kc] && b[kr][kc].color === byColor && b[kr][kc].type === 'k') return true;
+    }
+    
+    // 4. Check Orthogonal (Rook & Queen)
+    const ortho = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (let i = 0; i < ortho.length; i++) {
+        let dr = ortho[i][0], dc = ortho[i][1];
+        let tr = r + dr, tc = c + dc;
+        while (onBoard(tr, tc)) {
+            if (b[tr][tc]) {
+                if (b[tr][tc].color === byColor && (b[tr][tc].type === 'r' || b[tr][tc].type === 'q')) return true;
+                break;
             }
+            tr += dr;
+            tc += dc;
         }
     }
+    
+    // 5. Check Diagonal (Bishop & Queen)
+    const diag = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    for (let i = 0; i < diag.length; i++) {
+        let dr = diag[i][0], dc = diag[i][1];
+        let tr = r + dr, tc = c + dc;
+        while (onBoard(tr, tc)) {
+            if (b[tr][tc]) {
+                if (b[tr][tc].color === byColor && (b[tr][tc].type === 'b' || b[tr][tc].type === 'q')) return true;
+                break;
+            }
+            tr += dr;
+            tc += dc;
+        }
+    }
+    
     return false;
 }
 
-function findKing(color, testBoard = board) {
+function findKing(color, b = board) {
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const p = testBoard[r][c];
-            if (p && p.type === 'k' && p.color === color) return { r, c };
+            if (b[r][c] && b[r][c].type === 'k' && b[r][c].color === color) {
+                return { r, c };
+            }
         }
     }
     return null;
 }
 
-function isKingInCheck(color, testBoard = board) {
-    const k = findKing(color, testBoard);
-    if (!k) return false;
-    const enemy = color === 'white' ? 'black' : 'white';
-    return isSquareAttackedBy(k.r, k.c, enemy, testBoard);
+function isKingInCheck(color, b = board) {
+    const kPos = findKing(color, b);
+    if (!kPos) return false;
+    const opp = color === 'white' ? 'black' : 'white';
+    return isSquareAttacked(kPos.r, kPos.c, opp, b);
 }
 
-function cloneBoard(currentBoard) {
-    return currentBoard.map(row => row.map(cell => cell ? { ...cell } : null));
-}
-
-function getLegalMoves(r, c, testBoard = board) {
-    const piece = testBoard[r][c];
+function getLegalMoves(r, c, b = board) {
+    const piece = b[r][c];
     if (!piece) return [];
-    const raw = getRawMoves(r, c, testBoard);
-    const color = piece.color;
+    const pseudo = getPseudoLegalMoves(r, c, b);
     
-    return raw.filter(m => {
-        const nextBoard = cloneBoard(testBoard);
-        const movingPiece = nextBoard[r][c];
-        nextBoard[m.r][m.c] = { ...movingPiece, hasMoved: true };
-        nextBoard[r][c] = null;
+    return pseudo.filter(m => {
+        const nextB = cloneBoard(b);
+        nextB[m.r][m.c] = nextB[r][c];
+        nextB[r][c] = null;
         
-        if (m.isCastle === 'kingside') {
-            nextBoard[r][5] = { ...nextBoard[r][7], hasMoved: true };
-            nextBoard[r][7] = null;
-        } else if (m.isCastle === 'queenside') {
-            nextBoard[r][3] = { ...nextBoard[r][0], hasMoved: true };
-            nextBoard[r][0] = null;
+        if (m.isCastling === 'kingside') {
+            nextB[r][5] = nextB[r][7];
+            nextB[r][7] = null;
+        } else if (m.isCastling === 'queenside') {
+            nextB[r][3] = nextB[r][0];
+            nextB[r][0] = null;
         }
         
-        return !isKingInCheck(color, nextBoard);
+        return !isKingInCheck(piece.color, nextB);
     });
 }
 
-function getAllLegalMoves(color, testBoard = board) {
+function getAllLegalMoves(color, b = board) {
     const all = [];
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            if (testBoard[r][c] && testBoard[r][c].color === color) {
-                const legals = getLegalMoves(r, c, testBoard);
-                legals.forEach(m => {
-                    all.push({ from: { r, c }, to: m });
-                });
+            if (b[r][c] && b[r][c].color === color) {
+                const moves = getLegalMoves(r, c, b);
+                moves.forEach(m => all.push({ from: { r, c }, to: m }));
             }
         }
     }
     return all;
 }
 
+// =========================================================
+// 2. 2-PLAYER BOARD RENDERING & INTERACTION
+// =========================================================
+
 function draw2PlayerBoard() {
-    const el = document.getElementById('chessboard');
-    if (!el) return;
-    el.innerHTML = '';
+    const boardEl = document.getElementById('chessboard');
+    if (!boardEl) return;
+    boardEl.innerHTML = '';
     
-    const kingInCheckLoc = isKingInCheck(turn, board) ? findKing(turn, board) : null;
-    const selectedMoves = selectedSquare ? getLegalMoves(selectedSquare.r, selectedSquare.c) : [];
+    const isFlipped = (playerSide === 'black' && gameMode === 'ai') || isManualFlipped;
+    const kingInCheckPos = isKingInCheck(turn, board) ? findKing(turn, board) : null;
+    const legalMovesForSelected = selectedSquare ? getLegalMoves(selectedSquare.r, selectedSquare.c) : [];
     
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const isLight = (r + c) % 2 === 0;
+    for (let rIdx = 0; rIdx < 8; rIdx++) {
+        for (let cIdx = 0; cIdx < 8; cIdx++) {
+            const r = isFlipped ? 7 - rIdx : rIdx;
+            const c = isFlipped ? 7 - cIdx : cIdx;
+            
             const sq = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
             sq.className = `square ${isLight ? 'light' : 'dark'}`;
             sq.dataset.r = r;
             sq.dataset.c = c;
@@ -466,18 +650,30 @@ function draw2PlayerBoard() {
             if (lastMove && ((lastMove.from.r === r && lastMove.from.c === c) || (lastMove.to.r === r && lastMove.to.c === c))) {
                 sq.classList.add('last-move');
             }
-            if (kingInCheckLoc && kingInCheckLoc.r === r && kingInCheckLoc.c === c) {
-                sq.classList.add('check-square');
+            if (kingInCheckPos && kingInCheckPos.r === r && kingInCheckPos.c === c) {
+                sq.classList.add('check-danger');
             }
-            if (activeHint && activeHint.from.r === r && activeHint.from.c === c) {
-                sq.classList.add('hint-from');
-            }
-            if (activeHint && activeHint.to.r === r && activeHint.to.c === c) {
-                sq.classList.add('hint-to');
+            if (activeHint && activeHint.r === r && activeHint.c === c) {
+                sq.classList.add('hint-square');
             }
             
-            // Move indicator dots
-            const destMove = selectedMoves.find(m => m.r === r && m.c === c);
+            // Coordinates on board edge
+            if (royalSettings.coords) {
+                if (cIdx === 0) {
+                    const rankLbl = document.createElement('span');
+                    rankLbl.className = 'sq-coord sq-coord-rank';
+                    rankLbl.textContent = 8 - r;
+                    sq.appendChild(rankLbl);
+                }
+                if (rIdx === 7) {
+                    const fileLbl = document.createElement('span');
+                    fileLbl.className = 'sq-coord sq-coord-file';
+                    fileLbl.textContent = String.fromCharCode(97 + c);
+                    sq.appendChild(fileLbl);
+                }
+            }
+            
+            const destMove = legalMovesForSelected.find(m => m.r === r && m.c === c);
             if (destMove) {
                 if (board[r][c]) {
                     const ring = document.createElement('div');
@@ -490,37 +686,105 @@ function draw2PlayerBoard() {
                 }
             }
             
-            // Piece
             const piece = board[r][c];
             if (piece) {
-                const pieceWrapper = document.createElement('div');
-                pieceWrapper.className = 'piece-svg animate-land';
-                pieceWrapper.innerHTML = getPieceSvg(piece.color, piece.type);
-                sq.appendChild(pieceWrapper);
+                const pEl = document.createElement('div');
+                pEl.className = 'piece-svg animate-land';
+                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+                sq.appendChild(pEl);
             }
             
             sq.addEventListener('click', () => handle2PlayerSquareClick(r, c));
-            el.appendChild(sq);
+            boardEl.appendChild(sq);
         }
     }
     
     updateEvalBar();
 }
 
+function drawBoardSnapshot(snapBoard, snapLastMove, snapTurn) {
+    const boardEl = document.getElementById('chessboard');
+    if (!boardEl) return;
+    boardEl.innerHTML = '';
+    
+    const isFlipped = (playerSide === 'black' && gameMode === 'ai') || isManualFlipped;
+    const kingInCheckPos = isKingInCheck(snapTurn, snapBoard) ? findKing(snapTurn, snapBoard) : null;
+    
+    for (let rIdx = 0; rIdx < 8; rIdx++) {
+        for (let cIdx = 0; cIdx < 8; cIdx++) {
+            const r = isFlipped ? 7 - rIdx : rIdx;
+            const c = isFlipped ? 7 - cIdx : cIdx;
+            
+            const sq = document.createElement('div');
+            const isLight = (r + c) % 2 === 0;
+            sq.className = `square ${isLight ? 'light' : 'dark'}`;
+            
+            if (snapLastMove && ((snapLastMove.from.r === r && snapLastMove.from.c === c) || (snapLastMove.to.r === r && snapLastMove.to.c === c))) {
+                sq.classList.add('last-move');
+            }
+            if (kingInCheckPos && kingInCheckPos.r === r && kingInCheckPos.c === c) {
+                sq.classList.add('check-danger');
+            }
+            
+            if (royalSettings.coords) {
+                if (cIdx === 0) {
+                    const rankLbl = document.createElement('span');
+                    rankLbl.className = 'sq-coord sq-coord-rank';
+                    rankLbl.textContent = 8 - r;
+                    sq.appendChild(rankLbl);
+                }
+                if (rIdx === 7) {
+                    const fileLbl = document.createElement('span');
+                    fileLbl.className = 'sq-coord sq-coord-file';
+                    fileLbl.textContent = String.fromCharCode(97 + c);
+                    sq.appendChild(fileLbl);
+                }
+            }
+            
+            const piece = snapBoard[r][c];
+            if (piece) {
+                const pEl = document.createElement('div');
+                pEl.className = 'piece-svg';
+                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+                sq.appendChild(pEl);
+            }
+            
+            sq.addEventListener('click', () => {
+                showToast('Reviewing move history. Tap "Return to Live" to play ⚡');
+            });
+            boardEl.appendChild(sq);
+        }
+    }
+}
+
 function handle2PlayerSquareClick(r, c) {
-    if (isGameOver) return;
+    if (isGameOver || isGamePaused) return;
     if (gameMode === 'ai' && turn === botSide) return;
     
     const clickedPiece = board[r][c];
     
     if (selectedSquare) {
-        const legalMoves = getLegalMoves(selectedSquare.r, selectedSquare.c);
-        const targetMove = legalMoves.find(m => m.r === r && m.c === c);
-        
-        if (targetMove) {
-            execute2PlayerMove(selectedSquare, targetMove);
+        if (selectedSquare.r === r && selectedSquare.c === c) {
             selectedSquare = null;
-            activeHint = null;
+            draw2PlayerBoard();
+            return;
+        }
+        
+        const legals = getLegalMoves(selectedSquare.r, selectedSquare.c);
+        const chosen = legals.find(m => m.r === r && m.c === c);
+        
+        if (chosen) {
+            const movingPiece = board[selectedSquare.r][selectedSquare.c];
+            const isPawnPromotion = movingPiece.type === 'p' && (r === 0 || r === 7);
+            
+            if (isPawnPromotion) {
+                pendingPromotion = { from: selectedSquare, to: chosen };
+                showPromotionModal(movingPiece.color);
+                return;
+            }
+            
+            execute2PlayerMove(selectedSquare, chosen);
+            selectedSquare = null;
             return;
         }
         
@@ -544,15 +808,17 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     const movingPiece = board[from.r][from.c];
     if (!movingPiece) return;
     
-    if (movingPiece.type === 'p' && (to.r === 0 || to.r === 7) && !promoPiece) {
-        pendingPromotion = { from, to };
-        showPromotionModal(movingPiece.color);
-        return;
-    }
-    
     const capturedPiece = board[to.r][to.c];
     
-    // Sparkle FX on piece landing
+    history.push({
+        board: cloneBoard(board),
+        turn,
+        lastMove,
+        captured: { white: [...captured.white], black: [...captured.black] },
+        clockTimes: { ...clockTimes }
+    });
+    
+    // Sparkle FX on landing square
     const sqEl = document.querySelector(`.square[data-r="${to.r}"][data-c="${to.c}"]`);
     if (sqEl && fx2p) {
         const rect = sqEl.getBoundingClientRect();
@@ -562,28 +828,24 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         if (capturedPiece) {
             fx2p.shockwave(px, py, '#ef4444');
         } else {
-            fx2p.spark(px, py, 14, '#d4af37');
+            fx2p.spark(px, py, 14, '#ffd700');
         }
     }
     
     if (capturedPiece) {
         captured[movingPiece.color].push(capturedPiece);
         audio.capture();
+        triggerHaptic('capture');
     } else {
         audio.move();
+        triggerHaptic('move');
     }
     
-    history.push({
-        board: cloneBoard(board),
-        turn,
-        lastMove,
-        captured: { white: [...captured.white], black: [...captured.black] }
-    });
-    
-    if (to.isCastle === 'kingside') {
+    // Handle Castling Rook move
+    if (to.isCastling === 'kingside') {
         board[from.r][5] = { ...board[from.r][7], hasMoved: true };
         board[from.r][7] = null;
-    } else if (to.isCastle === 'queenside') {
+    } else if (to.isCastling === 'queenside') {
         board[from.r][3] = { ...board[from.r][0], hasMoved: true };
         board[from.r][0] = null;
     }
@@ -593,7 +855,6 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     board[from.r][from.c] = null;
     
     lastMove = { from, to, piece: finalPiece };
-    
     addMoveHistoryNotation(from, to, finalPiece, capturedPiece !== null);
     
     turn = turn === 'white' ? 'black' : 'white';
@@ -602,6 +863,7 @@ function execute2PlayerMove(from, to, promoPiece = null) {
     
     if (isKingInCheck(turn, board)) {
         audio.check();
+        triggerHaptic('check');
     }
     
     const nextLegals = getAllLegalMoves(turn, board);
@@ -611,39 +873,77 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         if (isKingInCheck(turn, board)) {
             const winner = turn === 'white' ? 'black' : 'white';
             const winnerName = playerNames[winner];
-            showGameOverModal(`Checkmate! ${winnerName} reigns victorious!`);
+            
+            // Defeat Lightning on King's square
+            const kingSq = findKing(turn, board);
+            triggerDefeatLightning2P(kingSq);
+            
+            setTimeout(() => {
+                showGameOverModal(`Checkmate! ${winnerName} reigns victorious!`, winnerName);
+            }, 650);
+            
             if (winner === playerSide) {
                 lordProfile.wins++;
+                if (gameMode === 'ai') {
+                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
+                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
+                    lordProfile.botRecords[difficulty].w++;
+                }
                 audio.victory();
+                triggerHaptic('victory');
             } else {
+                if (gameMode === 'ai') {
+                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
+                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
+                    lordProfile.botRecords[difficulty].l++;
+                }
                 audio.defeat();
+                triggerHaptic('check');
             }
         } else {
-            showGameOverModal('Stalemate! The royal duel ends in a draw.');
+            showGameOverModal('Stalemate! The royal duel ends in a draw.', 'Draw');
+            triggerHaptic('move');
         }
         lordProfile.matches++;
         saveProfile();
+        checkAndUnlockAchievements();
         return;
     }
     
     if (gameMode === 'ai' && turn === botSide && !isGameOver) {
-        setTimeout(make2PlayerAIMove, 450);
+        aiMoveTimeout = setTimeout(make2PlayerAIMove, 450);
+    }
+}
+
+function triggerDefeatLightning2P(kingSq) {
+    if (!kingSq || !fx2p) return;
+    const sqEl = document.querySelector(`.square[data-r="${kingSq.r}"][data-c="${kingSq.c}"]`);
+    if (sqEl) {
+        const rect = sqEl.getBoundingClientRect();
+        const canvasRect = fx2p.canvas.getBoundingClientRect();
+        const px = rect.left - canvasRect.left + rect.width / 2;
+        const py = rect.top - canvasRect.top + rect.height / 2;
+        fx2p.lightningDefeat(px, py, '#ef4444', '#ffd700');
+        audio.strike();
     }
 }
 
 function make2PlayerAIMove() {
-    if (isGameOver || turn !== botSide) return;
+    if (isGameOver || isGamePaused || turn !== botSide) return;
     const allMoves = getAllLegalMoves(botSide, board);
     if (allMoves.length === 0) return;
     
     let chosenMove = null;
     
     if (difficulty === 1) {
+        // Squire Leon (~600 Elo): Random with occasional capture
         chosenMove = allMoves[Math.floor(Math.random() * allMoves.length)];
     } else if (difficulty === 2) {
+        // Sir Galahad (~1200 Elo): Prefer captures, checks, and center control
         const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c] !== null);
         chosenMove = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
-    } else {
+    } else if (difficulty === 3) {
+        // Lady Morgana (~1700 Elo): Material evaluation with center weighting
         let bestVal = -999999;
         const vals = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
         
@@ -662,7 +962,31 @@ function make2PlayerAIMove() {
                 chosenMove = m;
             }
         });
+        if (!chosenMove) chosenMove = allMoves[0];
+    } else {
+        // King Arthur (~2200 Elo): Deep tactical calculation with king safety
+        let bestVal = -999999;
+        const vals = { p: 100, n: 330, b: 340, r: 520, q: 950, k: 20000 };
         
+        allMoves.forEach(m => {
+            const nextB = cloneBoard(board);
+            const target = nextB[m.to.r][m.to.c];
+            nextB[m.to.r][m.to.c] = nextB[m.from.r][m.from.c];
+            nextB[m.from.r][m.from.c] = null;
+            
+            let moveScore = target ? vals[target.type] : 0;
+            if (isKingInCheck(playerSide, nextB)) moveScore += 80;
+            if (m.to.r >= 3 && m.to.r <= 4 && m.to.c >= 3 && m.to.c <= 4) moveScore += 25;
+            // Penalize leaving pieces under immediate attack
+            if (isSquareAttacked(m.to.r, m.to.c, playerSide, nextB)) {
+                moveScore -= (vals[nextB[m.to.r][m.to.c].type] * 0.8);
+            }
+            
+            if (moveScore > bestVal) {
+                bestVal = moveScore;
+                chosenMove = m;
+            }
+        });
         if (!chosenMove) chosenMove = allMoves[0];
     }
     
@@ -677,18 +1001,65 @@ function addMoveHistoryNotation(from, to, piece, isCapture) {
     const notation = isCapture ? (pLetter ? `${pLetter}x${dest}` : `${files[from.c]}x${dest}`) : `${pLetter}${dest}`;
     
     moveHistoryNotation.push(notation);
+    renderMoveHistoryChips();
+}
+
+function renderMoveHistoryChips() {
     const container = document.getElementById('history-chips');
     if (!container) return;
     
-    if (moveHistoryNotation.length === 1) container.innerHTML = '';
-    const chip = document.createElement('span');
-    chip.className = 'history-chip active';
-    const num = Math.ceil(moveHistoryNotation.length / 2);
-    chip.textContent = moveHistoryNotation.length % 2 === 1 ? `${num}. ${notation}` : notation;
+    if (moveHistoryNotation.length === 0) {
+        container.innerHTML = '<span class="history-empty-placeholder">Royal duel ready to commence...</span>';
+        return;
+    }
     
-    container.querySelectorAll('.history-chip.active').forEach(c => c.classList.remove('active'));
-    container.appendChild(chip);
-    container.scrollLeft = container.scrollWidth;
+    container.innerHTML = '';
+    moveHistoryNotation.forEach((not, idx) => {
+        const chip = document.createElement('span');
+        const isCurrentActive = replayIndex === idx || (replayIndex === -1 && idx === moveHistoryNotation.length - 1);
+        chip.className = `history-chip ${isCurrentActive ? 'active' : ''}`;
+        const num = Math.ceil((idx + 1) / 2);
+        chip.textContent = idx % 2 === 0 ? `${num}. ${not}` : not;
+        chip.title = `Review move ${num}`;
+        chip.addEventListener('click', () => showReplayMove(idx));
+        container.appendChild(chip);
+    });
+    
+    if (replayIndex === -1) {
+        container.scrollLeft = container.scrollWidth;
+    }
+}
+
+function showReplayMove(index) {
+    if (history.length === 0) return;
+    if (index < 0) index = 0;
+    if (index >= history.length) {
+        returnToLiveGame();
+        return;
+    }
+    replayIndex = index;
+    const snap = history[index];
+    
+    drawBoardSnapshot(snap.board, snap.lastMove, snap.turn);
+    renderMoveHistoryChips();
+    
+    const banner = document.getElementById('replay-notice-banner');
+    const label = document.getElementById('replay-move-label');
+    if (banner) banner.classList.remove('hidden');
+    if (label) {
+        const num = Math.ceil((index + 1) / 2);
+        label.textContent = `${num}${index % 2 === 0 ? ' (White)' : ' (Black)'}`;
+    }
+    triggerHaptic('move');
+}
+
+function returnToLiveGame() {
+    replayIndex = -1;
+    const banner = document.getElementById('replay-notice-banner');
+    if (banner) banner.classList.add('hidden');
+    renderMoveHistoryChips();
+    draw2PlayerBoard();
+    triggerHaptic('move');
 }
 
 function updateEvalBar() {
@@ -718,13 +1089,40 @@ function updateHUD() {
         turnDot.style.backgroundColor = turn === 'white' ? 'var(--primary)' : 'var(--accent)';
     }
     
+    // Sort captured pieces by value descending (Q -> R -> B -> N -> P)
+    const sortPieces = (a, b) => (PIECE_VALUES[b.type] || 0) - (PIECE_VALUES[a.type] || 0);
+    const whiteCapturedSorted = [...captured.white].sort(sortPieces);
+    const blackCapturedSorted = [...captured.black].sort(sortPieces);
+    
     const capWhite = document.getElementById('captured-by-white');
     const capBlack = document.getElementById('captured-by-black');
     if (capWhite) {
-        capWhite.innerHTML = captured.white.map(p => `<div class="captured-piece-mini">${getPieceSvg('black', p.type)}</div>`).join('');
+        capWhite.innerHTML = whiteCapturedSorted.map(p => `<div class="captured-piece-mini">${getPieceSvg('black', p.type)}</div>`).join('');
     }
     if (capBlack) {
-        capBlack.innerHTML = captured.black.map(p => `<div class="captured-piece-mini">${getPieceSvg('white', p.type)}</div>`).join('');
+        capBlack.innerHTML = blackCapturedSorted.map(p => `<div class="captured-piece-mini">${getPieceSvg('white', p.type)}</div>`).join('');
+    }
+    
+    // Material advantage calculation
+    const whiteScore = captured.white.reduce((acc, p) => acc + (PIECE_VALUES[p.type] || 0), 0);
+    const blackScore = captured.black.reduce((acc, p) => acc + (PIECE_VALUES[p.type] || 0), 0);
+    const diff = whiteScore - blackScore;
+    
+    const advWhite = document.getElementById('advantage-white');
+    const advBlack = document.getElementById('advantage-black');
+    if (advWhite && advBlack) {
+        if (diff > 0) {
+            advWhite.textContent = `+${diff}`;
+            advWhite.classList.remove('hidden');
+            advBlack.classList.add('hidden');
+        } else if (diff < 0) {
+            advBlack.textContent = `+${Math.abs(diff)}`;
+            advBlack.classList.remove('hidden');
+            advWhite.classList.add('hidden');
+        } else {
+            advWhite.classList.add('hidden');
+            advBlack.classList.add('hidden');
+        }
     }
     
     const clkW = document.getElementById('clock-white');
@@ -733,24 +1131,41 @@ function updateHUD() {
     if (clkB) clkB.classList.toggle('active', turn === 'black' && matchClockLimit > 0);
 }
 
+// =========================================================
+// 3. CLOCK TIMERS WITH STRICT BACKGROUND PAUSE (NO TIME LOSS)
+// =========================================================
+
 function startClock() {
     stopClock();
     if (matchClockLimit <= 0) {
-        document.getElementById('time-white').textContent = '♾️';
-        document.getElementById('time-black').textContent = '♾️';
+        const tw = document.getElementById('time-white');
+        const tb = document.getElementById('time-black');
+        if (tw) tw.textContent = '∞';
+        if (tb) tb.textContent = '∞';
         return;
     }
+    
     clockTimes = { white: matchClockLimit, black: matchClockLimit };
     updateClockDisplay();
+    
+    resumeClockTicker();
+}
+
+function resumeClockTicker() {
+    stopClock();
+    if (matchClockLimit <= 0 || isGameOver || isGamePaused) return;
+    
     clockInterval = setInterval(() => {
-        if (isGameOver) return;
+        if (isGameOver || isGamePaused) return;
         clockTimes[turn]--;
         updateClockDisplay();
+        
         if (clockTimes[turn] <= 0) {
             stopClock();
             isGameOver = true;
             const winner = turn === 'white' ? 'black' : 'white';
-            showGameOverModal(`Time expired! ${playerNames[winner]} wins on time!`);
+            const winnerName = playerNames[winner];
+            showGameOverModal(`Time expired! ${winnerName} wins on time!`, winnerName);
             audio.defeat();
         }
     }, 1000);
@@ -762,9 +1177,17 @@ function stopClock() {
 }
 
 function updateClockDisplay() {
+    if (matchClockLimit <= 0) {
+        const tw = document.getElementById('time-white');
+        const tb = document.getElementById('time-black');
+        if (tw) tw.textContent = '∞';
+        if (tb) tb.textContent = '∞';
+        return;
+    }
+    
     const format = t => {
-        const m = Math.floor(t / 60);
-        const s = t % 60;
+        const m = Math.floor(Math.max(0, t) / 60);
+        const s = Math.max(0, t) % 60;
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
     const tw = document.getElementById('time-white');
@@ -773,13 +1196,76 @@ function updateClockDisplay() {
     if (tb) tb.textContent = format(clockTimes.black);
 }
 
+// Pause and Resume APIs for Android lifecycle and UI
+function pauseGame() {
+    isGamePaused = true;
+    stopClock();
+    if (aiMoveTimeout) {
+        clearTimeout(aiMoveTimeout);
+        aiMoveTimeout = null;
+    }
+    const banner = document.getElementById('turn-message');
+    if (banner && isMatchActive) {
+        banner.textContent = 'Match Paused ⏸️';
+    }
+}
+
+function resumeGame() {
+    isGamePaused = false;
+    updateHUD();
+    if (matchClockLimit > 0 && isMatchActive && !isGameOver) {
+        resumeClockTicker();
+    }
+    if (gameMode === 'ai' && turn === botSide && isMatchActive && !isGameOver) {
+        aiMoveTimeout = setTimeout(make2PlayerAIMove, 400);
+    }
+}
+
+function handleAndroidBack() {
+    // If an overlay modal is active, close it
+    const openModal = document.querySelector('.modal-overlay:not(.hidden)');
+    if (openModal) {
+        openModal.classList.add('hidden');
+        if (openModal.id === 'pause-modal') resumeGame();
+        return true;
+    }
+    
+    // If in active Arena match, show Pause Modal
+    if (currentTab === 'arena' && isMatchActive && !isGameOver) {
+        pauseGame();
+        const pModal = document.getElementById('pause-modal');
+        if (pModal) pModal.classList.remove('hidden');
+        return true;
+    }
+    
+    // If on Tactics or Profile, return to Home
+    if (currentTab !== 'home') {
+        switchTab('home');
+        return true;
+    }
+    
+    return false; // Let Android show exit confirmation
+}
+window.handleAndroidBack = handleAndroidBack;
+window.pauseGame = pauseGame;
+window.resumeGame = resumeGame;
+
+// Background tab / screen visibility handler
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        pauseGame();
+    }
+});
+
+// Promotion Dialog
 function showPromotionModal(color) {
     const modal = document.getElementById('promotion-modal');
     const container = document.getElementById('promo-options');
     if (!modal || !container) return;
     container.innerHTML = '';
     
-    ['q', 'r', 'b', 'n'].forEach(type => {
+    const pieces = ['q', 'r', 'b', 'n'];
+    pieces.forEach(type => {
         const btn = document.createElement('button');
         btn.className = 'promo-btn';
         btn.innerHTML = getPieceSvg(color, type);
@@ -792,41 +1278,22 @@ function showPromotionModal(color) {
         });
         container.appendChild(btn);
     });
-    
     modal.classList.remove('hidden');
 }
 
-function showGameOverModal(msg) {
+function showGameOverModal(msg, victor = 'Player') {
     const modal = document.getElementById('gameover-modal');
-    const desc = document.getElementById('gameover-msg');
-    if (!modal || !desc) return;
-    desc.textContent = msg;
+    const msgEl = document.getElementById('gameover-msg');
+    const scoreEl = document.getElementById('gameover-score');
+    if (!modal || !msgEl) return;
+    msgEl.textContent = msg;
+    if (scoreEl) scoreEl.textContent = victor;
     modal.classList.remove('hidden');
 }
 
 // =========================================================
-// 2. FOUR KINGDOMS / 4-PLAYER INTEGRATED ENGINE
+// 4. 14x14 FOUR KINGDOMS CHESS ENGINE & BOARD
 // =========================================================
-
-const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
-const FOUR_KINGDOM_NAMES = {
-    red: 'Red Lord (South)',
-    blue: 'Blue Baron (West)',
-    gold: 'Gold Emperor (North)',
-    green: 'Green Duke (East)'
-};
-
-let fourBoard = [];
-let fourTurn = 'red';
-let fourSelected = null;
-let fourLastMove = null;
-let fourArmies = {
-    red: { alive: true, count: 16 },
-    blue: { alive: true, count: 16 },
-    gold: { alive: true, count: 16 },
-    green: { alive: true, count: 16 }
-};
-let fourMode = 'ai';
 
 function isVoidSquare(r, c) {
     if (r < 3 && c < 3) return true;
@@ -845,6 +1312,15 @@ function initFourPlayerBoard() {
     fourTurn = 'red';
     fourSelected = null;
     fourLastMove = null;
+    isHumanDefeated4P = false;
+    isFourMatchActive = true;
+    fourEliminationOrder = [];
+    
+    const podiumModal = document.getElementById('four-podium-modal');
+    if (podiumModal) podiumModal.classList.add('hidden');
+    const elimBanner = document.getElementById('four-elim-banner');
+    if (elimBanner) elimBanner.classList.add('hidden');
+    
     fourArmies = {
         red: { alive: true, count: 16 },
         blue: { alive: true, count: 16 },
@@ -855,25 +1331,25 @@ function initFourPlayerBoard() {
     const backPieces = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
     const backPiecesMirror = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'];
     
-    // Red (South)
+    // Red (South) - Rows 13 & 12, Columns 3..10
     for (let c = 3; c <= 10; c++) {
         fourBoard[12][c] = { type: 'p', color: 'red', dir: 'up', hasMoved: false };
         fourBoard[13][c] = { type: backPieces[c - 3], color: 'red', hasMoved: false };
     }
     
-    // Gold (North)
+    // Gold (North) - Rows 0 & 1, Columns 3..10
     for (let c = 3; c <= 10; c++) {
         fourBoard[1][c] = { type: 'p', color: 'gold', dir: 'down', hasMoved: false };
         fourBoard[0][c] = { type: backPieces[c - 3], color: 'gold', hasMoved: false };
     }
     
-    // Blue (West)
+    // Blue (West) - Columns 0 & 1, Rows 3..10
     for (let r = 3; r <= 10; r++) {
         fourBoard[r][1] = { type: 'p', color: 'blue', dir: 'right', hasMoved: false };
         fourBoard[r][0] = { type: backPiecesMirror[r - 3], color: 'blue', hasMoved: false };
     }
     
-    // Green (East)
+    // Green (East) - Columns 13 & 12, Rows 3..10
     for (let r = 3; r <= 10; r++) {
         fourBoard[r][12] = { type: 'p', color: 'green', dir: 'left', hasMoved: false };
         fourBoard[r][13] = { type: backPiecesMirror[r - 3], color: 'green', hasMoved: false };
@@ -968,7 +1444,7 @@ function drawFourBoard() {
     if (!el) return;
     el.innerHTML = '';
     
-    const selectedMoves = fourSelected ? getFourMoves(fourSelected.r, fourSelected.c) : [];
+    const selectedMoves = (fourSelected && (!isHumanDefeated4P || fourMode === 'pass')) ? getFourMoves(fourSelected.r, fourSelected.c) : [];
     
     for (let r = 0; r < 14; r++) {
         for (let c = 0; c < 14; c++) {
@@ -1020,17 +1496,26 @@ function drawFourBoard() {
 }
 
 function handleFourSquareClick(r, c) {
-    if (isVoidSquare(r, c)) return;
-    if (fourMode === 'ai' && fourTurn !== 'red') return;
+    if (isGameOver || isGamePaused) return;
+    if (fourMode === 'ai') {
+        if (isHumanDefeated4P) return; // Human eliminated, prevent all moves!
+        if (fourTurn !== 'red') return; // Not human turn
+    }
     
     const clickedPiece = fourBoard[r][c];
     
     if (fourSelected) {
-        const moves = getFourMoves(fourSelected.r, fourSelected.c);
-        const targetMove = moves.find(m => m.r === r && m.c === c);
+        if (fourSelected.r === r && fourSelected.c === c) {
+            fourSelected = null;
+            drawFourBoard();
+            return;
+        }
         
-        if (targetMove) {
-            executeFourMove(fourSelected, targetMove);
+        const legals = getFourMoves(fourSelected.r, fourSelected.c);
+        const chosen = legals.find(m => m.r === r && m.c === c);
+        
+        if (chosen) {
+            executeFourMove(fourSelected, chosen);
             fourSelected = null;
             return;
         }
@@ -1099,17 +1584,11 @@ function executeFourMove(from, to) {
     
     const aliveKingdoms = FOUR_KINGDOMS.filter(k => fourArmies[k].alive);
     if (aliveKingdoms.length === 1) {
-        const victor = aliveKingdoms[0];
-        showGameOverModal(`🏆 ${FOUR_KINGDOM_NAMES[victor]} has conquered the Four Kingdoms Realm!`);
-        if (victor === 'red') {
-            lordProfile.fourWins++;
-            saveProfile();
-            audio.victory();
-        }
+        showFourPodiumModal(aliveKingdoms[0]);
         return;
     }
     
-    if (fourMode === 'ai' && fourTurn !== 'red') {
+    if (fourMode === 'ai' && fourTurn !== 'red' && !isGameOver) {
         setTimeout(makeFourAIMove, 450);
     }
 }
@@ -1128,7 +1607,55 @@ function advanceFourTurn() {
 
 function eliminateKingdom(color) {
     fourArmies[color].alive = false;
-    showToast(`${FOUR_KINGDOM_NAMES[color]} King was captured! Kingdom Eliminated!`, 'error');
+    if (!fourEliminationOrder.includes(color)) {
+        fourEliminationOrder.push(color);
+    }
+    
+    // Dynamic floating elimination banner
+    const elimBanner = document.getElementById('four-elim-banner');
+    const elimText = document.getElementById('four-elim-text');
+    if (elimBanner && elimText) {
+        elimText.textContent = `💀 ${FOUR_KINGDOM_NAMES[color]} Has Fallen!`;
+        elimBanner.classList.remove('hidden');
+        clearTimeout(window._elimBannerTimeout);
+        window._elimBannerTimeout = setTimeout(() => {
+            elimBanner.classList.add('hidden');
+        }, 3200);
+    }
+    
+    // Board shake animation on the 4-player frame
+    const frame = document.getElementById('four-board-frame');
+    if (frame) {
+        frame.classList.add('shake-board');
+        setTimeout(() => frame.classList.remove('shake-board'), 500);
+    }
+    
+    showToast(`${FOUR_KINGDOM_NAMES[color]} King was captured!`, 'error');
+    
+    // Find King coordinates for lightning defeat effect
+    let kingSq = null;
+    for (let r = 0; r < 14; r++) {
+        for (let c = 0; c < 14; c++) {
+            if (fourBoard[r][c] && fourBoard[r][c].color === color && fourBoard[r][c].type === 'k') {
+                kingSq = { r, c };
+                break;
+            }
+        }
+    }
+    
+    if (kingSq && fx4p) {
+        const sqEl = document.querySelector(`.four-square[data-r="${kingSq.r}"][data-c="${kingSq.c}"]`);
+        if (sqEl) {
+            const rect = sqEl.getBoundingClientRect();
+            const canvasRect = fx4p.canvas.getBoundingClientRect();
+            const px = rect.left - canvasRect.left + rect.width / 2;
+            const py = rect.top - canvasRect.top + rect.height / 2;
+            fx4p.lightningDefeat(px, py, '#ef4444', '#ffd700');
+            audio.strike();
+        }
+    }
+    
+    // Clear defeated army pieces
     for (let r = 0; r < 14; r++) {
         for (let c = 0; c < 14; c++) {
             if (fourBoard[r][c] && fourBoard[r][c].color === color) {
@@ -1136,10 +1663,78 @@ function eliminateKingdom(color) {
             }
         }
     }
+    
+    // IF HUMAN (RED) IS ELIMINATED: STOP ACTIVE GAMEPLAY IMMEDIATELY!
+    if (color === 'red' && fourMode === 'ai') {
+        isHumanDefeated4P = true;
+        fourSelected = null;
+        setTimeout(() => {
+            showFourDefeatModal();
+        }, 700);
+    }
+}
+
+function showFourDefeatModal() {
+    const modal = document.getElementById('four-defeat-modal');
+    if (modal) modal.classList.remove('hidden');
+    audio.defeat();
+}
+
+function showFourPodiumModal(victor) {
+    const modal = document.getElementById('four-podium-modal');
+    if (!modal) return;
+    
+    isGameOver = true;
+    isFourMatchActive = false;
+    
+    const crests = { red: '🔴', blue: '🔵', gold: '🟡', green: '🟢' };
+    
+    const p1 = victor;
+    const p2 = fourEliminationOrder[2] || FOUR_KINGDOMS.find(k => k !== p1) || 'blue';
+    const p3 = fourEliminationOrder[1] || FOUR_KINGDOMS.find(k => k !== p1 && k !== p2) || 'gold';
+    const p4 = fourEliminationOrder[0] || FOUR_KINGDOMS.find(k => k !== p1 && k !== p2 && k !== p3) || 'green';
+    
+    const n1 = document.getElementById('podium-name-1');
+    const c1 = document.getElementById('podium-crest-1');
+    if (n1) n1.textContent = FOUR_KINGDOM_NAMES[p1];
+    if (c1) c1.textContent = crests[p1] || '👑';
+    
+    const n2 = document.getElementById('podium-name-2');
+    const c2 = document.getElementById('podium-crest-2');
+    if (n2) n2.textContent = FOUR_KINGDOM_NAMES[p2];
+    if (c2) c2.textContent = crests[p2] || '⚔️';
+    
+    const n3 = document.getElementById('podium-name-3');
+    const c3 = document.getElementById('podium-crest-3');
+    if (n3) n3.textContent = FOUR_KINGDOM_NAMES[p3];
+    if (c3) c3.textContent = crests[p3] || '🛡️';
+    
+    const n4 = document.getElementById('podium-name-4');
+    const c4 = document.getElementById('podium-crest-4');
+    if (n4) n4.textContent = FOUR_KINGDOM_NAMES[p4];
+    if (c4) c4.textContent = crests[p4] || '💀';
+    
+    const sub = document.getElementById('four-podium-sub');
+    if (sub) {
+        sub.textContent = `${FOUR_KINGDOM_NAMES[p1]} reigns supreme over all 4 Kingdoms!`;
+    }
+    
+    if (p1 === 'red') {
+        lordProfile.fourWins++;
+        saveProfile();
+        audio.victory();
+        triggerHaptic('victory');
+    } else {
+        audio.defeat();
+        triggerHaptic('check');
+    }
+    
+    modal.classList.remove('hidden');
+    checkAndUnlockAchievements();
 }
 
 function makeFourAIMove() {
-    if (fourTurn === 'red' || !fourArmies[fourTurn].alive) return;
+    if (fourTurn === 'red' || !fourArmies[fourTurn].alive || isGamePaused || isGameOver) return;
     
     const allMoves = [];
     for (let r = 0; r < 14; r++) {
@@ -1156,6 +1751,11 @@ function makeFourAIMove() {
         advanceFourTurn();
         updateFourHUD();
         drawFourBoard();
+        const aliveKingdoms = FOUR_KINGDOMS.filter(k => fourArmies[k].alive);
+        if (aliveKingdoms.length === 1) {
+            showFourPodiumModal(aliveKingdoms[0]);
+            return;
+        }
         if (fourMode === 'ai' && fourTurn !== 'red') {
             setTimeout(makeFourAIMove, 450);
         }
@@ -1178,376 +1778,493 @@ function makeFourAIMove() {
 }
 
 function updateFourHUD() {
-    const badge = document.getElementById('four-turn-badge');
-    const text = document.getElementById('four-turn-text');
-    if (text) text.textContent = `${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn`;
-    if (badge) {
-        const dot = badge.querySelector('.kingdom-dot');
-        if (dot) dot.className = `kingdom-dot ${fourTurn}`;
+    const turnMsg = document.getElementById('turn-message');
+    const turnDot = document.getElementById('turn-dot');
+    const kColors = { red: '#ef4444', blue: '#38bdf8', gold: '#facc15', green: '#22c55e' };
+    
+    if (turnMsg) turnMsg.textContent = `${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn`;
+    if (turnDot) turnDot.style.backgroundColor = kColors[fourTurn] || 'var(--primary)';
+    
+    // Active Kingdom Turn Banner with kingdom crest and player name
+    const turnBanner = document.getElementById('four-turn-banner');
+    if (turnBanner) {
+        turnBanner.className = `four-turn-banner ${fourTurn}`;
+        const crest = { red: '🔴', blue: '🔵', gold: '🟡', green: '🟢' }[fourTurn] || '👑';
+        const roleNote = (fourMode === 'ai' && fourTurn === 'red') ? ' (You)' : '';
+        turnBanner.innerHTML = `<span class="crest">${crest}</span> <strong>${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn${roleNote}</strong>`;
+    }
+    
+    // Dynamic glowing perimeter border on board frame matching active kingdom
+    const boardFrame = document.getElementById('four-board-frame');
+    if (boardFrame) {
+        boardFrame.className = `four-board-frame turn-${fourTurn}`;
     }
     
     FOUR_KINGDOMS.forEach(k => {
         const card = document.getElementById(`hud-k-${k}`);
-        const statusEl = document.getElementById(`k-status-${k}`);
+        const status = document.getElementById(`k-status-${k}`);
         if (card) {
             card.classList.toggle('active-turn', fourTurn === k && fourArmies[k].alive);
             card.classList.toggle('eliminated', !fourArmies[k].alive);
         }
-        if (statusEl) {
-            statusEl.textContent = fourArmies[k].alive ? `${fourArmies[k].count} Army` : 'Fallen';
+        if (status) {
+            status.textContent = fourArmies[k].alive ? `${fourArmies[k].count} Army` : 'Defeated';
         }
     });
 }
 
 // =========================================================
-// 3. CASTLE TACTICS & OPENINGS MASTER
+// 5. 5 DAILY CASTLE PUZZLES ENGINE (1 ATTEMPT PER DAY)
 // =========================================================
 
 const PUZZLES = [
     {
-        title: 'Puzzle #1: Scholar\'s Mate',
-        instruction: '⚪ White Queen to move & checkmate on f7',
-        board: [
-            ['r', null, 'b', 'q', 'k', 'b', 'n', 'r'],
-            ['p', 'p', 'p', 'p', null, 'p', 'p', 'p'],
-            [null, null, 'n', null, null, null, null, null],
-            [null, null, null, null, 'p', null, null, null],
-            [null, null, 'B', null, 'P', null, null, null],
-            [null, null, null, null, null, null, null, null],
-            ['P', 'P', 'P', 'P', null, 'P', 'P', 'P'],
-            ['R', 'N', 'B', null, 'K', null, 'N', 'R']
-        ],
-        extraWhiteQueen: { r: 4, c: 7 },
-        solution: { from: { r: 4, c: 7 }, to: { r: 1, c: 5 } }
+        id: 0,
+        title: "Daily Puzzle #1: Back-Rank Mate",
+        turn: "⚪ White to move & deliver Back-Rank Checkmate",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[0][6] = { type: 'k', color: 'black' };
+            b[1][5] = { type: 'p', color: 'black' };
+            b[1][6] = { type: 'p', color: 'black' };
+            b[1][7] = { type: 'p', color: 'black' };
+            b[7][0] = { type: 'r', color: 'white' };
+            b[7][6] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 7, c: 0 }, to: { r: 0, c: 0 } },
+        hint: "Deliver Back-Rank checkmate along row 8 with your Rook!"
     },
     {
-        title: 'Puzzle #2: Back-Rank Mate',
-        instruction: '⚪ White Rook to move & checkmate on d8',
-        board: [
-            [null, null, null, null, null, 'r', 'k', null],
-            ['p', 'p', 'p', null, null, 'p', 'p', 'p'],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null],
-            ['P', 'P', 'P', null, null, 'P', 'P', 'P'],
-            [null, null, null, 'R', null, null, 'K', null]
-        ],
-        solution: { from: { r: 7, c: 3 }, to: { r: 0, c: 3 } }
+        id: 1,
+        title: "Daily Puzzle #2: Scholar's Queen Mate",
+        turn: "⚪ White Queen to move & deliver Checkmate",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[0][4] = { type: 'k', color: 'black' };
+            b[0][3] = { type: 'q', color: 'black' };
+            b[0][2] = { type: 'b', color: 'black' };
+            b[1][3] = { type: 'p', color: 'black' };
+            b[1][4] = { type: 'p', color: 'black' };
+            b[4][2] = { type: 'b', color: 'white' };
+            b[5][5] = { type: 'q', color: 'white' };
+            b[7][4] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 5, c: 5 }, to: { r: 1, c: 5 } },
+        hint: "Strike f7 with your Queen, backed by the Bishop on c4 for checkmate!"
+    },
+    {
+        id: 2,
+        title: "Daily Puzzle #3: Smothered Mate",
+        turn: "⚪ White Knight to move & deliver Smothered Checkmate",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[0][7] = { type: 'k', color: 'black' };
+            b[0][6] = { type: 'r', color: 'black' };
+            b[1][6] = { type: 'p', color: 'black' };
+            b[1][7] = { type: 'p', color: 'black' };
+            b[3][4] = { type: 'n', color: 'white' };
+            b[7][6] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 3, c: 4 }, to: { r: 1, c: 5 } },
+        hint: "Jump your Knight to f7! The enemy King is trapped by its own pieces."
+    },
+    {
+        id: 3,
+        title: "Daily Puzzle #4: Anastasia's Mate",
+        turn: "⚪ White Rook to move & deliver Checkmate on h-file",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[1][7] = { type: 'k', color: 'black' };
+            b[1][5] = { type: 'p', color: 'black' };
+            b[1][6] = { type: 'p', color: 'black' };
+            b[1][4] = { type: 'n', color: 'white' };
+            b[3][0] = { type: 'r', color: 'white' };
+            b[7][6] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 3, c: 0 }, to: { r: 3, c: 7 } },
+        hint: "Slide your Rook to h5! The Knight on e7 seals off g8 and g6."
+    },
+    {
+        id: 4,
+        title: "Daily Puzzle #5: Arabian Mate",
+        turn: "⚪ White Rook to move & deliver Arabian Checkmate",
+        setup: () => {
+            const b = Array(8).fill(null).map(() => Array(8).fill(null));
+            b[0][7] = { type: 'k', color: 'black' };
+            b[2][5] = { type: 'n', color: 'white' };
+            b[1][1] = { type: 'r', color: 'white' };
+            b[7][6] = { type: 'k', color: 'white' };
+            return b;
+        },
+        solution: { from: { r: 1, c: 1 }, to: { r: 1, c: 7 } },
+        hint: "Move your Rook to h7! The Knight on f6 defends the Rook and covers g8."
     }
 ];
 
-let currentPuzzleIdx = 0;
-let puzzleBoardState = [];
-let puzzleSelected = null;
-
-function renderCurrentPuzzle() {
-    const p = PUZZLES[currentPuzzleIdx];
-    document.getElementById('puzzle-level-tag').textContent = p.title;
-    document.getElementById('puzzle-turn-text').textContent = p.instruction;
-    document.getElementById('puzzle-feedback').textContent = '';
-    
-    puzzleBoardState = Array(8).fill(null).map(() => Array(8).fill(null));
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const sym = p.board[r][c];
-            if (sym) {
-                const isW = sym === sym.toUpperCase();
-                puzzleBoardState[r][c] = { type: sym.toLowerCase(), color: isW ? 'white' : 'black' };
-            }
-        }
-    }
-    if (p.extraWhiteQueen) {
-        puzzleBoardState[p.extraWhiteQueen.r][p.extraWhiteQueen.c] = { type: 'q', color: 'white' };
-    }
-    
-    drawPuzzleBoard();
+function getDailyPuzzleStorageKey() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `royal_daily_puzzles_${year}-${month}-${day}`;
 }
 
-function drawPuzzleBoard() {
-    const el = document.getElementById('puzzle-board');
-    if (!el) return;
-    el.innerHTML = '';
-    
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const isLight = (r + c) % 2 === 0;
-            const sq = document.createElement('div');
-            sq.className = `square ${isLight ? 'light' : 'dark'}`;
-            
-            if (puzzleSelected && puzzleSelected.r === r && puzzleSelected.c === c) {
-                sq.classList.add('selected');
-            }
-            
-            const piece = puzzleBoardState[r][c];
-            if (piece) {
-                const pEl = document.createElement('div');
-                pEl.className = 'piece-svg';
-                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
-                sq.appendChild(pEl);
-            }
-            
-            sq.addEventListener('click', () => handlePuzzleClick(r, c));
-            el.appendChild(sq);
-        }
+function getCompletedPuzzlesToday() {
+    try {
+        const key = getDailyPuzzleStorageKey();
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        return [];
     }
 }
 
-function handlePuzzleClick(r, c) {
-    const p = PUZZLES[currentPuzzleIdx];
-    const piece = puzzleBoardState[r][c];
-    
-    if (puzzleSelected) {
-        if (puzzleSelected.r === p.solution.from.r && puzzleSelected.c === p.solution.from.c &&
-            r === p.solution.to.r && c === p.solution.to.c) {
-            puzzleBoardState[r][c] = puzzleBoardState[puzzleSelected.r][puzzleSelected.c];
-            puzzleBoardState[puzzleSelected.r][puzzleSelected.c] = null;
-            puzzleSelected = null;
-            drawPuzzleBoard();
-            document.getElementById('puzzle-feedback').innerHTML = '<span style="color:#22c55e;">👑 Masterful! Brilliant Checkmate!</span>';
-            audio.victory();
+function isPuzzleCompletedToday(idx) {
+    const completed = getCompletedPuzzlesToday();
+    return completed.includes(idx);
+}
+
+function markPuzzleCompletedToday(idx) {
+    try {
+        const key = getDailyPuzzleStorageKey();
+        const completed = getCompletedPuzzlesToday();
+        if (!completed.includes(idx)) {
+            completed.push(idx);
+            localStorage.setItem(key, JSON.stringify(completed));
             lordProfile.puzzles++;
             saveProfile();
-            return;
-        } else {
-            document.getElementById('puzzle-feedback').innerHTML = '<span style="color:#ef4444;">❌ Incorrect move, rethink your tactic!</span>';
-            puzzleSelected = null;
-            drawPuzzleBoard();
-        }
-    } else {
-        if (piece && piece.color === 'white') {
-            puzzleSelected = { r, c };
-            drawPuzzleBoard();
-        }
-    }
-}
-
-// Openings Master
-const OPENINGS_DATA = {
-    italian: {
-        title: 'Italian Game (Giuoco Piano)',
-        desc: 'One of the oldest chess openings. Develops the Bishop to c4 to target the weak f7 square.',
-        moves: ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4'],
-        notation: '1. e4 e5 2. Nf3 Nc6 3. Bc4'
-    },
-    sicilian: {
-        title: 'Sicilian Defense (Open)',
-        desc: 'The most popular counter-attacking defense against White’s 1. e4.',
-        moves: ['e2e4', 'c7c5', 'g1f3', 'd7d6', 'd2d4'],
-        notation: '1. e4 c5 2. Nf3 d6 3. d4'
-    },
-    queens_gambit: {
-        title: 'Queen\'s Gambit',
-        desc: 'White offers the c4 pawn to dominate the critical central board squares.',
-        moves: ['d2d4', 'd7d5', 'c2c4'],
-        notation: '1. d4 d5 2. c4'
-    },
-    ruy_lopez: {
-        title: 'Ruy Lopez (Spanish Opening)',
-        desc: 'Classical mastery. White pins the knight guarding Black’s e5 pawn.',
-        moves: ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'],
-        notation: '1. e4 e5 2. Nf3 Nc6 3. Bb5'
-    },
-    french: {
-        title: 'French Defense',
-        desc: 'Solid pawn structure preparing immediate counterplay with ...d5.',
-        moves: ['e2e4', 'e7e6', 'd2d4', 'd7d5'],
-        notation: '1. e4 e6 2. d4 d5'
-    },
-    scandinavian: {
-        title: 'Scandinavian Defense',
-        desc: 'Directly challenges White\'s center pawn on move 1.',
-        moves: ['e2e4', 'd7d5'],
-        notation: '1. e4 d5'
-    }
-};
-
-let currentOpeningKey = 'italian';
-let currentOpeningStep = 0;
-let openingsBoardState = [];
-
-function initOpeningsBoard() {
-    openingsBoardState = Array(8).fill(null).map(() => Array(8).fill(null));
-    const backRow = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
-    for (let c = 0; c < 8; c++) {
-        openingsBoardState[0][c] = { type: backRow[c], color: 'black' };
-        openingsBoardState[1][c] = { type: 'p', color: 'black' };
-        openingsBoardState[6][c] = { type: 'p', color: 'white' };
-        openingsBoardState[7][c] = { type: backRow[c], color: 'white' };
-    }
-}
-
-function parseAlgToCoord(str) {
-    const files = { a:0, b:1, c:2, d:3, e:4, f:5, g:6, h:7 };
-    const fc = files[str[0]];
-    const fr = 8 - parseInt(str[1]);
-    const tc = files[str[2]];
-    const tr = 8 - parseInt(str[3]);
-    return { from: { r: fr, c: fc }, to: { r: tr, c: tc } };
-}
-
-function drawOpeningsBoard() {
-    const el = document.getElementById('openings-board');
-    if (!el) return;
-    el.innerHTML = '';
-    
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const isLight = (r + c) % 2 === 0;
-            const sq = document.createElement('div');
-            sq.className = `square ${isLight ? 'light' : 'dark'}`;
-            
-            const piece = openingsBoardState[r][c];
-            if (piece) {
-                const pEl = document.createElement('div');
-                pEl.className = 'piece-svg';
-                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
-                sq.appendChild(pEl);
+            if (completed.length === PUZZLES.length) {
+                updatePuzzleStreakOnCompletion();
             }
-            el.appendChild(sq);
+        }
+    } catch (e) {}
+}
+
+function getTodayDateStr() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getYesterdayDateStr() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getPuzzleStreakData() {
+    try {
+        const raw = localStorage.getItem('royal_puzzle_streak');
+        return raw ? JSON.parse(raw) : { streak: 0, lastDate: '' };
+    } catch (e) {
+        return { streak: 0, lastDate: '' };
+    }
+}
+
+function updatePuzzleStreakOnCompletion() {
+    const today = getTodayDateStr();
+    const yesterday = getYesterdayDateStr();
+    let data = getPuzzleStreakData();
+    
+    if (data.lastDate === today) {
+        return;
+    }
+    
+    if (data.lastDate === yesterday) {
+        data.streak = (data.streak || 0) + 1;
+    } else {
+        data.streak = 1;
+    }
+    data.lastDate = today;
+    localStorage.setItem('royal_puzzle_streak', JSON.stringify(data));
+    renderPuzzleStreak();
+    checkAndUnlockAchievements();
+}
+
+function renderPuzzleStreak() {
+    const streakCountEl = document.getElementById('puzzle-streak-count');
+    const streakTierEl = document.getElementById('puzzle-streak-tier');
+    const streakSubEl = document.getElementById('puzzle-streak-sub');
+    if (!streakCountEl) return;
+    
+    const today = getTodayDateStr();
+    const yesterday = getYesterdayDateStr();
+    let data = getPuzzleStreakData();
+    
+    let currentStreak = data.streak || 0;
+    if (data.lastDate && data.lastDate !== today && data.lastDate !== yesterday) {
+        currentStreak = 0;
+    }
+    
+    streakCountEl.textContent = `${currentStreak} Day Streak`;
+    
+    let tier = '⭐ Squire Tactician';
+    if (currentStreak >= 14) tier = '👑 Grand Sovereign';
+    else if (currentStreak >= 7) tier = '🏰 Castle Master';
+    else if (currentStreak >= 3) tier = '⚔️ Knight Champion';
+    
+    if (streakTierEl) streakTierEl.textContent = tier;
+    
+    const completedList = getCompletedPuzzlesToday();
+    if (streakSubEl) {
+        if (completedList.length === PUZZLES.length) {
+            streakSubEl.innerHTML = '🔥 All 5 daily puzzles cleared! Streak safely secured.';
+        } else {
+            const left = PUZZLES.length - completedList.length;
+            streakSubEl.textContent = `Clear ${left} more puzzle${left > 1 ? 's' : ''} today to advance your streak!`;
         }
     }
 }
 
-function stepOpeningMove(direction) {
-    const opening = OPENINGS_DATA[currentOpeningKey];
-    if (direction === 'next' && currentOpeningStep < opening.moves.length) {
-        const move = parseAlgToCoord(opening.moves[currentOpeningStep]);
-        openingsBoardState[move.to.r][move.to.c] = openingsBoardState[move.from.r][move.from.c];
-        openingsBoardState[move.from.r][move.from.c] = null;
-        currentOpeningStep++;
-        audio.move();
-    } else if (direction === 'reset') {
-        initOpeningsBoard();
-        currentOpeningStep = 0;
-    }
-    drawOpeningsBoard();
-}
-
-// =========================================================
-// 4. PROFILE & LOCALSTORAGE PERSISTENCE
-// =========================================================
-
-function loadProfile() {
-    try {
-        const raw = localStorage.getItem('electro_king_lord_profile');
-        if (raw) {
-            lordProfile = { ...lordProfile, ...JSON.parse(raw) };
-        }
-    } catch (e) {
-        console.warn('Could not load profile:', e);
-    }
-    updateProfileUI();
-}
-
-function saveProfile() {
-    try {
-        localStorage.setItem('electro_king_lord_profile', JSON.stringify(lordProfile));
-    } catch (e) {
-        console.warn('Could not save profile:', e);
-    }
-    updateProfileUI();
-}
-
-function updateProfileUI() {
-    const pName = document.getElementById('profile-name');
-    const hudName = document.getElementById('hud-lord-name');
-    const pNameTag = document.getElementById('player-name-tag');
-    const pMatches = document.getElementById('stat-matches');
-    const pWins = document.getElementById('stat-wins');
-    const pRate = document.getElementById('stat-winrate');
-    const pFourWins = document.getElementById('stat-four-wins');
-    const avatarEl = document.getElementById('profile-avatar');
-    
-    if (pName) pName.textContent = lordProfile.name;
-    if (hudName) hudName.textContent = lordProfile.name;
-    if (pNameTag) pNameTag.textContent = lordProfile.name;
-    if (pMatches) pMatches.textContent = lordProfile.matches;
-    if (pWins) pWins.textContent = lordProfile.wins;
-    if (pFourWins) pFourWins.textContent = lordProfile.fourWins;
-    if (avatarEl) avatarEl.textContent = lordProfile.avatar;
-    
-    if (pRate) {
-        const rate = lordProfile.matches > 0 ? Math.round((lordProfile.wins / lordProfile.matches) * 100) : 0;
-        pRate.textContent = `${rate}%`;
-    }
-    
-    playerNames.white = lordProfile.name;
-}
-
-// =========================================================
-// 5. TOAST & NAVIGATION
-// =========================================================
-
-function showToast(msg, type = 'info', duration = 2800) {
-    const container = document.getElementById('toast-container');
+function renderPuzzleProgressPills() {
+    const container = document.getElementById('puzzle-progress-pills');
     if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 250);
-    }, duration);
+    container.innerHTML = '';
+    
+    const completed = getCompletedPuzzlesToday();
+    
+    PUZZLES.forEach((pz, idx) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'puzzle-pill';
+        if (idx === currentPuzzleIdx) pill.classList.add('active');
+        if (completed.includes(idx)) pill.classList.add('completed');
+        
+        pill.textContent = completed.includes(idx) ? '✓' : (idx + 1);
+        pill.title = completed.includes(idx) ? `Daily Puzzle #${idx + 1} (Completed)` : `Daily Puzzle #${idx + 1}`;
+        
+        pill.addEventListener('click', () => {
+            currentPuzzleIdx = idx;
+            renderCurrentPuzzle();
+        });
+        
+        container.appendChild(pill);
+    });
 }
+
+function renderCurrentPuzzle() {
+    const pz = PUZZLES[currentPuzzleIdx];
+    if (!pz) return;
+    
+    renderPuzzleStreak();
+    renderPuzzleProgressPills();
+    
+    const lvlTag = document.getElementById('puzzle-level-tag');
+    const solvedBadge = document.getElementById('puzzle-solved-badge');
+    const turnText = document.getElementById('puzzle-turn-text');
+    const boardEl = document.getElementById('puzzle-board');
+    const feedbackEl = document.getElementById('puzzle-feedback');
+    if (!lvlTag || !turnText || !boardEl) return;
+    
+    const isCompleted = isPuzzleCompletedToday(currentPuzzleIdx);
+    const completedList = getCompletedPuzzlesToday();
+    
+    lvlTag.textContent = pz.title;
+    if (solvedBadge) solvedBadge.classList.toggle('hidden', !isCompleted);
+    
+    if (feedbackEl) {
+        if (completedList.length === PUZZLES.length) {
+            feedbackEl.innerHTML = '<span style="color:#22c55e;">🏆 All 5 Daily Puzzles Solved Today! Grandmaster tactics achieved.</span>';
+        } else if (isCompleted) {
+            feedbackEl.innerHTML = '<span style="color:#22c55e;">✅ Solved! You have completed this puzzle today.</span>';
+        } else {
+            feedbackEl.textContent = '';
+        }
+    }
+    
+    turnText.textContent = isCompleted ? 'Completed for today (Cannot repeat)' : pz.turn;
+    boardEl.innerHTML = '';
+    
+    const pzBoard = pz.setup();
+    if (isCompleted) {
+        pzBoard[pz.solution.to.r][pz.solution.to.c] = pzBoard[pz.solution.from.r][pz.solution.from.c];
+        pzBoard[pz.solution.from.r][pz.solution.from.c] = null;
+    }
+    
+    let pzSelected = null;
+    
+    function drawPzBoard() {
+        boardEl.innerHTML = '';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const sq = document.createElement('div');
+                const isLight = (r + c) % 2 === 0;
+                sq.className = `square ${isLight ? 'light' : 'dark'}`;
+                
+                if (pzSelected && pzSelected.r === r && pzSelected.c === c) {
+                    sq.classList.add('selected');
+                }
+                
+                const piece = pzBoard[r][c];
+                if (piece) {
+                    const pEl = document.createElement('div');
+                    pEl.className = 'piece-svg';
+                    pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+                    sq.appendChild(pEl);
+                }
+                
+                sq.addEventListener('click', () => {
+                    if (isCompleted) {
+                        showToast('✅ Puzzle already completed today!', 'info');
+                        return;
+                    }
+                    
+                    if (pzSelected) {
+                        if (pzSelected.r === r && pzSelected.c === c) {
+                            pzSelected = null;
+                            drawPzBoard();
+                            return;
+                        }
+                        
+                        if (piece && piece.color === 'white') {
+                            pzSelected = { r, c };
+                            drawPzBoard();
+                            return;
+                        }
+                        
+                        if (pzSelected.r === pz.solution.from.r && pzSelected.c === pz.solution.from.c &&
+                            r === pz.solution.to.r && c === pz.solution.to.c) {
+                            
+                            pzBoard[r][c] = pzBoard[pzSelected.r][pzSelected.c];
+                            pzBoard[pzSelected.r][pzSelected.c] = null;
+                            pzSelected = null;
+                            markPuzzleCompletedToday(currentPuzzleIdx);
+                            audio.victory();
+                            showToast(`🎉 Checkmate! Daily Puzzle #${currentPuzzleIdx + 1} Solved!`, 'success');
+                            renderCurrentPuzzle();
+                        } else {
+                            showToast('❌ Incorrect move. Try again!', 'error');
+                            audio.defeat();
+                            pzSelected = null;
+                            drawPzBoard();
+                        }
+                    } else if (piece && piece.color === 'white') {
+                        pzSelected = { r, c };
+                        drawPzBoard();
+                    }
+                });
+                boardEl.appendChild(sq);
+            }
+        }
+    }
+    
+    drawPzBoard();
+}
+
+// =========================================================
+// 6. NAVIGATION & TAB SWITCHING
+// =========================================================
 
 function switchTab(tabId) {
     currentTab = tabId;
+    
     document.querySelectorAll('.tab-screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     
-    const screen = document.getElementById(`screen-${tabId}`);
-    const navBtn = document.getElementById(`nav-btn-${tabId}`);
-    if (screen) screen.classList.add('active');
-    if (navBtn) navBtn.classList.add('active');
+    const targetScreen = document.getElementById(`screen-${tabId === 'battle' ? 'arena' : tabId}`);
+    const targetNavBtn = document.getElementById(`nav-btn-${tabId}`);
     
-    if (tabId === 'arena') {
+    if (targetScreen) targetScreen.classList.add('active');
+    if (targetNavBtn) targetNavBtn.classList.add('active');
+    
+    const headerSub = document.getElementById('header-mode-subtitle');
+    
+    if (tabId === 'home') {
+        if (headerSub) headerSub.textContent = 'Castle Battle Setup';
+        pauseGame();
+    } else if (tabId === 'arena' || tabId === 'battle') {
         if (arenaSubMode === '2p') {
+            if (headerSub) headerSub.textContent = 'Classic 2-Player Duel';
             draw2PlayerBoard();
+            if (fx2p) fx2p.resize();
         } else {
+            if (headerSub) headerSub.textContent = 'Four Kingdoms Realm';
             drawFourBoard();
+            if (fx4p) fx4p.resize();
+        }
+        if (isMatchActive && !isGameOver) {
+            resumeGame();
         }
     } else if (tabId === 'puzzles') {
+        if (headerSub) headerSub.textContent = 'Castle Tactics Academy';
+        pauseGame();
         renderCurrentPuzzle();
+    } else if (tabId === 'profile') {
+        if (headerSub) headerSub.textContent = 'Player Honor & Records';
+        pauseGame();
+        updateProfileUI();
     }
 }
 
 function switchArenaSubMode(mode) {
     arenaSubMode = mode;
-    const btn2p = document.getElementById('arena-toggle-2p');
-    const btn4p = document.getElementById('arena-toggle-4p');
     const view2p = document.getElementById('view-2player-arena');
     const view4p = document.getElementById('view-4player-arena');
+    const subTitle = document.getElementById('header-mode-subtitle');
     
     if (mode === '2p') {
-        if (btn2p) btn2p.classList.add('active');
-        if (btn4p) btn4p.classList.remove('active');
         if (view2p) view2p.classList.remove('hidden');
         if (view4p) view4p.classList.add('hidden');
+        if (subTitle) subTitle.textContent = 'Classic 2-Player Duel';
         draw2PlayerBoard();
         if (fx2p) fx2p.resize();
     } else {
-        if (btn4p) btn4p.classList.add('active');
-        if (btn2p) btn2p.classList.remove('active');
         if (view4p) view4p.classList.remove('hidden');
         if (view2p) view2p.classList.add('hidden');
+        if (subTitle) subTitle.textContent = 'Four Kingdoms Realm';
         drawFourBoard();
         if (fx4p) fx4p.resize();
     }
 }
 
 // =========================================================
-// 6. EVENT LISTENERS INITIALIZATION
+// 7. EVENT LISTENERS & INITIALIZATION
 // =========================================================
 
+function syncSettingsCheckboxes() {
+    ['modal-sound-toggle', 'pref-sound-toggle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = royalSettings.sound;
+    });
+    ['modal-vibrate-toggle', 'pref-vibrate-toggle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = royalSettings.vibration;
+    });
+    ['modal-coords-toggle', 'pref-coords-toggle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = royalSettings.coords;
+    });
+    ['modal-eval-toggle', 'pref-eval-toggle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = royalSettings.evalBar;
+    });
+    const evalWrapper = document.getElementById('eval-bar-wrapper');
+    if (evalWrapper) evalWrapper.style.display = royalSettings.evalBar ? 'flex' : 'none';
+    audio.enabled = royalSettings.sound;
+}
+
+function bindCheckbox(id, key, onChange) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+        royalSettings[key] = el.checked;
+        localStorage.setItem(`royal_chess_${key}`, el.checked);
+        syncSettingsCheckboxes();
+        if (onChange) onChange();
+        triggerHaptic('move');
+    });
+}
+
 function setupEventListeners() {
-    // Mode Switcher Widget in Arena
-    const arena2pBtn = document.getElementById('arena-toggle-2p');
-    const arena4pBtn = document.getElementById('arena-toggle-4p');
-    if (arena2pBtn) arena2pBtn.addEventListener('click', () => switchArenaSubMode('2p'));
-    if (arena4pBtn) arena4pBtn.addEventListener('click', () => switchArenaSubMode('4p'));
-    
     // Bottom Navigation Tabs
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1556,295 +2273,524 @@ function setupEventListeners() {
         });
     });
     
+    // HOME SCREEN CONTROLS
+    // Variation: 2-Player vs 4-Player
+    const cat2p = document.getElementById('home-cat-2p');
+    const cat4p = document.getElementById('home-cat-4p');
+    const group2p = document.getElementById('home-2p-group');
+    const group4p = document.getElementById('home-4p-group');
+    
+    if (cat2p && cat4p) {
+        cat2p.addEventListener('click', () => {
+            cat2p.classList.add('active');
+            cat4p.classList.remove('active');
+            group2p.classList.remove('hidden');
+            group4p.classList.add('hidden');
+            arenaSubMode = '2p';
+        });
+        cat4p.addEventListener('click', () => {
+            cat4p.classList.add('active');
+            cat2p.classList.remove('active');
+            group4p.classList.remove('hidden');
+            group2p.classList.add('hidden');
+            arenaSubMode = '4p';
+        });
+    }
+    
+    // 2P Play Mode: vs AI vs Pass & Play
+    const modeAiBtn = document.getElementById('home-2p-mode-ai');
+    const modeLocalBtn = document.getElementById('home-2p-mode-local');
+    const pNameSec = document.getElementById('home-player-name-section');
+    const localNamesSec = document.getElementById('home-local-names-section');
+    const sideSec = document.getElementById('home-side-select-section');
+    const diffSec = document.getElementById('home-ai-difficulty-section');
+    
+    if (modeAiBtn && modeLocalBtn) {
+        modeAiBtn.addEventListener('click', () => {
+            modeAiBtn.classList.add('active');
+            modeLocalBtn.classList.remove('active');
+            gameMode = 'ai';
+            if (pNameSec) pNameSec.classList.remove('hidden');
+            if (localNamesSec) localNamesSec.classList.add('hidden');
+            if (sideSec) sideSec.classList.remove('hidden');
+            if (diffSec) diffSec.classList.remove('hidden');
+        });
+        modeLocalBtn.addEventListener('click', () => {
+            modeLocalBtn.classList.add('active');
+            modeAiBtn.classList.remove('active');
+            gameMode = 'local';
+            if (pNameSec) pNameSec.classList.add('hidden');
+            if (localNamesSec) localNamesSec.classList.remove('hidden');
+            if (sideSec) sideSec.classList.add('hidden');
+            if (diffSec) diffSec.classList.add('hidden');
+        });
+    }
+    
+    // Timer speed selection (Default: None = 0)
+    document.querySelectorAll('#home-timer-group .clock-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#home-timer-group .clock-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            matchClockLimit = parseInt(btn.dataset.time, 10) || 0;
+        });
+    });
+    
+    // Command Colors (White, Random, Black)
+    const sideWhite = document.getElementById('home-side-white');
+    const sideRand = document.getElementById('home-side-random');
+    const sideBlack = document.getElementById('home-side-black');
+    if (sideWhite && sideRand && sideBlack) {
+        [sideWhite, sideRand, sideBlack].forEach(btn => {
+            btn.addEventListener('click', () => {
+                [sideWhite, sideRand, sideBlack].forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const s = btn.dataset.side;
+                if (s === 'random') {
+                    playerSide = Math.random() < 0.5 ? 'white' : 'black';
+                } else {
+                    playerSide = s;
+                }
+                botSide = playerSide === 'white' ? 'black' : 'white';
+            });
+        });
+    }
+    
+    // Bot Knight selection
+    document.querySelectorAll('.bot-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            difficulty = parseInt(card.dataset.diff, 10) || 2;
+        });
+    });
+    
+    // 4P Mode (vs 3 Bots vs Pass & Play)
+    const fourAiBtn = document.getElementById('home-4p-ai-btn');
+    const fourPassBtn = document.getElementById('home-4p-pass-btn');
+    const fourAiNameSec = document.getElementById('home-4p-ai-name-section');
+    const fourPassNamesSec = document.getElementById('home-4p-pass-names-section');
+    
+    if (fourAiBtn && fourPassBtn) {
+        fourAiBtn.addEventListener('click', () => {
+            fourAiBtn.classList.add('active');
+            fourPassBtn.classList.remove('active');
+            fourMode = 'ai';
+            if (fourAiNameSec) fourAiNameSec.classList.remove('hidden');
+            if (fourPassNamesSec) fourPassNamesSec.classList.add('hidden');
+        });
+        fourPassBtn.addEventListener('click', () => {
+            fourPassBtn.classList.add('active');
+            fourAiBtn.classList.remove('active');
+            fourMode = 'pass';
+            if (fourAiNameSec) fourAiNameSec.classList.add('hidden');
+            if (fourPassNamesSec) fourPassNamesSec.classList.remove('hidden');
+        });
+    }
+    
+    // COMMENCE BATTLE ⚔️ (HOME START BUTTON)
+    const homeStartBtn = document.getElementById('home-start-btn');
+    if (homeStartBtn) {
+        homeStartBtn.addEventListener('click', () => {
+            // Save player name
+            const nameInput = document.getElementById('home-player-name');
+            const fourNameInput = document.getElementById('home-4p-player-name');
+            const fourRedInput = document.getElementById('home-4p-name-red');
+            const customName = (arenaSubMode === '4p' ? (fourMode === 'pass' ? fourRedInput?.value : fourNameInput?.value) : nameInput?.value)?.trim();
+            if (customName) {
+                lordProfile.name = customName;
+                saveProfile();
+            }
+            
+            // Switch to Arena tab first so elements are visible
+            switchTab('arena');
+            
+            if (arenaSubMode === '2p') {
+                switchArenaSubMode('2p');
+                startNew2PlayerGame();
+            } else {
+                switchArenaSubMode('4p');
+                startNew4PlayerGame();
+            }
+        });
+    }
+    
     // In-game Action Buttons
     const undoBtn = document.getElementById('undo-btn');
     if (undoBtn) {
         undoBtn.addEventListener('click', () => {
-            if (history.length > 0 && !isGameOver) {
+            if (history.length === 0 || isGameOver || isGamePaused) return;
+            if (replayIndex !== -1) returnToLiveGame();
+            
+            if (aiMoveTimeout) {
+                clearTimeout(aiMoveTimeout);
+                aiMoveTimeout = null;
+            }
+            
+            // In vs AI mode: if it's player's turn, undo both AI and player moves
+            if (gameMode === 'ai' && history.length >= 2 && turn === playerSide) {
+                history.pop();
+                if (moveHistoryNotation.length > 0) moveHistoryNotation.pop();
                 const prev = history.pop();
                 board = prev.board;
                 turn = prev.turn;
                 lastMove = prev.lastMove;
                 captured = prev.captured;
-                selectedSquare = null;
-                activeHint = null;
-                updateHUD();
-                draw2PlayerBoard();
-                showToast('Move Undone ↩️');
+                clockTimes = prev.clockTimes;
+                if (moveHistoryNotation.length > 0) moveHistoryNotation.pop();
+            } else {
+                const prev = history.pop();
+                board = prev.board;
+                turn = prev.turn;
+                lastMove = prev.lastMove;
+                captured = prev.captured;
+                clockTimes = prev.clockTimes;
+                if (moveHistoryNotation.length > 0) moveHistoryNotation.pop();
             }
+            
+            renderMoveHistoryChips();
+            updateHUD();
+            updateClockDisplay();
+            draw2PlayerBoard();
+            audio.move();
+            triggerHaptic('move');
+            showToast('Move Undone ↩️');
         });
     }
     
     const hintBtn = document.getElementById('hint-btn');
     if (hintBtn) {
         hintBtn.addEventListener('click', () => {
+            if (isGameOver || isGamePaused) return;
             const legals = getAllLegalMoves(turn, board);
             if (legals.length > 0) {
-                activeHint = legals[Math.floor(Math.random() * legals.length)];
+                const m = legals[Math.floor(Math.random() * legals.length)];
+                activeHint = m.from;
                 draw2PlayerBoard();
-                showToast('💡 Tactical Advisor illuminated a move!');
+                audio.powerup();
+                triggerHaptic('move');
+                showToast('💡 Hint: Consider moving the highlighted piece!');
+                setTimeout(() => {
+                    activeHint = null;
+                    draw2PlayerBoard();
+                }, 3000);
             }
         });
     }
     
-    const strikeBtn = document.getElementById('powerup-btn');
-    if (strikeBtn) {
-        strikeBtn.addEventListener('click', () => {
-            audio.powerup();
-            if (fx2p) {
-                fx2p.shockwave(fx2p.canvas.width / 2, fx2p.canvas.height / 2, '#d4af37');
+    // Draw Offers
+    const drawBtn = document.getElementById('draw-btn');
+    const drawModal = document.getElementById('draw-modal');
+    const drawConfirmBtn = document.getElementById('draw-confirm-btn');
+    const drawCancelBtn = document.getElementById('draw-cancel-btn');
+    const drawRespondModal = document.getElementById('draw-respond-modal');
+    const drawAcceptBtn = document.getElementById('draw-accept-btn');
+    const drawDeclineBtn = document.getElementById('draw-decline-btn');
+    
+    if (drawBtn) {
+        drawBtn.addEventListener('click', () => {
+            if (isGameOver || isGamePaused) return;
+            if (drawModal) drawModal.classList.remove('hidden');
+        });
+    }
+    if (drawCancelBtn) {
+        drawCancelBtn.addEventListener('click', () => {
+            if (drawModal) drawModal.classList.add('hidden');
+        });
+    }
+    if (drawConfirmBtn) {
+        drawConfirmBtn.addEventListener('click', () => {
+            if (drawModal) drawModal.classList.add('hidden');
+            if (isGameOver || isGamePaused) return;
+            
+            if (gameMode === 'ai') {
+                const vals = { p: 1, n: 3, b: 3.1, r: 5, q: 9, k: 0 };
+                let score = 0;
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const p = board[r][c];
+                        if (p) score += (p.color === botSide ? 1 : -1) * vals[p.type];
+                    }
+                }
+                const bot = BOT_PERSONALITIES[difficulty] || BOT_PERSONALITIES[2];
+                if (score <= 0.8) {
+                    isGameOver = true;
+                    stopClock();
+                    showGameOverModal(`Peace Treaty Signed! ${bot.name} accepted your Royal Draw. 🤝`, 'Royal Draw');
+                    audio.victory();
+                    triggerHaptic('victory');
+                    lordProfile.matches++;
+                    saveProfile();
+                } else {
+                    showToast(`${bot.name} declined: "The kingdom shall be mine!" ⚔️`, 'error');
+                    audio.defeat();
+                    triggerHaptic('check');
+                }
+            } else {
+                const nextPlayer = turn === 'white' ? playerNames.black : playerNames.white;
+                const desc = document.getElementById('draw-respond-desc');
+                if (desc) desc.textContent = `${playerNames[turn]} has offered a draw. Does ${nextPlayer} accept?`;
+                if (drawRespondModal) drawRespondModal.classList.remove('hidden');
             }
-            showToast('⚡ Royal Strike unleashed on the battlefield!');
+        });
+    }
+    if (drawAcceptBtn) {
+        drawAcceptBtn.addEventListener('click', () => {
+            if (drawRespondModal) drawRespondModal.classList.add('hidden');
+            isGameOver = true;
+            stopClock();
+            showGameOverModal('Peace Treaty Signed! Both players agreed to a Royal Draw. 🤝', 'Royal Draw');
+            audio.victory();
+            triggerHaptic('victory');
+            lordProfile.matches++;
+            saveProfile();
+        });
+    }
+    if (drawDeclineBtn) {
+        drawDeclineBtn.addEventListener('click', () => {
+            if (drawRespondModal) drawRespondModal.classList.add('hidden');
+            showToast('Draw offer declined! The battle rages on ⚔️');
         });
     }
     
-    const soundBtn = document.getElementById('sound-btn');
-    if (soundBtn) {
-        soundBtn.addEventListener('click', () => {
-            audio.enabled = !audio.enabled;
-            document.getElementById('sound-icon').textContent = audio.enabled ? '🔊' : '🔇';
-            showToast(audio.enabled ? 'Sound enabled 🔊' : 'Sound muted 🔇');
+    // Resignation
+    const resignBtn = document.getElementById('resign-btn');
+    const resignModal = document.getElementById('resign-modal');
+    const resignConfirmBtn = document.getElementById('resign-confirm-btn');
+    const resignCancelBtn = document.getElementById('resign-cancel-btn');
+    
+    if (resignBtn) {
+        resignBtn.addEventListener('click', () => {
+            if (isGameOver || isGamePaused) return;
+            const sub = document.getElementById('resign-modal-sub');
+            if (sub) {
+                const oppName = turn === 'white' ? playerNames.black : playerNames.white;
+                sub.textContent = `Are you sure you wish to resign? Victory will be conceded to ${oppName}.`;
+            }
+            if (resignModal) resignModal.classList.remove('hidden');
+        });
+    }
+    if (resignCancelBtn) {
+        resignCancelBtn.addEventListener('click', () => {
+            if (resignModal) resignModal.classList.add('hidden');
+        });
+    }
+    if (resignConfirmBtn) {
+        resignConfirmBtn.addEventListener('click', () => {
+            if (resignModal) resignModal.classList.add('hidden');
+            if (isGameOver || isGamePaused) return;
+            isGameOver = true;
+            stopClock();
+            const winnerColor = turn === 'white' ? 'black' : 'white';
+            const winnerName = playerNames[winnerColor];
+            showGameOverModal(`${playerNames[turn]} resigned! ${winnerName} claims victory!`, winnerName);
+            if (winnerColor === playerSide) {
+                lordProfile.wins++;
+                if (gameMode === 'ai') {
+                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
+                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
+                    lordProfile.botRecords[difficulty].w++;
+                }
+                audio.victory();
+                triggerHaptic('victory');
+            } else {
+                if (gameMode === 'ai') {
+                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
+                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
+                    lordProfile.botRecords[difficulty].l++;
+                }
+                audio.defeat();
+                triggerHaptic('check');
+            }
+            lordProfile.matches++;
+            saveProfile();
+            checkAndUnlockAchievements();
         });
     }
     
+    // Match Options & Theme Modal
+    const matchOptionsBtn = document.getElementById('match-options-btn');
+    const matchOptionsModal = document.getElementById('match-options-modal');
+    const matchOptionsCloseBtn = document.getElementById('match-options-close-btn');
+    const matchOptionsDoneBtn = document.getElementById('match-options-done-btn');
+    const flipBoardBtn = document.getElementById('flip-board-btn');
+    
+    if (matchOptionsBtn) {
+        matchOptionsBtn.addEventListener('click', () => {
+            syncSettingsCheckboxes();
+            if (matchOptionsModal) matchOptionsModal.classList.remove('hidden');
+        });
+    }
+    if (matchOptionsCloseBtn) matchOptionsCloseBtn.addEventListener('click', () => matchOptionsModal.classList.add('hidden'));
+    if (matchOptionsDoneBtn) matchOptionsDoneBtn.addEventListener('click', () => matchOptionsModal.classList.add('hidden'));
+    if (flipBoardBtn) {
+        flipBoardBtn.addEventListener('click', () => {
+            isManualFlipped = !isManualFlipped;
+            draw2PlayerBoard();
+            showToast(isManualFlipped ? 'Board Flipped (Black View) 🔄' : 'Board Reset (White View) 🔄');
+            triggerHaptic('move');
+        });
+    }
+    
+    // Replay Stepper buttons
+    const repStartBtn = document.getElementById('replay-start-btn');
+    const repPrevBtn = document.getElementById('replay-prev-btn');
+    const repNextBtn = document.getElementById('replay-next-btn');
+    const repEndBtn = document.getElementById('replay-end-btn');
+    const repReturnBtn = document.getElementById('replay-return-btn');
+    
+    if (repStartBtn) repStartBtn.addEventListener('click', () => showReplayMove(0));
+    if (repPrevBtn) {
+        repPrevBtn.addEventListener('click', () => {
+            const cur = replayIndex === -1 ? history.length - 1 : replayIndex;
+            showReplayMove(cur - 1);
+        });
+    }
+    if (repNextBtn) {
+        repNextBtn.addEventListener('click', () => {
+            if (replayIndex === -1) return;
+            if (replayIndex + 1 >= history.length) {
+                returnToLiveGame();
+            } else {
+                showReplayMove(replayIndex + 1);
+            }
+        });
+    }
+    if (repEndBtn) repEndBtn.addEventListener('click', () => returnToLiveGame());
+    if (repReturnBtn) repReturnBtn.addEventListener('click', () => returnToLiveGame());
+    
+    // Theme Card buttons (both on Home, Options Modal, and Profile)
+    document.querySelectorAll('.theme-card-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const t = btn.dataset.theme;
+            applyTheme(t);
+            showToast(`Theme: ${t.charAt(0).toUpperCase() + t.slice(1)} Applied 🎨`);
+            triggerHaptic('move');
+        });
+    });
+    
+    // Settings Checkbox Sync
+    bindCheckbox('modal-sound-toggle', 'sound', () => { audio.enabled = royalSettings.sound; });
+    bindCheckbox('pref-sound-toggle', 'sound', () => { audio.enabled = royalSettings.sound; });
+    bindCheckbox('modal-vibrate-toggle', 'vibration');
+    bindCheckbox('pref-vibrate-toggle', 'vibration');
+    bindCheckbox('modal-coords-toggle', 'coords', () => draw2PlayerBoard());
+    bindCheckbox('pref-coords-toggle', 'coords', () => draw2PlayerBoard());
+    bindCheckbox('modal-eval-toggle', 'evalBar', () => {
+        const ew = document.getElementById('eval-bar-wrapper');
+        if (ew) ew.style.display = royalSettings.evalBar ? 'flex' : 'none';
+    });
+    bindCheckbox('pref-eval-toggle', 'evalBar', () => {
+        const ew = document.getElementById('eval-bar-wrapper');
+        if (ew) ew.style.display = royalSettings.evalBar ? 'flex' : 'none';
+    });
+    
+    // In-Game Menu Button -> PAUSE & RETURN TO HOME
     const menuBtn = document.getElementById('menu-btn');
     if (menuBtn) {
         menuBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.remove('hidden');
+            pauseGame();
+            const pModal = document.getElementById('pause-modal');
+            if (pModal) pModal.classList.remove('hidden');
         });
     }
     
-    const setupCloseBtn = document.getElementById('setup-close-btn');
-    if (setupCloseBtn) {
-        setupCloseBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.add('hidden');
+    // Pause Modal Buttons
+    const pauseResumeBtn = document.getElementById('pause-resume-btn');
+    const pauseHomeBtn = document.getElementById('pause-home-btn');
+    if (pauseResumeBtn) {
+        pauseResumeBtn.addEventListener('click', () => {
+            document.getElementById('pause-modal').classList.add('hidden');
+            resumeGame();
+        });
+    }
+    if (pauseHomeBtn) {
+        pauseHomeBtn.addEventListener('click', () => {
+            document.getElementById('pause-modal').classList.add('hidden');
+            switchTab('home');
         });
     }
     
-    // 2-Player Mode Selector (vs AI or Pass & Play)
-    const modeAiBtn = document.getElementById('mode-ai-btn');
-    const modeLocalBtn = document.getElementById('mode-local-btn');
-    const aiInputs = document.getElementById('ai-name-inputs');
-    const localInputs = document.getElementById('local-name-inputs');
-    const sideSelectSection = document.getElementById('side-select-section');
-    const diffSection = document.getElementById('difficulty-section');
-
-    if (modeAiBtn && modeLocalBtn) {
-        modeAiBtn.addEventListener('click', () => {
-            gameMode = 'ai';
-            modeAiBtn.classList.add('active');
-            modeLocalBtn.classList.remove('active');
-            if (aiInputs) aiInputs.classList.remove('hidden');
-            if (localInputs) localInputs.classList.add('hidden');
-            if (sideSelectSection) sideSelectSection.classList.remove('hidden');
-            if (diffSection) diffSection.classList.remove('hidden');
-            showToast('Mode: vs. Castle AI 🤖');
-        });
-
-        modeLocalBtn.addEventListener('click', () => {
-            gameMode = 'local';
-            modeLocalBtn.classList.add('active');
-            modeAiBtn.classList.remove('active');
-            if (aiInputs) aiInputs.classList.add('hidden');
-            if (localInputs) localInputs.classList.remove('hidden');
-            if (sideSelectSection) sideSelectSection.classList.add('hidden');
-            if (diffSection) diffSection.classList.add('hidden');
-            showToast('Mode: Pass & Play 👥 (2 Human Players)');
-        });
-    }
+    // 4-Player Rules
+    const rulesBtn = document.getElementById('four-rules-btn');
+    const rulesModal = document.getElementById('four-rules-modal');
+    const rulesOkBtn = document.getElementById('four-rules-ok-btn');
+    const rulesClose = document.getElementById('four-rules-close-btn');
+    if (rulesBtn) rulesBtn.addEventListener('click', () => rulesModal.classList.remove('hidden'));
+    if (rulesOkBtn) rulesOkBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
+    if (rulesClose) rulesClose.addEventListener('click', () => rulesModal.classList.add('hidden'));
     
-    // 2-Player Setup Match Form
-    document.querySelectorAll('.clock-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.clock-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            matchClockLimit = parseInt(btn.dataset.time);
-        });
-    });
-    
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            playerSide = btn.dataset.side === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : btn.dataset.side;
-            botSide = playerSide === 'white' ? 'black' : 'white';
-        });
-    });
-    
-    document.querySelectorAll('.bot-card').forEach(card => {
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.bot-card').forEach(b => b.classList.remove('active'));
-            card.classList.add('active');
-            difficulty = parseInt(card.dataset.diff);
-            playerNames.black = `${BOT_PERSONALITIES[difficulty].name}`;
-            const oppTag = document.getElementById('opponent-name-tag');
-            if (oppTag) oppTag.textContent = playerNames.black;
-        });
-    });
-    
-    const startMatchBtn = document.getElementById('start-match-btn');
-    if (startMatchBtn) {
-        startMatchBtn.addEventListener('click', () => {
-            document.getElementById('setup-modal').classList.add('hidden');
-            startNew2PlayerGame();
-        });
-    }
-    
-    // 4-Player Controls
     const fourResetBtn = document.getElementById('four-reset-btn');
-    if (fourResetBtn) {
-        fourResetBtn.addEventListener('click', () => {
+    if (fourResetBtn) fourResetBtn.addEventListener('click', () => initFourPlayerBoard());
+    
+    const fourAiStepBtn = document.getElementById('four-ai-step-btn');
+    if (fourAiStepBtn) fourAiStepBtn.addEventListener('click', () => makeFourAIMove());
+    
+    // 4-Player Defeat Modal Buttons
+    const fourDefeatHomeBtn = document.getElementById('four-defeat-home-btn');
+    const fourDefeatRestartBtn = document.getElementById('four-defeat-restart-btn');
+    if (fourDefeatHomeBtn) {
+        fourDefeatHomeBtn.addEventListener('click', () => {
+            document.getElementById('four-defeat-modal').classList.add('hidden');
+            switchTab('home');
+        });
+    }
+    if (fourDefeatRestartBtn) {
+        fourDefeatRestartBtn.addEventListener('click', () => {
+            document.getElementById('four-defeat-modal').classList.add('hidden');
             initFourPlayerBoard();
-            showToast('Four Kingdoms Realm Reset 🔄');
         });
     }
     
-    const fourAIStepBtn = document.getElementById('four-ai-step-btn');
-    if (fourAIStepBtn) {
-        fourAIStepBtn.addEventListener('click', () => {
-            makeFourAIMove();
+    // 4-Player Podium Modal Buttons
+    const podiumHomeBtn = document.getElementById('podium-home-btn');
+    const podiumRestartBtn = document.getElementById('podium-restart-btn');
+    if (podiumHomeBtn) {
+        podiumHomeBtn.addEventListener('click', () => {
+            const modal = document.getElementById('four-podium-modal');
+            if (modal) modal.classList.add('hidden');
+            switchTab('home');
         });
     }
-    
-    const fourRulesBtn = document.getElementById('four-rules-btn');
-    if (fourRulesBtn) {
-        fourRulesBtn.addEventListener('click', () => {
-            document.getElementById('four-rules-modal').classList.remove('hidden');
-        });
-    }
-    
-    const fourRulesClose = document.getElementById('four-rules-close-btn');
-    const fourRulesOk = document.getElementById('four-rules-ok-btn');
-    if (fourRulesClose) fourRulesClose.addEventListener('click', () => document.getElementById('four-rules-modal').classList.add('hidden'));
-    if (fourRulesOk) fourRulesOk.addEventListener('click', () => document.getElementById('four-rules-modal').classList.add('hidden'));
-    
-    // 4-Player Mode buttons
-    const fourModeAIBtn = document.getElementById('four-mode-ai-btn');
-    const fourModePassBtn = document.getElementById('four-mode-pass-btn');
-    const fourModeOnlineBtn = document.getElementById('four-mode-online-btn');
-    
-    if (fourModeAIBtn) {
-        fourModeAIBtn.addEventListener('click', () => {
-            fourMode = 'ai';
-            fourModeAIBtn.classList.add('active');
-            fourModePassBtn.classList.remove('active');
-            fourModeOnlineBtn.classList.remove('active');
-            showToast('Mode: 🤖 vs 3 Kingdom Bots');
-        });
-    }
-    if (fourModePassBtn) {
-        fourModePassBtn.addEventListener('click', () => {
-            fourMode = 'pass';
-            fourModePassBtn.classList.add('active');
-            fourModeAIBtn.classList.remove('active');
-            fourModeOnlineBtn.classList.remove('active');
-            showToast('Mode: 👥 Pass & Play (All 4 Kingdoms Active)');
-        });
-    }
-    if (fourModeOnlineBtn) {
-        fourModeOnlineBtn.addEventListener('click', () => {
-            document.getElementById('four-lobby-modal').classList.remove('hidden');
-        });
-    }
-    
-    const lobbyClose = document.getElementById('four-lobby-close-btn');
-    if (lobbyClose) lobbyClose.addEventListener('click', () => document.getElementById('four-lobby-modal').classList.add('hidden'));
-    
-    const hostTabBtn = document.getElementById('lobby-host-tab-btn');
-    const joinTabBtn = document.getElementById('lobby-join-tab-btn');
-    const hostView = document.getElementById('lobby-host-view');
-    const joinView = document.getElementById('lobby-join-view');
-    
-    if (hostTabBtn && joinTabBtn) {
-        hostTabBtn.addEventListener('click', () => {
-            hostTabBtn.classList.add('active');
-            joinTabBtn.classList.remove('active');
-            hostView.classList.remove('hidden');
-            joinView.classList.add('hidden');
-        });
-        joinTabBtn.addEventListener('click', () => {
-            joinTabBtn.classList.add('active');
-            hostTabBtn.classList.remove('active');
-            joinView.classList.remove('hidden');
-            hostView.classList.add('hidden');
-        });
-    }
-    
-    const hostLaunchBtn = document.getElementById('host-launch-match-btn');
-    if (hostLaunchBtn) {
-        hostLaunchBtn.addEventListener('click', () => {
-            document.getElementById('four-lobby-modal').classList.add('hidden');
+    if (podiumRestartBtn) {
+        podiumRestartBtn.addEventListener('click', () => {
+            const modal = document.getElementById('four-podium-modal');
+            if (modal) modal.classList.add('hidden');
             initFourPlayerBoard();
-            showToast('⚔️ Royal Realm Battle Commenced!');
         });
     }
     
-    const joinActionBtn = document.getElementById('join-room-action-btn');
-    if (joinActionBtn) {
-        joinActionBtn.addEventListener('click', () => {
-            const code = document.getElementById('join-code-input').value.trim();
-            if (code) {
-                document.getElementById('four-lobby-modal').classList.add('hidden');
-                initFourPlayerBoard();
-                showToast(`🛡️ Entered Realm Room: ${code}!`);
-            } else {
-                showToast('Please enter room code', 'error');
-            }
-        });
-    }
-    
-    // Puzzles Tab Subnav
-    const subPuzzlesBtn = document.getElementById('subnav-puzzles-btn');
-    const subOpeningsBtn = document.getElementById('subnav-openings-btn');
-    const puzzlesView = document.getElementById('puzzles-view-container');
-    const openingsView = document.getElementById('openings-view-container');
-    
-    if (subPuzzlesBtn && subOpeningsBtn) {
-        subPuzzlesBtn.addEventListener('click', () => {
-            subPuzzlesBtn.classList.add('active');
-            subOpeningsBtn.classList.remove('active');
-            puzzlesView.classList.remove('hidden');
-            openingsView.classList.add('hidden');
-        });
-        subOpeningsBtn.addEventListener('click', () => {
-            subOpeningsBtn.classList.add('active');
-            subPuzzlesBtn.classList.remove('active');
-            openingsView.classList.remove('hidden');
-            puzzlesView.classList.add('hidden');
-            initOpeningsBoard();
-            drawOpeningsBoard();
-        });
-    }
-    
+    // 5 Daily Puzzles Action Buttons
+    const puzzlePrevBtn = document.getElementById('puzzle-prev-btn');
     const puzzleNextBtn = document.getElementById('puzzle-next-btn');
+    const puzzleResetBtn = document.getElementById('puzzle-reset-btn');
+    const puzzleHintBtn = document.getElementById('puzzle-hint-btn');
+    
+    if (puzzlePrevBtn) {
+        puzzlePrevBtn.addEventListener('click', () => {
+            currentPuzzleIdx = (currentPuzzleIdx + PUZZLES.length - 1) % PUZZLES.length;
+            renderCurrentPuzzle();
+        });
+    }
     if (puzzleNextBtn) {
         puzzleNextBtn.addEventListener('click', () => {
             currentPuzzleIdx = (currentPuzzleIdx + 1) % PUZZLES.length;
             renderCurrentPuzzle();
         });
     }
-    const puzzleResetBtn = document.getElementById('puzzle-reset-btn');
     if (puzzleResetBtn) {
-        puzzleResetBtn.addEventListener('click', () => renderCurrentPuzzle());
-    }
-    
-    // Openings
-    const openDropdown = document.getElementById('openings-dropdown');
-    if (openDropdown) {
-        openDropdown.addEventListener('change', (e) => {
-            currentOpeningKey = e.target.value;
-            const op = OPENINGS_DATA[currentOpeningKey];
-            document.getElementById('opening-title').textContent = op.title;
-            document.getElementById('opening-desc').textContent = op.desc;
-            document.getElementById('opening-move-notation').textContent = op.notation;
-            stepOpeningMove('reset');
+        puzzleResetBtn.addEventListener('click', () => {
+            renderCurrentPuzzle();
         });
     }
-    
-    const openNextBtn = document.getElementById('opening-next-btn');
-    const openResetBtn = document.getElementById('opening-reset-btn');
-    if (openNextBtn) openNextBtn.addEventListener('click', () => stepOpeningMove('next'));
-    if (openResetBtn) openResetBtn.addEventListener('click', () => stepOpeningMove('reset'));
+    if (puzzleHintBtn) {
+        puzzleHintBtn.addEventListener('click', () => {
+            const pz = PUZZLES[currentPuzzleIdx];
+            if (pz && pz.hint) {
+                showToast(`💡 Hint: ${pz.hint}`, 'info');
+                audio.powerup();
+            }
+        });
+    }
     
     // Profile Edit
     const authBtn = document.getElementById('profile-auth-btn');
@@ -1861,22 +2807,35 @@ function setupEventListeners() {
                 lordProfile.name = val;
                 saveProfile();
                 authModal.classList.add('hidden');
-                showToast(`Title saved: ${val} 👑`, 'success');
+                showToast(`Name saved: ${val} 👑`, 'success');
             }
         });
     }
     
+    const gameoverHomeBtn = document.getElementById('gameover-home-btn');
     const restartBtn = document.getElementById('gameover-restart-btn');
+    if (gameoverHomeBtn) {
+        gameoverHomeBtn.addEventListener('click', () => {
+            document.getElementById('gameover-modal').classList.add('hidden');
+            switchTab('home');
+        });
+    }
     if (restartBtn) {
         restartBtn.addEventListener('click', () => {
             document.getElementById('gameover-modal').classList.add('hidden');
-            startNew2PlayerGame();
+            if (arenaSubMode === '2p') {
+                startNew2PlayerGame();
+            } else {
+                startNew4PlayerGame();
+            }
         });
     }
 }
 
 function startNew2PlayerGame() {
     isGameOver = false;
+    isGamePaused = false;
+    isMatchActive = true;
     turn = 'white';
     selectedSquare = null;
     lastMove = null;
@@ -1884,57 +2843,307 @@ function startNew2PlayerGame() {
     captured = { white: [], black: [] };
     activeHint = null;
     moveHistoryNotation = [];
+    if (aiMoveTimeout) {
+        clearTimeout(aiMoveTimeout);
+        aiMoveTimeout = null;
+    }
+    
+    const bot = BOT_PERSONALITIES[difficulty] || BOT_PERSONALITIES[2];
     
     if (gameMode === 'local') {
-        const p1Val = document.getElementById('p1-name-input')?.value.trim();
-        const p2Val = document.getElementById('p2-name-input')?.value.trim();
-        playerNames.white = p1Val || lordProfile.name || 'White Lord';
-        playerNames.black = p2Val || 'Black Lord';
+        const p1Val = document.getElementById('home-p1-name')?.value.trim();
+        const p2Val = document.getElementById('home-p2-name')?.value.trim();
+        playerNames.white = p1Val || lordProfile.name || 'Player 1';
+        playerNames.black = p2Val || 'Player 2';
         
         const oppAvatar = document.getElementById('top-player-avatar');
         const oppTag = document.getElementById('opponent-name-tag');
+        const oppSub = document.getElementById('opponent-sub-tag');
         const myAvatar = document.getElementById('bottom-player-avatar');
         const myTag = document.getElementById('player-name-tag');
+        const mySub = document.getElementById('player-sub-tag');
+        
         if (oppAvatar) oppAvatar.textContent = '⚫';
         if (oppTag) oppTag.textContent = playerNames.black;
+        if (oppSub) oppSub.textContent = 'Black Army';
         if (myAvatar) myAvatar.textContent = '⚪';
         if (myTag) myTag.textContent = playerNames.white;
+        if (mySub) mySub.textContent = 'White Army';
     } else {
-        const p1Val = document.getElementById('player-name-input')?.value.trim();
-        playerNames.white = p1Val || lordProfile.name || 'Lord Sovereign';
-        playerNames.black = BOT_PERSONALITIES[difficulty].name;
+        const pName = lordProfile.name || 'Player';
+        playerNames[playerSide] = pName;
+        playerNames[botSide] = bot.name;
         
         const oppAvatar = document.getElementById('top-player-avatar');
         const oppTag = document.getElementById('opponent-name-tag');
+        const oppSub = document.getElementById('opponent-sub-tag');
         const myAvatar = document.getElementById('bottom-player-avatar');
         const myTag = document.getElementById('player-name-tag');
-        if (oppAvatar) oppAvatar.textContent = '🤖';
-        if (oppTag) oppTag.textContent = playerNames.black;
+        const mySub = document.getElementById('player-sub-tag');
+        
+        if (oppAvatar) oppAvatar.textContent = bot.icon;
+        if (oppTag) oppTag.textContent = bot.name;
+        if (oppSub) oppSub.textContent = `AI Knight • ${bot.rating}`;
         if (myAvatar) myAvatar.textContent = '👑';
-        if (myTag) myTag.textContent = playerNames.white;
+        if (myTag) myTag.textContent = pName;
+        if (mySub) mySub.textContent = 'Grandmaster';
     }
+    
+    replayIndex = -1;
+    const repBanner = document.getElementById('replay-notice-banner');
+    if (repBanner) repBanner.classList.add('hidden');
+    renderMoveHistoryChips();
     
     init2PlayerBoard();
     updateHUD();
     draw2PlayerBoard();
     startClock();
+    if (fx2p) fx2p.resize();
+    triggerHaptic('move');
     
     if (gameMode === 'ai' && botSide === 'white') {
-        setTimeout(make2PlayerAIMove, 500);
+        aiMoveTimeout = setTimeout(make2PlayerAIMove, 500);
     }
 }
 
-// Bootstrapping
+function startNew4PlayerGame() {
+    isGameOver = false;
+    isGamePaused = false;
+    isHumanDefeated4P = false;
+    isFourMatchActive = true;
+    isMatchActive = true;
+    if (aiMoveTimeout) {
+        clearTimeout(aiMoveTimeout);
+        aiMoveTimeout = null;
+    }
+    
+    if (fourMode === 'pass') {
+        const nRed = document.getElementById('home-4p-name-red')?.value.trim() || lordProfile.name || 'Player 1';
+        const nBlue = document.getElementById('home-4p-name-blue')?.value.trim() || 'Player 2';
+        const nGold = document.getElementById('home-4p-name-gold')?.value.trim() || 'Player 3';
+        const nGreen = document.getElementById('home-4p-name-green')?.value.trim() || 'Player 4';
+        
+        FOUR_KINGDOM_NAMES.red = nRed;
+        FOUR_KINGDOM_NAMES.blue = nBlue;
+        FOUR_KINGDOM_NAMES.gold = nGold;
+        FOUR_KINGDOM_NAMES.green = nGreen;
+        
+        const redEl = document.getElementById('k-name-red');
+        const blueEl = document.getElementById('k-name-blue');
+        const goldEl = document.getElementById('k-name-gold');
+        const greenEl = document.getElementById('k-name-green');
+        
+        if (redEl) redEl.textContent = nRed;
+        if (blueEl) blueEl.textContent = nBlue;
+        if (goldEl) goldEl.textContent = nGold;
+        if (greenEl) greenEl.textContent = nGreen;
+    } else {
+        const pName = document.getElementById('home-4p-player-name')?.value.trim() || lordProfile.name || 'Player';
+        FOUR_KINGDOM_NAMES.red = pName;
+        FOUR_KINGDOM_NAMES.blue = 'Blue Baron 🤖';
+        FOUR_KINGDOM_NAMES.gold = 'Gold Emperor 🤖';
+        FOUR_KINGDOM_NAMES.green = 'Green Duke 🤖';
+        
+        const redEl = document.getElementById('k-name-red');
+        const blueEl = document.getElementById('k-name-blue');
+        const goldEl = document.getElementById('k-name-gold');
+        const greenEl = document.getElementById('k-name-green');
+        
+        if (redEl) redEl.textContent = pName;
+        if (blueEl) blueEl.textContent = 'Blue Baron';
+        if (goldEl) goldEl.textContent = 'Gold Emperor';
+        if (greenEl) greenEl.textContent = 'Green Duke';
+    }
+    
+    initFourPlayerBoard();
+    if (fx4p) fx4p.resize();
+}
+
+const ROYAL_ACHIEVEMENTS = [
+    {
+        id: 'first_win',
+        icon: '🛡️',
+        title: 'First Blood',
+        desc: 'Claim your first Classic victory',
+        check: (p) => (p.wins || 0) >= 1
+    },
+    {
+        id: 'knight_slayer',
+        icon: '⚔️',
+        title: 'Knight Slayer',
+        desc: 'Defeat Sir Galahad (~1200 Elo)',
+        check: (p) => (p.botRecords && p.botRecords[2] && p.botRecords[2].w >= 1)
+    },
+    {
+        id: 'queen_tamer',
+        icon: '🏰',
+        title: 'Morgana Falls',
+        desc: 'Defeat Lady Morgana (~1700 Elo)',
+        check: (p) => (p.botRecords && p.botRecords[3] && p.botRecords[3].w >= 1)
+    },
+    {
+        id: 'king_subdued',
+        icon: '👑',
+        title: 'Arthur Subdued',
+        desc: 'Defeat King Arthur (~2200 Elo)',
+        check: (p) => (p.botRecords && p.botRecords[4] && p.botRecords[4].w >= 1)
+    },
+    {
+        id: 'realm_conqueror',
+        icon: '🏆',
+        title: 'Realm Conqueror',
+        desc: 'Conquer the 4-Player Realm',
+        check: (p) => (p.fourWins || 0) >= 1
+    },
+    {
+        id: 'puzzle_master',
+        icon: '🧩',
+        title: 'Castle Tactician',
+        desc: 'Solve 5 Daily Chess Puzzles',
+        check: (p) => (p.puzzles || 0) >= 5
+    },
+    {
+        id: 'streak_3',
+        icon: '🔥',
+        title: 'Royal Flame',
+        desc: 'Maintain a 3-Day Puzzle Streak',
+        check: (p) => {
+            const s = getPuzzleStreakData();
+            return (s.streak || 0) >= 3;
+        }
+    },
+    {
+        id: 'grand_sovereign',
+        icon: '⚡',
+        title: 'Grand Sovereign',
+        desc: 'Achieve 10 total victories',
+        check: (p) => ((p.wins || 0) + (p.fourWins || 0)) >= 10
+    }
+];
+
+function checkAndUnlockAchievements() {
+    renderAchievements();
+}
+
+function renderAchievements() {
+    const grid = document.getElementById('achievements-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    ROYAL_ACHIEVEMENTS.forEach(ach => {
+        const isUnlocked = ach.check(lordProfile);
+        const card = document.createElement('div');
+        card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+        card.innerHTML = `
+            <span class="ach-icon">${ach.icon}</span>
+            <div class="ach-info">
+                <span class="ach-title">${ach.title}</span>
+                <span class="ach-desc">${ach.desc}</span>
+            </div>
+            <span class="ach-badge ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? 'Unlocked' : 'Locked'}</span>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function loadProfile() {
+    const savedName = localStorage.getItem('royal_player_name') || localStorage.getItem('electro_player_name');
+    if (savedName && savedName !== 'Lord Sovereign') {
+        lordProfile.name = savedName;
+    } else {
+        lordProfile.name = 'Player';
+    }
+    
+    try {
+        const savedRecs = localStorage.getItem('royal_bot_records');
+        if (savedRecs) {
+            lordProfile.botRecords = JSON.parse(savedRecs);
+        }
+    } catch (e) {}
+    
+    const homeInput = document.getElementById('home-player-name');
+    const fourInput = document.getElementById('home-4p-player-name');
+    const fourRedInput = document.getElementById('home-4p-name-red');
+    const authInput = document.getElementById('auth-username-input');
+    
+    if (homeInput) homeInput.value = lordProfile.name;
+    if (fourInput) fourInput.value = lordProfile.name;
+    if (fourRedInput) fourRedInput.value = lordProfile.name;
+    if (authInput) authInput.value = lordProfile.name;
+    
+    updateProfileUI();
+}
+
+function saveProfile() {
+    if (lordProfile.name) {
+        localStorage.setItem('royal_player_name', lordProfile.name);
+        localStorage.setItem('electro_player_name', lordProfile.name);
+    }
+    if (lordProfile.botRecords) {
+        localStorage.setItem('royal_bot_records', JSON.stringify(lordProfile.botRecords));
+    }
+    updateProfileUI();
+}
+
+function updateProfileUI() {
+    const pName = document.getElementById('profile-name');
+    const statMatches = document.getElementById('stat-matches');
+    const statWins = document.getElementById('stat-wins');
+    const statWinrate = document.getElementById('stat-winrate');
+    const statFourWins = document.getElementById('stat-four-wins');
+    
+    if (pName) pName.textContent = lordProfile.name;
+    if (statMatches) statMatches.textContent = lordProfile.matches;
+    if (statWins) statWins.textContent = lordProfile.wins;
+    if (statWinrate) {
+        const rate = lordProfile.matches > 0 ? Math.round((lordProfile.wins / lordProfile.matches) * 100) : 0;
+        statWinrate.textContent = `${rate}%`;
+    }
+    if (statFourWins) statFourWins.textContent = lordProfile.fourWins;
+    
+    // Opponent Knights Head-to-Head Records
+    if (lordProfile.botRecords) {
+        for (let d = 1; d <= 4; d++) {
+            const el = document.getElementById(`rec-bot-${d}`);
+            if (el && lordProfile.botRecords[d]) {
+                const rec = lordProfile.botRecords[d];
+                el.textContent = `${rec.w || 0}W - ${rec.l || 0}L`;
+            }
+        }
+    }
+    
+    renderAchievements();
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 2400);
+}
+
+// =========================================================
+// 8. BOOTSTRAPPING (STARTS CLEANLY ON HOME)
+// =========================================================
+
 window.addEventListener('DOMContentLoaded', () => {
     fx2p = new CastleFX('fx-canvas');
     fx4p = new CastleFX('four-fx-canvas');
     
+    applyTheme(royalSettings.theme);
+    syncSettingsCheckboxes();
     loadProfile();
     setupEventListeners();
     init2PlayerBoard();
     initFourPlayerBoard();
-    initOpeningsBoard();
-    draw2PlayerBoard();
-    startClock();
-    console.log('Electro King: Castle Realm Edition initialized successfully!');
+    
+    // Open HOME SCREEN FIRST on launch!
+    switchTab('home');
+    console.log('Royal Chess: Castle Realm initialized successfully on Home screen with theme ' + royalSettings.theme);
 });
