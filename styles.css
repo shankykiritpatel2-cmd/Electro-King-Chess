@@ -14,112 +14,133 @@
 }
 
 :root {
-    --bg-color: #0b0f17;
-    --bg-surface: #131923;
-    --bg-card: #1a2230;
-    --text-color: #f1f5f9;
-    --text-muted: #8e9db3;
+    --bg-color: #0b071e;
+    --bg-surface: #120e2e;
+    --bg-card: #18123c;
+    --text-color: #ffffff;
+    --text-muted: #9d99b3;
     
-    --primary: #d4af37;        /* Imperial Gold */
-    --primary-light: #fbeea4;
-    --primary-hover: #e5c07b;
-    --primary-glow: rgba(212, 175, 55, 0.4);
+    --primary: #00f5d4;        /* Electric Cyan */
+    --primary-light: #70fff0;
+    --primary-hover: #00d6b9;
+    --primary-glow: rgba(0, 245, 212, 0.5);
     
-    --secondary: #e2c97c;      /* Royal Amber / Champagne */
-    --secondary-glow: rgba(226, 201, 124, 0.25);
+    --secondary: #9d4edd;      /* Electric Purple */
+    --secondary-glow: rgba(157, 78, 221, 0.45);
     
-    --accent: #b82e38;         /* Royal Crimson Velvet */
-    --accent-glow: rgba(184, 46, 56, 0.45);
+    --accent: #ff0054;         /* Electric Neon Pink/Crimson */
+    --accent-glow: rgba(255, 0, 84, 0.45);
     
-    --board-dark: #1b2230;     /* Chiseled Dark Slate */
-    --board-light: #3a4457;    /* Castle Grey Stone */
-    --board-frame-bg: linear-gradient(145deg, #242c3d 0%, #131924 50%, #090e15 100%);
-    --board-frame-border: #d4af37;
+    --yellow: #ffd166;         /* Electric Voltage Gold */
+    --yellow-glow: rgba(255, 209, 102, 0.45);
     
-    --panel-bg: rgba(19, 25, 35, 0.88);
-    --panel-border: rgba(212, 175, 55, 0.28);
+    --board-dark: #120e2e;     /* Deep Cyber Indigo */
+    --board-light: rgba(0, 245, 212, 0.08); /* Cyber Light Tile */
+    --board-frame-bg: linear-gradient(145deg, #1b143a 0%, #0f0a24 50%, #070414 100%);
+    --board-frame-border: #00f5d4;
     
-    --k-red: #ef4444;
-    --k-blue: #38bdf8;
-    --k-gold: #eab308;
-    --k-green: #22c55e;
+    --panel-bg: rgba(18, 14, 46, 0.88);
+    --panel-border: rgba(0, 245, 212, 0.22);
+    
+    --k-red: #ff0054;
+    --k-blue: #00f5d4;
+    --k-gold: #ffd166;
+    --k-green: #00ff66;
 }
 
-/* THEME 1: ROYAL CASTLE (Default) */
-body.theme-castle {
-    --bg-color: #0b0f17;
-    --bg-surface: #131923;
-    --bg-card: #1a2230;
-    --primary: #d4af37;
-    --primary-light: #fbeea4;
-    --primary-hover: #e5c07b;
-    --primary-glow: rgba(212, 175, 55, 0.4);
-    --secondary: #e2c97c;
-    --accent: #b82e38;
-    --board-dark: #1b2230;
-    --board-light: #3a4457;
-    --board-frame-bg: linear-gradient(145deg, #242c3d 0%, #131924 50%, #090e15 100%);
-    --board-frame-border: #d4af37;
+/* THEME 1: CYBER NEON (Electro King Signature Default) */
+body.theme-cyber {
+    --bg-color: #0b071e;
+    --bg-surface: #120e2e;
+    --bg-card: #18123c;
+    --primary: #00f5d4;
+    --primary-light: #70fff0;
+    --primary-hover: #00d6b9;
+    --primary-glow: rgba(0, 245, 212, 0.5);
+    --secondary: #9d4edd;
+    --secondary-glow: rgba(157, 78, 221, 0.45);
+    --accent: #ff0054;
+    --accent-glow: rgba(255, 0, 84, 0.45);
+    --yellow: #ffd166;
+    --yellow-glow: rgba(255, 209, 102, 0.45);
+    --board-dark: #120e2e;
+    --board-light: rgba(0, 245, 212, 0.08);
+    --board-frame-bg: linear-gradient(145deg, #1b143a 0%, #0f0a24 50%, #070414 100%);
+    --board-frame-border: #00f5d4;
+    --panel-bg: rgba(18, 14, 46, 0.88);
+    --panel-border: rgba(0, 245, 212, 0.22);
 }
 
-/* THEME 2: CLASSIC WALNUT & MAPLE WOOD */
-body.theme-wood {
-    --bg-color: #120e0a;
-    --bg-surface: #1d1712;
-    --bg-card: #271f19;
-    --primary: #d99b43;
-    --primary-light: #fce1b4;
-    --primary-hover: #eaad5b;
-    --primary-glow: rgba(217, 155, 67, 0.4);
-    --secondary: #c28336;
-    --accent: #9e3223;
-    --board-dark: #7b4b28;
-    --board-light: #d6b28d;
-    --board-frame-bg: linear-gradient(145deg, #422917 0%, #2b1a0e 50%, #1c1008 100%);
-    --board-frame-border: #d99b43;
-}
-
-/* THEME 3: MIDNIGHT OBSIDIAN & GOLD */
+/* THEME 2: DARK OBSIDIAN */
 body.theme-obsidian {
     --bg-color: #070709;
     --bg-surface: #0f1015;
     --bg-card: #171821;
-    --primary: #e6b800;
-    --primary-light: #fff099;
-    --primary-hover: #f5c71a;
-    --primary-glow: rgba(230, 184, 0, 0.45);
-    --secondary: #d4af37;
-    --accent: #dc2626;
-    --board-dark: #111217;
-    --board-light: #282c37;
+    --primary: #4cc9f0;
+    --primary-light: #b3ecff;
+    --primary-hover: #38bdf8;
+    --primary-glow: rgba(76, 201, 240, 0.45);
+    --secondary: #7209b7;
+    --secondary-glow: rgba(114, 9, 183, 0.45);
+    --accent: #f72585;
+    --accent-glow: rgba(247, 37, 133, 0.45);
+    --board-dark: #0d0a14;
+    --board-light: rgba(76, 201, 240, 0.08);
     --board-frame-bg: linear-gradient(145deg, #1f222d 0%, #11131a 50%, #08090d 100%);
-    --board-frame-border: #e6b800;
+    --board-frame-border: #4cc9f0;
+    --panel-bg: rgba(15, 16, 21, 0.88);
+    --panel-border: rgba(76, 201, 240, 0.22);
 }
 
-/* THEME 4: CYBER NEON */
-body.theme-cyber {
-    --bg-color: #050a14;
-    --bg-surface: #0a1324;
-    --bg-card: #101d36;
-    --primary: #00e5ff;
-    --primary-light: #a7f3d0;
-    --primary-hover: #38bdf8;
-    --primary-glow: rgba(0, 229, 255, 0.45);
-    --secondary: #818cf8;
-    --accent: #f43f5e;
-    --board-dark: #0d1a33;
-    --board-light: #1e3a6a;
-    --board-frame-bg: linear-gradient(145deg, #132448 0%, #0a1428 50%, #050a14 100%);
-    --board-frame-border: #00e5ff;
+/* THEME 3: ROYAL GOLD */
+body.theme-gold, body.theme-castle {
+    --bg-color: #0d0903;
+    --bg-surface: #171005;
+    --bg-card: #221808;
+    --primary: #ffd166;
+    --primary-light: #fff2c2;
+    --primary-hover: #ffc338;
+    --primary-glow: rgba(255, 209, 102, 0.5);
+    --secondary: #ff9f1c;
+    --secondary-glow: rgba(255, 159, 28, 0.45);
+    --accent: #e63946;
+    --accent-glow: rgba(230, 57, 70, 0.45);
+    --board-dark: #1b1306;
+    --board-light: rgba(255, 209, 102, 0.09);
+    --board-frame-bg: linear-gradient(145deg, #2b1f0c 0%, #160f06 50%, #0d0903 100%);
+    --board-frame-border: #ffd166;
+    --panel-bg: rgba(23, 16, 5, 0.88);
+    --panel-border: rgba(255, 209, 102, 0.25);
+}
+
+/* THEME 4: MATRIX TERMINAL */
+body.theme-matrix, body.theme-wood {
+    --bg-color: #030d07;
+    --bg-surface: #07170c;
+    --bg-card: #0b2212;
+    --primary: #00ff66;
+    --primary-light: #80ffb3;
+    --primary-hover: #00e65c;
+    --primary-glow: rgba(0, 255, 102, 0.5);
+    --secondary: #00f5d4;
+    --secondary-glow: rgba(0, 245, 212, 0.45);
+    --accent: #ff0054;
+    --accent-glow: rgba(255, 0, 84, 0.45);
+    --board-dark: #07170c;
+    --board-light: rgba(0, 255, 102, 0.08);
+    --board-frame-bg: linear-gradient(145deg, #0e2917 0%, #07170c 50%, #030d07 100%);
+    --board-frame-border: #00ff66;
+    --panel-bg: rgba(7, 23, 12, 0.88);
+    --panel-border: rgba(0, 255, 102, 0.25);
 }
 
 body {
     background-color: var(--bg-color);
     background-image: 
-        radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(184, 46, 56, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.07) 0%, transparent 50%),
-        linear-gradient(180deg, #070a0f 0%, #0e131b 100%);
+        radial-gradient(circle at 50% 0%, rgba(157, 78, 221, 0.22) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(255, 0, 84, 0.14) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(0, 245, 212, 0.16) 0%, transparent 50%),
+        linear-gradient(180deg, #070414 0%, #0b071e 100%);
     background-attachment: fixed;
     color: var(--text-color);
     font-family: 'Outfit', sans-serif;
@@ -178,24 +199,24 @@ body {
 }
 
 .logo-title {
-    font-family: 'Cinzel', 'Outfit', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.22rem;
     font-weight: 900;
-    letter-spacing: 1.5px;
-    background: linear-gradient(135deg, #ffffff 0%, #fff2b2 25%, #ffd700 50%, #d4af37 75%, #aa8210 100%);
+    letter-spacing: 1.4px;
+    background: linear-gradient(135deg, #00f5d4 0%, #70fff0 30%, #9d4edd 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.55));
+    filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.55));
     line-height: 1.1;
     text-transform: uppercase;
 }
 
 .logo-subtitle {
-    font-family: 'Cinzel', 'Outfit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.62rem;
     color: var(--text-muted);
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
 }
 
@@ -843,20 +864,26 @@ body {
     display: block;
 }
 
-.theme-swatch.castle {
-    background: linear-gradient(135deg, #3a4457 50%, #1b2230 50%);
-}
-
-.theme-swatch.wood {
-    background: linear-gradient(135deg, #d6b28d 50%, #7b4b28 50%);
+.theme-swatch.cyber {
+    background: linear-gradient(135deg, #00f5d4 50%, #120e2e 50%);
+    box-shadow: 0 0 8px rgba(0, 245, 212, 0.4);
 }
 
 .theme-swatch.obsidian {
-    background: linear-gradient(135deg, #282c37 50%, #111217 50%);
+    background: linear-gradient(135deg, #4cc9f0 50%, #0d0a14 50%);
+    box-shadow: 0 0 8px rgba(76, 201, 240, 0.3);
 }
 
-.theme-swatch.cyber {
-    background: linear-gradient(135deg, #1e3a6a 50%, #0d1a33 50%);
+.theme-swatch.gold,
+.theme-swatch.castle {
+    background: linear-gradient(135deg, #ffd166 50%, #1b1306 50%);
+    box-shadow: 0 0 8px rgba(255, 209, 102, 0.3);
+}
+
+.theme-swatch.matrix,
+.theme-swatch.wood {
+    background: linear-gradient(135deg, #00ff66 50%, #07170c 50%);
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
 }
 
 .theme-name {
@@ -1735,28 +1762,29 @@ body {
 .start-btn {
     width: 100%;
     padding: 10px;
-    background: linear-gradient(135deg, #d4af37 0%, #aa8210 100%);
-    border: 1px solid #fff5c0;
+    background: linear-gradient(135deg, #00f5d4 0%, #9d4edd 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 8px;
-    color: #0b0f17;
-    font-family: 'Cinzel', serif;
-    font-size: 0.9rem;
+    color: #0b071e;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.92rem;
     font-weight: 900;
     letter-spacing: 1px;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
-    transition: transform 0.15s ease;
+    box-shadow: 0 4px 15px rgba(0, 245, 212, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .primary-btn:active,
 .start-btn:active {
     transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(0, 245, 212, 0.2);
 }
 
 .secondary-btn {
     padding: 6px 12px;
-    background: #141b26;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(18, 14, 46, 0.85);
+    border: 1px solid rgba(0, 245, 212, 0.25);
     border-radius: 8px;
     color: var(--text-color);
     font-size: 0.75rem;

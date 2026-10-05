@@ -24,7 +24,7 @@ class CastleFX {
         this.canvas.height = rect.height;
     }
 
-    spark(x, y, count = 18, color = '#ffd700') {
+    spark(x, y, count = 18, color = '#00f5d4') {
         if (!this.ctx) return;
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -43,7 +43,7 @@ class CastleFX {
         if (!this.animId) this.animate();
     }
 
-    shockwave(x, y, color = '#ef4444') {
+    shockwave(x, y, color = '#ff0054') {
         if (!this.ctx) return;
         for (let i = 0; i < 28; i++) {
             const angle = (i / 28) * Math.PI * 2;
@@ -62,7 +62,7 @@ class CastleFX {
         if (!this.animId) this.animate();
     }
 
-    lightningDefeat(x, y, color = '#ffd700', secondary = '#38bdf8') {
+    lightningDefeat(x, y, color = '#00f5d4', secondary = '#9d4edd') {
         if (!this.ctx) return;
         this.resize();
         
@@ -241,27 +241,27 @@ const PIECE_SVGS = {
 };
 
 function getPieceSvg(color, type) {
-    let fill = '#fffdfa';
-    let stroke = '#d4af37';
+    let fill = '#ffffff';
+    let stroke = '#00f5d4';
     
     if (color === 'white') {
-        fill = '#fffdfa';
-        stroke = '#d4af37';
+        fill = '#ffffff';
+        stroke = '#00f5d4'; // Electric Cyan
     } else if (color === 'black') {
-        fill = '#1a202c';
-        stroke = '#b82e38';
+        fill = '#140a22';   // Deep Cyber Purple
+        stroke = '#ff0054'; // Electric Neon Pink
     } else if (color === 'red') {
-        fill = '#450a0a';
-        stroke = '#ef4444';
+        fill = '#2b0610';
+        stroke = '#ff0054';
     } else if (color === 'blue') {
-        fill = '#082f49';
-        stroke = '#38bdf8';
+        fill = '#051b33';
+        stroke = '#00f5d4';
     } else if (color === 'gold') {
-        fill = '#422006';
-        stroke = '#facc15';
+        fill = '#2a1c02';
+        stroke = '#ffd166';
     } else if (color === 'green') {
-        fill = '#052e16';
-        stroke = '#22c55e';
+        fill = '#042314';
+        stroke = '#00ff66';
     }
     
     const fn = PIECE_SVGS[type];
@@ -287,9 +287,15 @@ let lordProfile = {
     }
 };
 
-// --- ROYAL SETTINGS & HAPTIC ENGINE ---
+// --- ELECTRO SETTINGS & HAPTIC ENGINE ---
+let initialTheme = localStorage.getItem('royal_chess_theme');
+if (!initialTheme || initialTheme === 'castle') {
+    initialTheme = 'cyber';
+    localStorage.setItem('royal_chess_theme', 'cyber');
+}
+
 const royalSettings = {
-    theme: localStorage.getItem('royal_chess_theme') || 'castle',
+    theme: initialTheme,
     sound: localStorage.getItem('royal_chess_sound') !== 'false',
     vibration: localStorage.getItem('royal_chess_vibration') !== 'false',
     coords: localStorage.getItem('royal_chess_coords') !== 'false',
@@ -321,7 +327,7 @@ function triggerHaptic(type = 'move') {
 }
 
 function applyTheme(themeName) {
-    if (!['castle', 'wood', 'obsidian', 'cyber'].includes(themeName)) themeName = 'castle';
+    if (!['cyber', 'obsidian', 'gold', 'matrix', 'castle', 'wood'].includes(themeName)) themeName = 'cyber';
     royalSettings.theme = themeName;
     localStorage.setItem('royal_chess_theme', themeName);
     document.body.className = `theme-${themeName}`;
@@ -2722,9 +2728,6 @@ function setupEventListeners() {
     const fourResetBtn = document.getElementById('four-reset-btn');
     if (fourResetBtn) fourResetBtn.addEventListener('click', () => initFourPlayerBoard());
     
-    const fourAiStepBtn = document.getElementById('four-ai-step-btn');
-    if (fourAiStepBtn) fourAiStepBtn.addEventListener('click', () => makeFourAIMove());
-    
     // 4-Player Defeat Modal Buttons
     const fourDefeatHomeBtn = document.getElementById('four-defeat-home-btn');
     const fourDefeatRestartBtn = document.getElementById('four-defeat-restart-btn');
@@ -3145,5 +3148,5 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Open HOME SCREEN FIRST on launch!
     switchTab('home');
-    console.log('Royal Chess: Castle Realm initialized successfully on Home screen with theme ' + royalSettings.theme);
+    console.log('Electro King: Castle Realm initialized successfully on Home screen with theme ' + royalSettings.theme);
 });
