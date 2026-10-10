@@ -104,6 +104,15 @@
                             </div>
                         </div>
 
+                        <!-- BOARD ORIENTATION (FLIP BOARD OPTION) -->
+                        <div class="home-card-section" id="home-orientation-section">
+                            <label class="setup-label">🔄 Board Orientation</label>
+                            <div class="mode-toggle-group">
+                                <button type="button" class="mode-btn active" id="home-flip-normal-btn" data-orientation="normal">⚪ Normal (White Bottom)</button>
+                                <button type="button" class="mode-btn" id="home-flip-flipped-btn" data-orientation="flipped">🔄 Flip Board (Black Bottom)</button>
+                            </div>
+                        </div>
+
                         <!-- BOARD THEME SELECTION -->
                         <div class="home-card-section">
                             <label class="setup-label">🎨 Board Theme</label>
@@ -361,21 +370,6 @@
                         <span class="action-icon">💡</span>
                         <span class="action-txt">Hint</span>
                     </button>
-                    
-                    <button id="draw-btn" class="clean-action-btn" title="Offer Draw">
-                        <span class="action-icon">🤝</span>
-                        <span class="action-txt">Draw</span>
-                    </button>
-
-                    <button id="resign-btn" class="clean-action-btn" title="Resign Match">
-                        <span class="action-icon">🏳️</span>
-                        <span class="action-txt">Resign</span>
-                    </button>
-
-                    <button id="match-options-btn" class="clean-action-btn" title="Match Settings & Theme">
-                        <span class="action-icon">⚙️</span>
-                        <span class="action-txt">Options</span>
-                    </button>
 
                     <button id="menu-btn" class="clean-action-btn" title="Return to Home">
                         <span class="action-icon">🏠</span>
@@ -565,6 +559,45 @@
                                 <button type="button" class="theme-card-btn" data-theme="matrix">
                                     <span class="theme-swatch matrix"></span>
                                     <span class="theme-name">🌲 Matrix</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WIDGETS & PREFERENCES STYLING ("COOKING 🔥" / CYBER) -->
+                    <div class="settings-card" style="margin-top: 14px;">
+                        <h4 class="settings-heading">📱 Android Home Screen Widgets</h4>
+                        <p style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 10px;">Select your widget style so your home screen is cooking 🔥:</p>
+                        <div class="widget-preview-box" id="widget-preview-box">
+                            <div class="widget-preview-item" id="widget-preview-card">
+                                <div class="wp-left">
+                                    <span class="wp-icon">⚡</span>
+                                    <div class="wp-text">
+                                        <span class="wp-title">ELECTRO KING ⚡</span>
+                                        <span class="wp-sub" id="wp-sub-text">Cyber Chess 2.0 • Cooking 🔥</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="wp-play-btn" id="wp-play-btn">⚡ PLAY</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <label class="setup-label">🔥 Widget Color Style</label>
+                            <div class="theme-toggle-grid" id="widget-style-toggle-grid">
+                                <button type="button" class="theme-card-btn active" data-wstyle="cooking">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #ff0054 0%, #ffd166 100%);"></span>
+                                    <span class="theme-name">🔥 Cooking Fire</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-wstyle="cyber">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #00f5d4 0%, #9d4edd 100%);"></span>
+                                    <span class="theme-name">⚡ Cyber Neon</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-wstyle="obsidian">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #4cc9f0 0%, #7209b7 100%);"></span>
+                                    <span class="theme-name">🌌 Obsidian</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-wstyle="gold">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #ffd166 0%, #ff9f1c 100%);"></span>
+                                    <span class="theme-name">👑 Gold Volt</span>
                                 </button>
                             </div>
                         </div>

@@ -2361,7 +2361,21 @@ function setupEventListeners() {
         });
     }
     
-    // Bot Knight selection
+    // Home Board Orientation / Flip Board Setting
+    const flipNormalBtn = document.getElementById('home-flip-normal-btn');
+    const flipFlippedBtn = document.getElementById('home-flip-flipped-btn');
+    if (flipNormalBtn && flipFlippedBtn) {
+        flipNormalBtn.addEventListener('click', () => {
+            flipNormalBtn.classList.add('active');
+            flipFlippedBtn.classList.remove('active');
+            isManualFlipped = false;
+        });
+        flipFlippedBtn.addEventListener('click', () => {
+            flipFlippedBtn.classList.add('active');
+            flipNormalBtn.classList.remove('active');
+            isManualFlipped = true;
+        });
+    }
     document.querySelectorAll('.bot-card').forEach(card => {
         card.addEventListener('click', () => {
             document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('active'));
@@ -2634,6 +2648,32 @@ function setupEventListeners() {
             draw2PlayerBoard();
             showToast(isManualFlipped ? 'Board Flipped (Black View) 🔄' : 'Board Reset (White View) 🔄');
             triggerHaptic('move');
+        });
+    }
+    
+    // Profile Android Widget Style Selector (Cooking Style)
+    const widgetCard = document.getElementById('widget-preview-card');
+    const widgetSubText = document.getElementById('wp-sub-text');
+    const widgetStyleBtns = document.querySelectorAll('#widget-style-toggle-grid button');
+    
+    if (widgetStyleBtns.length > 0 && widgetCard) {
+        widgetStyleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                widgetStyleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const style = btn.dataset.wstyle || 'cooking';
+                
+                widgetCard.className = `widget-preview-item style-${style}`;
+                if (widgetSubText) {
+                    if (style === 'cooking') widgetSubText.textContent = 'Cyber Chess 2.0 • Cooking 🔥';
+                    else if (style === 'cyber') widgetSubText.textContent = 'Cyber Chess 2.0 • Electric ⚡';
+                    else if (style === 'obsidian') widgetSubText.textContent = 'Cyber Chess 2.0 • Ice Obsidian 🌌';
+                    else if (style === 'gold') widgetSubText.textContent = 'Cyber Chess 2.0 • Voltage Gold 👑';
+                }
+                
+                showToast(`Widget style set to ${btn.querySelector('.theme-name')?.textContent || style}! 🔥`);
+                triggerHaptic('move');
+            });
         });
     }
     
