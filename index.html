@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electro King 👑 - Castle Realm Chess</title>
-    <!-- Royal Medieval Typography -->
+    <title>Electro King 👑 - Cyber Chess 2.0</title>
+    <!-- Cyber Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=38">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=39">
     <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b071e">
@@ -17,15 +17,11 @@
 </head>
 <body class="theme-cyber">
     <div class="game-container">
-        <!-- ROYAL CASTLE HEADER -->
+        <!-- APP HEADER -->
         <header class="game-header">
             <div class="header-left">
-                <div class="logo-group">
-                    <div class="logo-text-block">
-                        <h1 class="logo-title">ELECTRO KING 👑</h1>
-                        <span class="logo-subtitle" id="header-mode-subtitle">Castle Realm Chess</span>
-                    </div>
-                </div>
+                <h1 class="logo-title">ELECTRO KING</h1>
+                <span class="logo-by">by Viaan Patel</span>
             </div>
             
             <div class="header-right">
@@ -43,16 +39,16 @@
             <section class="tab-screen active" id="screen-home">
                 <div class="scrollable-screen-content home-screen-container">
                     <div class="home-header-banner">
-                        <h2 class="glow-text">CASTLE REALM CHESS</h2>
-                        <p class="home-subtext">Configure your battle rules and command your army</p>
+                        <h2 class="glow-text">MATCH SETUP</h2>
+                        <p class="home-subtext">Configure your battle rules and engage</p>
                     </div>
 
                     <!-- GAME VARIATION SELECTOR (2P vs 4P) -->
                     <div class="home-card-section">
-                        <label class="setup-label">👑 Game Variation</label>
+                        <label class="setup-label">⚡ Game Mode</label>
                         <div class="mode-toggle-group">
-                            <button type="button" class="mode-btn active" id="home-cat-2p">👑 Classic 2-Player</button>
-                            <button type="button" class="mode-btn" id="home-cat-4p">⚔️ 4-Player Realm</button>
+                            <button type="button" class="mode-btn active" id="home-cat-2p">⚡ Classic 2-Player</button>
+                            <button type="button" class="mode-btn" id="home-cat-4p">⚔️ 4-Player Battle</button>
                         </div>
                     </div>
 
@@ -62,14 +58,14 @@
                         <div class="home-card-section">
                             <label class="setup-label">⚔️ Play Mode</label>
                             <div class="mode-toggle-group">
-                                <button type="button" class="mode-btn active" id="home-2p-mode-ai">vs. Castle AI 🤖</button>
+                                <button type="button" class="mode-btn active" id="home-2p-mode-ai">vs. AI Bot 🤖</button>
                                 <button type="button" class="mode-btn" id="home-2p-mode-local">Pass & Play 👥</button>
                             </div>
                         </div>
 
                         <!-- CLOCK SPEED SELECTION (Default: NONE) -->
                         <div class="home-card-section">
-                            <label class="setup-label">⏱️ Sandglass Clock</label>
+                            <label class="setup-label">⏱️ Match Timer</label>
                             <div class="timer-toggle-group" id="home-timer-group">
                                 <button type="button" class="clock-btn active" data-time="0">♾️ None</button>
                                 <button type="button" class="clock-btn" data-time="60">⚡ 1m</button>
@@ -100,11 +96,11 @@
 
                         <!-- SIDE SELECTOR (Only for vs AI) -->
                         <div class="home-card-section" id="home-side-select-section">
-                            <label class="setup-label">🎨 Command Colors</label>
+                            <label class="setup-label">🎨 Play As</label>
                             <div class="color-toggle-group">
-                                <button type="button" class="color-btn active" id="home-side-white" data-side="white">⚪ White Army</button>
+                                <button type="button" class="color-btn active" id="home-side-white" data-side="white">⚪ White</button>
                                 <button type="button" class="color-btn" id="home-side-random" data-side="random">🎲 Random</button>
-                                <button type="button" class="color-btn" id="home-side-black" data-side="black">⚫ Black Army</button>
+                                <button type="button" class="color-btn" id="home-side-black" data-side="black">⚫ Black</button>
                             </div>
                         </div>
 
@@ -131,28 +127,28 @@
                             </div>
                         </div>
 
-                        <!-- AI KNIGHT SELECTION -->
+                        <!-- AI BOT SELECTION -->
                         <div class="home-card-section" id="home-ai-difficulty-section">
-                            <label class="setup-label" id="home-diff-label">🛡️ Opponent Knight & Elo</label>
+                            <label class="setup-label" id="home-diff-label">🤖 Select AI Bot</label>
                             <div class="bot-cards-grid">
                                 <button type="button" class="bot-card" data-diff="1">
-                                    <span class="bot-card-icon">🛡️</span>
-                                    <span class="bot-card-name">Squire Leon</span>
+                                    <span class="bot-card-icon">⚡</span>
+                                    <span class="bot-card-name">Sparky</span>
                                     <span class="bot-card-rating">~600 Elo</span>
                                 </button>
                                 <button type="button" class="bot-card active" data-diff="2">
-                                    <span class="bot-card-icon">⚔️</span>
-                                    <span class="bot-card-name">Sir Galahad</span>
+                                    <span class="bot-card-icon">🛡️</span>
+                                    <span class="bot-card-name">CyberKnight</span>
                                     <span class="bot-card-rating">~1200 Elo</span>
                                 </button>
                                 <button type="button" class="bot-card" data-diff="3">
-                                    <span class="bot-card-icon">🏰</span>
-                                    <span class="bot-card-name">Lady Morgana</span>
+                                    <span class="bot-card-icon">👑</span>
+                                    <span class="bot-card-name">VoltQueen</span>
                                     <span class="bot-card-rating">~1700 Elo</span>
                                 </button>
                                 <button type="button" class="bot-card" data-diff="4">
-                                    <span class="bot-card-icon">👑</span>
-                                    <span class="bot-card-name">King Arthur</span>
+                                    <span class="bot-card-icon">🌌</span>
+                                    <span class="bot-card-name">ElectroKing</span>
                                     <span class="bot-card-rating">~2200 Elo</span>
                                 </button>
                             </div>
@@ -171,40 +167,40 @@
 
                         <!-- 4P vs 3 Bots Single Name Section -->
                         <div class="home-card-section" id="home-4p-ai-name-section">
-                            <label class="setup-label" for="home-4p-player-name">🔴 Your Name (South Red Lord)</label>
+                            <label class="setup-label" for="home-4p-player-name">🔴 Your Name (South Red)</label>
                             <input type="text" id="home-4p-player-name" class="setup-input" placeholder="Enter your name">
                         </div>
 
                         <!-- 4P Pass & Play 4-Player Names Grid -->
                         <div class="home-card-section hidden" id="home-4p-pass-names-section">
-                            <label class="setup-label">👥 4-Player Kingdom Names</label>
+                            <label class="setup-label">👥 4-Player Names</label>
                             <div class="name-grid-4p">
                                 <div>
-                                    <label class="setup-sub-label" for="home-4p-name-red">🔴 Red Lord (South)</label>
+                                    <label class="setup-sub-label" for="home-4p-name-red">🔴 Red (South)</label>
                                     <input type="text" id="home-4p-name-red" class="setup-input" placeholder="Player 1">
                                 </div>
                                 <div>
-                                    <label class="setup-sub-label" for="home-4p-name-blue">🔵 Blue Baron (West)</label>
+                                    <label class="setup-sub-label" for="home-4p-name-blue">🔵 Blue (West)</label>
                                     <input type="text" id="home-4p-name-blue" class="setup-input" placeholder="Player 2">
                                 </div>
                                 <div>
-                                    <label class="setup-sub-label" for="home-4p-name-gold">🟡 Gold Emperor (North)</label>
+                                    <label class="setup-sub-label" for="home-4p-name-gold">🟡 Gold (North)</label>
                                     <input type="text" id="home-4p-name-gold" class="setup-input" placeholder="Player 3">
                                 </div>
                                 <div>
-                                    <label class="setup-sub-label" for="home-4p-name-green">🟢 Green Duke (East)</label>
+                                    <label class="setup-sub-label" for="home-4p-name-green">🟢 Green (East)</label>
                                     <input type="text" id="home-4p-name-green" class="setup-input" placeholder="Player 4">
                                 </div>
                             </div>
                         </div>
 
                         <div class="rules-scroll-content" style="margin-top:6px;">
-                            <p>👑 <strong>Four Kingdoms Chess</strong>: 14x14 cross board with Red (South), Blue (West), Gold (North), Green (East). Last surviving kingdom conquers the realm!</p>
+                            <p>👑 <strong>4-Player Chess</strong>: 14x14 cross board with Red (South), Blue (West), Gold (North), Green (East). Last surviving player wins!</p>
                         </div>
                     </div>
 
                     <div class="home-action-row">
-                        <button id="home-start-btn" class="start-btn">COMMENCE BATTLE ⚔️</button>
+                        <button id="home-start-btn" class="start-btn">START BATTLE ⚔️</button>
                     </div>
                 </div>
             </section>
@@ -219,15 +215,15 @@
                         <div class="player-profile-pill">
                             <span class="player-avatar-mini" id="top-player-avatar">🤖</span>
                             <div class="player-name-group">
-                                <span class="player-name-tag" id="opponent-name-tag">Sir Galahad</span>
-                                <span class="player-sub-tag" id="opponent-sub-tag">AI Knight • ~1200 Elo</span>
+                                <span class="player-name-tag" id="opponent-name-tag">CyberKnight</span>
+                                <span class="player-sub-tag" id="opponent-sub-tag">AI Bot • ~1200 Elo</span>
                             </div>
                         </div>
                         <div class="captured-tray-wrapper" id="tray-black">
                             <div class="captured-list horizontal" id="captured-by-black"></div>
                             <span class="material-advantage-badge hidden" id="advantage-black">+0</span>
                         </div>
-                        <div class="clock-badge-widget" id="clock-black" title="Opponent Sandglass">
+                        <div class="clock-badge-widget" id="clock-black" title="Opponent Timer">
                             <span class="clock-icon">⏳</span>
                             <span class="clock-time" id="time-black">∞</span>
                         </div>
@@ -257,7 +253,7 @@
                             <span>📜 Moves</span>
                         </div>
                         <div class="history-chips-container" id="history-chips">
-                            <span class="history-empty-placeholder">Royal duel ready to commence...</span>
+                            <span class="history-empty-placeholder">Match ready to commence...</span>
                         </div>
                         <div class="replay-controls-group">
                             <button type="button" class="replay-step-btn" id="replay-start-btn" title="Start of Match">⏮️</button>
@@ -286,51 +282,51 @@
                             <div class="captured-list horizontal" id="captured-by-white"></div>
                             <span class="material-advantage-badge hidden" id="advantage-white">+0</span>
                         </div>
-                        <div class="clock-badge-widget" id="clock-white" title="Your Sandglass">
+                        <div class="clock-badge-widget" id="clock-white" title="Your Timer">
                             <span class="clock-icon">⏳</span>
                             <span class="clock-time" id="time-white">∞</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 4-PLAYER FOUR KINGDOMS VIEW -->
+                <!-- 4-PLAYER BATTLE VIEW -->
                 <div class="arena-view-wrapper hidden" id="view-4player-arena">
-                    <!-- 4 KINGDOMS STATUS CARDS GRID -->
+                    <!-- 4 ARMIES STATUS CARDS GRID -->
                     <div class="four-kingdoms-hud-grid">
                         <div class="kingdom-card red-kingdom active-turn" id="hud-k-red">
                             <div class="k-crest-badge red">🔴</div>
                             <div class="k-details">
-                                <span class="k-name" id="k-name-red">Red Lord</span>
-                                <span class="k-status" id="k-status-red">16 Army</span>
+                                <span class="k-name" id="k-name-red">Red Commander</span>
+                                <span class="k-status" id="k-status-red">16 Pieces</span>
                             </div>
                         </div>
                         <div class="kingdom-card blue-kingdom" id="hud-k-blue">
                             <div class="k-crest-badge blue">🔵</div>
                             <div class="k-details">
-                                <span class="k-name" id="k-name-blue">Blue Baron</span>
-                                <span class="k-status" id="k-status-blue">16 Army</span>
+                                <span class="k-name" id="k-name-blue">Blue Voltage</span>
+                                <span class="k-status" id="k-status-blue">16 Pieces</span>
                             </div>
                         </div>
                         <div class="kingdom-card gold-kingdom" id="hud-k-gold">
                             <div class="k-crest-badge gold">🟡</div>
                             <div class="k-details">
-                                <span class="k-name" id="k-name-gold">Gold Emperor</span>
-                                <span class="k-status" id="k-status-gold">16 Army</span>
+                                <span class="k-name" id="k-name-gold">Gold Spark</span>
+                                <span class="k-status" id="k-status-gold">16 Pieces</span>
                             </div>
                         </div>
                         <div class="kingdom-card green-kingdom" id="hud-k-green">
                             <div class="k-crest-badge green">🟢</div>
                             <div class="k-details">
-                                <span class="k-name" id="k-name-green">Green Duke</span>
-                                <span class="k-status" id="k-status-green">16 Army</span>
+                                <span class="k-name" id="k-name-green">Green Pulse</span>
+                                <span class="k-status" id="k-status-green">16 Pieces</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- REALM TURN INDICATOR BANNER -->
+                    <!-- TURN INDICATOR BANNER -->
                     <div class="four-turn-banner red" id="four-turn-banner">
                         <span class="four-turn-dot" id="four-turn-dot"></span>
-                        <span class="four-turn-text" id="four-turn-text">🔴 Red Lord's Turn (South)</span>
+                        <span class="four-turn-text" id="four-turn-text">🔴 Red's Turn (South)</span>
                     </div>
 
                     <!-- 14x14 FOUR KINGDOMS CHESSBOARD -->
@@ -342,14 +338,14 @@
                             <canvas id="four-fx-canvas" class="fx-canvas"></canvas>
                             <div class="four-elimination-banner hidden" id="four-elim-banner">
                                 <span class="elim-icon">💀</span>
-                                <span class="elim-text" id="four-elim-text">Blue Baron Has Fallen!</span>
+                                <span class="elim-text" id="four-elim-text">Blue Has Fallen!</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- 4-PLAYER ACTIONS WIDGET -->
                     <div class="four-quick-actions-widget">
-                        <button id="four-reset-btn" class="secondary-btn btn-sm">🔄 Reset Realm</button>
+                        <button id="four-reset-btn" class="secondary-btn btn-sm">🔄 Reset Match</button>
                         <button id="four-rules-btn" class="secondary-btn btn-sm">📜 Rules</button>
                     </div>
                 </div>
@@ -388,11 +384,11 @@
                 </div>
             </section>
 
-            <!-- TAB 2: 5 DAILY CASTLE PUZZLES -->
+            <!-- TAB 3: 5 DAILY PUZZLES -->
             <section class="tab-screen" id="screen-puzzles">
                 <div class="scrollable-screen-content puzzle-screen-container">
                     <div class="home-header-banner">
-                        <h2 class="glow-text">5 DAILY CASTLE PUZZLES 🧩</h2>
+                        <h2 class="glow-text">5 DAILY PUZZLES 🧩</h2>
                         <p class="home-subtext">Solve today's 5 tactical challenges. Refreshes every day!</p>
                     </div>
 
@@ -404,7 +400,7 @@
                         <div class="streak-details">
                             <div class="streak-title-row">
                                 <span class="streak-count" id="puzzle-streak-count">0 Day Streak</span>
-                                <span class="streak-tier-badge" id="puzzle-streak-tier">⭐ Squire Tactician</span>
+                                <span class="streak-tier-badge" id="puzzle-streak-tier">⚡ Sparky Tactician</span>
                             </div>
                             <p class="streak-sub" id="puzzle-streak-sub">Clear all 5 puzzles today to advance your streak!</p>
                         </div>
@@ -445,8 +441,8 @@
             <!-- TAB 4: PROFILE & RECORD -->
             <section class="tab-screen" id="screen-profile">
                 <div class="scrollable-screen-content">
-                    <h2 class="sub-screen-title">👑 Player Court & Profile</h2>
-                    <p class="sub-screen-desc">Manage your player name, battle honor, and game records.</p>
+                    <h2 class="sub-screen-title">👑 Player Profile & Stats</h2>
+                    <p class="sub-screen-desc">Manage your player name, achievements, and game records.</p>
 
                     <!-- USER AVATAR & ACCOUNT STATUS -->
                     <div class="profile-header-card">
@@ -487,36 +483,36 @@
 
                     <!-- HEAD-TO-HEAD BOT OPPONENTS RECORD -->
                     <div class="settings-card" style="margin-top: 12px;">
-                        <h4 class="settings-heading">🛡️ Opponent Knights Record</h4>
+                        <h4 class="settings-heading">🤖 Opponent Bots Record</h4>
                         <div class="bot-records-grid">
                             <div class="bot-record-row">
-                                <span class="bot-rec-icon">🛡️</span>
+                                <span class="bot-rec-icon">⚡</span>
                                 <div class="bot-rec-name-group">
-                                    <span class="bot-rec-name">Squire Leon</span>
+                                    <span class="bot-rec-name">Sparky</span>
                                     <span class="bot-rec-sub">~600 Elo</span>
                                 </div>
                                 <span class="bot-rec-score" id="rec-bot-1">0W - 0L</span>
                             </div>
                             <div class="bot-record-row">
-                                <span class="bot-rec-icon">⚔️</span>
+                                <span class="bot-rec-icon">🛡️</span>
                                 <div class="bot-rec-name-group">
-                                    <span class="bot-rec-name">Sir Galahad</span>
+                                    <span class="bot-rec-name">CyberKnight</span>
                                     <span class="bot-rec-sub">~1200 Elo</span>
                                 </div>
                                 <span class="bot-rec-score" id="rec-bot-2">0W - 0L</span>
                             </div>
                             <div class="bot-record-row">
-                                <span class="bot-rec-icon">🏰</span>
+                                <span class="bot-rec-icon">👑</span>
                                 <div class="bot-rec-name-group">
-                                    <span class="bot-rec-name">Lady Morgana</span>
+                                    <span class="bot-rec-name">VoltQueen</span>
                                     <span class="bot-rec-sub">~1700 Elo</span>
                                 </div>
                                 <span class="bot-rec-score" id="rec-bot-3">0W - 0L</span>
                             </div>
                             <div class="bot-record-row">
-                                <span class="bot-rec-icon">👑</span>
+                                <span class="bot-rec-icon">🌌</span>
                                 <div class="bot-rec-name-group">
-                                    <span class="bot-rec-name">King Arthur</span>
+                                    <span class="bot-rec-name">ElectroKing</span>
                                     <span class="bot-rec-sub">~2200 Elo</span>
                                 </div>
                                 <span class="bot-rec-score" id="rec-bot-4">0W - 0L</span>
@@ -526,7 +522,7 @@
 
                     <!-- ROYAL HONOR ACHIEVEMENTS -->
                     <div class="settings-card" style="margin-top: 12px;">
-                        <h4 class="settings-heading">🏆 Royal Honor Badges</h4>
+                        <h4 class="settings-heading">🏆 Achievements</h4>
                         <div class="achievements-grid" id="achievements-grid">
                             <!-- Populated dynamically -->
                         </div>
@@ -534,9 +530,9 @@
 
                     <!-- PREFERENCES SETTINGS -->
                     <div class="settings-card">
-                        <h4 class="settings-heading">⚙️ Castle Preferences</h4>
+                        <h4 class="settings-heading">⚙️ Preferences</h4>
                         <div class="pref-row">
-                            <span>🔊 Sound Effects & Fanfare</span>
+                            <span>🔊 Sound Effects</span>
                             <input type="checkbox" id="pref-sound-toggle" checked>
                         </div>
                         <div class="pref-row">
@@ -580,7 +576,7 @@
         <!-- PERSISTENT STREAMLINED BOTTOM NAVIGATION DOCK -->
         <nav class="bottom-nav-dock">
             <button class="nav-tab active" id="nav-btn-home" data-tab="home">
-                <span class="nav-icon">🏰</span>
+                <span class="nav-icon">⚡</span>
                 <span class="nav-label">Home</span>
             </button>
             <button class="nav-tab" id="nav-btn-puzzles" data-tab="puzzles">
@@ -598,23 +594,23 @@
     <div class="modal-overlay hidden" id="four-rules-modal">
         <div class="modal-card">
             <button type="button" class="modal-close-btn" id="four-rules-close-btn">&times;</button>
-            <h2 class="glow-text">📜 FOUR KINGDOM RULES</h2>
+            <h2 class="glow-text">📜 4-PLAYER RULES</h2>
             <div class="rules-scroll-content">
                 <p><strong>1. Turn Order:</strong> Red (South) ➡️ Blue (West) ➡️ Gold (North) ➡️ Green (East).</p>
                 <p><strong>2. Board Geometry:</strong> 14x14 cross board with the 4 corner 3x3 areas removed.</p>
                 <p><strong>3. Pawn Movement:</strong> Pawns march forward relative to kingdom orientation and capture diagonally forward. Pawns promote to Queens upon crossing the center into rank 8 from spawn.</p>
-                <p><strong>4. Elimination:</strong> When a Kingdom's King is captured, that Kingdom is eliminated from the realm.</p>
-                <p><strong>5. Victory:</strong> The last surviving Kingdom conquers the realm!</p>
+                <p><strong>4. Elimination:</strong> When an army's King is captured, that army is eliminated.</p>
+                <p><strong>5. Victory:</strong> The last surviving player wins!</p>
             </div>
-            <button type="button" class="start-btn" id="four-rules-ok-btn">UNDERSTOOD 👑</button>
+            <button type="button" class="start-btn" id="four-rules-ok-btn">UNDERSTOOD ⚡</button>
         </div>
     </div>
 
     <!-- 4-PLAYER DEFEAT DIALOG OVERLAY -->
     <div class="modal-overlay hidden" id="four-defeat-modal">
         <div class="modal-card text-center">
-            <h2 class="glow-text">YOUR KINGDOM HAS FALLEN ⚔️</h2>
-            <p class="gameover-desc" id="four-defeat-msg">The Red Kingdom was eliminated from the Four Kingdoms Realm.</p>
+            <h2 class="glow-text">YOU HAVE BEEN ELIMINATED ⚔️</h2>
+            <p class="gameover-desc" id="four-defeat-msg">You were eliminated from the 4-Player match.</p>
             <div class="gameover-stats">
                 <p>Status: <span style="color:#ef4444; font-weight:bold;">Defeated</span></p>
             </div>
@@ -628,16 +624,16 @@
     <!-- 4-PLAYER VICTORY PODIUM MODAL -->
     <div class="modal-overlay hidden" id="four-podium-modal">
         <div class="modal-card text-center podium-modal-card">
-            <h2 class="glow-text">REALM CONQUERED! 👑</h2>
-            <p class="modal-sub" id="four-podium-sub">The great Four Kingdoms battle has concluded.</p>
+            <h2 class="glow-text">MATCH CONCLUDED! 👑</h2>
+            <p class="modal-sub" id="four-podium-sub">The 4-Player battle has concluded.</p>
             
             <div class="podium-container">
                 <!-- 1st Place (Conqueror) -->
                 <div class="podium-champion-card" id="podium-pos-1">
                     <span class="podium-crown-icon">👑</span>
                     <div class="podium-crest-large" id="podium-crest-1">🔴</div>
-                    <span class="podium-champ-name" id="podium-name-1">Red Lord</span>
-                    <span class="podium-badge gold">🥇 1st Place • Realm Champion</span>
+                    <span class="podium-champ-name" id="podium-name-1">Red Commander</span>
+                    <span class="podium-badge gold">🥇 1st Place • Match Winner</span>
                 </div>
                 
                 <!-- Runners Up 2nd, 3rd, 4th -->
@@ -645,17 +641,17 @@
                     <div class="podium-runner-card" id="podium-pos-2">
                         <span class="runner-rank silver">🥈 2nd</span>
                         <div class="podium-crest-mini" id="podium-crest-2">🔵</div>
-                        <span class="runner-name" id="podium-name-2">Blue Baron</span>
+                        <span class="runner-name" id="podium-name-2">Blue Voltage</span>
                     </div>
                     <div class="podium-runner-card" id="podium-pos-3">
                         <span class="runner-rank bronze">🥉 3rd</span>
                         <div class="podium-crest-mini" id="podium-crest-3">🟡</div>
-                        <span class="runner-name" id="podium-name-3">Gold Emperor</span>
+                        <span class="runner-name" id="podium-name-3">Gold Spark</span>
                     </div>
                     <div class="podium-runner-card" id="podium-pos-4">
                         <span class="runner-rank fallen">💀 4th</span>
                         <div class="podium-crest-mini" id="podium-crest-4">🟢</div>
-                        <span class="runner-name" id="podium-name-4">Green Duke</span>
+                        <span class="runner-name" id="podium-name-4">Green Pulse</span>
                     </div>
                 </div>
             </div>
@@ -670,8 +666,8 @@
     <!-- PAWN PROMOTION DIALOG OVERLAY -->
     <div class="modal-overlay hidden" id="promotion-modal">
         <div class="modal-card mini-card">
-            <h3>Royal Promotion! 👑</h3>
-            <p>Choose an honor to upgrade your Pawn:</p>
+            <h3>Pawn Promotion! 👑</h3>
+            <p>Choose a piece to promote your Pawn:</p>
             <div class="promo-buttons-container" id="promo-options"></div>
         </div>
     </div>
@@ -695,7 +691,7 @@
     <div class="modal-overlay hidden" id="pause-modal">
         <div class="modal-card text-center">
             <h2 class="glow-text">MATCH PAUSED ⏸️</h2>
-            <p class="modal-sub">Take a breath or return to castle command</p>
+            <p class="modal-sub">Take a breath or return to home menu</p>
             <div style="display:flex; gap:8px; margin-top:16px;">
                 <button id="pause-resume-btn" class="start-btn" style="flex:1;">RESUME ⚔️</button>
                 <button id="pause-home-btn" class="secondary-btn" style="flex:1;">🏠 HOME</button>
@@ -707,8 +703,8 @@
     <div class="modal-overlay hidden" id="auth-modal">
         <div class="modal-card">
             <button type="button" class="modal-close-btn" id="auth-close-btn">&times;</button>
-            <h2 class="glow-text">EDIT PLAYER NAME 👑</h2>
-            <p class="modal-sub">Set your player name across the realm</p>
+            <h2 class="glow-text">EDIT PLAYER NAME ⚡</h2>
+            <p class="modal-sub">Set your player name across matches</p>
             
             <div class="setup-form">
                 <div>
@@ -716,7 +712,7 @@
                     <input type="text" id="auth-username-input" class="setup-input" placeholder="Enter your name">
                 </div>
 
-                <button type="button" class="start-btn" id="auth-submit-btn">SAVE NAME 🛡️</button>
+                <button type="button" class="start-btn" id="auth-submit-btn">SAVE NAME ⚡</button>
             </div>
         </div>
     </div>
@@ -779,11 +775,11 @@
     <!-- RESIGN CONFIRMATION MODAL -->
     <div class="modal-overlay hidden" id="resign-modal">
         <div class="modal-card text-center">
-            <h2 class="glow-text">CONCEDE DUEL? 🏳️</h2>
+            <h2 class="glow-text">RESIGN MATCH? 🏳️</h2>
             <p class="modal-sub" id="resign-modal-sub">Are you sure you wish to resign? Victory will be conceded to your opponent.</p>
             <div style="display:flex; gap:8px; margin-top:16px;">
                 <button id="resign-confirm-btn" class="secondary-btn" style="flex:1; border-color:#ef4444; color:#ef4444;">YES, RESIGN</button>
-                <button id="resign-cancel-btn" class="start-btn" style="flex:1;">CONTINUE DUEL ⚔️</button>
+                <button id="resign-cancel-btn" class="start-btn" style="flex:1;">CONTINUE MATCH ⚔️</button>
             </div>
         </div>
     </div>
@@ -791,8 +787,8 @@
     <!-- DRAW OFFER MODAL -->
     <div class="modal-overlay hidden" id="draw-modal">
         <div class="modal-card text-center">
-            <h2 class="glow-text">OFFER ROYAL DRAW? 🤝</h2>
-            <p class="modal-sub" id="draw-modal-desc">Propose an honorable draw to end this contest peacefully.</p>
+            <h2 class="glow-text">OFFER DRAW? 🤝</h2>
+            <p class="modal-sub" id="draw-modal-desc">Propose a draw to end this match peacefully.</p>
             <div style="display:flex; gap:8px; margin-top:16px;">
                 <button id="draw-confirm-btn" class="start-btn" style="flex:1;">OFFER DRAW 🤝</button>
                 <button id="draw-cancel-btn" class="secondary-btn" style="flex:1;">CANCEL</button>
@@ -804,7 +800,7 @@
     <div class="modal-overlay hidden" id="draw-respond-modal">
         <div class="modal-card text-center">
             <h2 class="glow-text">DRAW OFFERED 🤝</h2>
-            <p class="modal-sub" id="draw-respond-desc">Your opponent has proposed an honorable peace treaty. Do you accept?</p>
+            <p class="modal-sub" id="draw-respond-desc">Your opponent has offered a draw. Do you accept?</p>
             <div style="display:flex; gap:8px; margin-top:16px;">
                 <button id="draw-accept-btn" class="start-btn" style="flex:1;">ACCEPT DRAW 🤝</button>
                 <button id="draw-decline-btn" class="secondary-btn" style="flex:1;">DECLINE ⚔️</button>

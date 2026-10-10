@@ -2,7 +2,7 @@
   "id": "electro-king-chess-pwa",
   "name": "Electro King Chess",
   "short_name": "Electro King",
-  "description": "Stunning cyber-neon chess game featuring 2-Player duel and 4-Player Four Kingdoms Realm modes with electric animations and tactical master challenges.",
+  "description": "Stunning cyber-neon chess game featuring 2-Player duel and 4-Player battle modes with electric animations and tactical master challenges.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./index.html",

@@ -1,6 +1,6 @@
 /* =========================================================
-   ELECTRO KING 👑 - CASTLE REALM EDITION
-   Royal Medieval Grandmaster Design System & FX
+   ELECTRO KING 👑
+   Cyber Neon Electric Chess Design System & FX
    ========================================================= */
 
 * {
@@ -181,43 +181,29 @@ body {
     flex-shrink: 0;
 }
 
-.logo-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-}
-
-.logo-text-block {
+.header-left {
     display: flex;
     flex-direction: column;
-    background: transparent;
-    border: none;
 }
 
 .logo-title {
     font-family: 'Outfit', sans-serif;
-    font-size: 1.22rem;
-    font-weight: 900;
-    letter-spacing: 1.4px;
-    background: linear-gradient(135deg, #00f5d4 0%, #70fff0 30%, #9d4edd 100%);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #00f5d4 0%, #9d4edd 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.55));
+    filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.4));
     line-height: 1.1;
     text-transform: uppercase;
 }
 
-.logo-subtitle {
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.62rem;
+.logo-by {
+    font-size: 0.58rem;
     color: var(--text-muted);
     font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .name-grid,
@@ -451,7 +437,7 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-family: 'Cinzel', monospace;
+    font-family: 'Outfit', monospace;
 }
 
 .clock-icon {
@@ -805,7 +791,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.72rem;
     font-weight: 800;
     padding: 2px 7px;
@@ -1120,7 +1106,7 @@ body {
 }
 
 .home-header-banner h2 {
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.25rem;
     font-weight: 900;
     letter-spacing: 1.2px;
@@ -1274,7 +1260,7 @@ body {
     color: var(--text-muted);
     font-size: 0.82rem;
     font-weight: 800;
-    font-family: 'Cinzel', monospace;
+    font-family: 'Outfit', monospace;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1313,7 +1299,7 @@ body {
     font-size: 0.88rem;
     font-weight: 800;
     color: var(--primary);
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
 }
 
 .puzzle-solved-tag {
@@ -1377,7 +1363,7 @@ body {
 }
 
 .sub-screen-title {
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.15rem;
     font-weight: 800;
     color: var(--primary);
@@ -1447,7 +1433,7 @@ body {
     font-size: 1.05rem;
     font-weight: 800;
     color: #f8fafc;
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
 }
 
 .account-pill-group {
@@ -1496,7 +1482,7 @@ body {
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--primary);
-    font-family: 'Cinzel', monospace;
+    font-family: 'Outfit', monospace;
 }
 
 .stat-lbl {
@@ -1519,7 +1505,7 @@ body {
     font-size: 0.85rem;
     font-weight: 800;
     color: var(--primary);
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
 }
 
 .pref-row {
@@ -1630,7 +1616,7 @@ body {
 }
 
 .glow-text {
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.22rem;
     font-weight: 900;
     text-align: center;
@@ -1828,7 +1814,7 @@ body {
 }
 
 .room-code-txt {
-    font-family: 'Cinzel', monospace;
+    font-family: 'Outfit', monospace;
     font-size: 1.25rem;
     font-weight: 900;
     color: var(--primary);
@@ -2045,7 +2031,7 @@ body {
 }
 
 .streak-count {
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.95rem;
     font-weight: 800;
     color: var(--primary-light);
@@ -2111,7 +2097,7 @@ body {
 }
 
 .bot-rec-score {
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.78rem;
     font-weight: 800;
     color: var(--primary);
@@ -2191,7 +2177,7 @@ body {
     width: fit-content;
     font-size: 0.78rem;
     font-weight: 800;
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     letter-spacing: 0.4px;
     transition: all 0.3s ease;
 }
@@ -2277,7 +2263,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.88rem;
     font-weight: 800;
     z-index: 50;
@@ -2346,7 +2332,7 @@ body {
 }
 
 .podium-champ-name {
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.15rem;
     font-weight: 800;
     color: var(--primary-light);
@@ -2383,7 +2369,7 @@ body {
 .runner-rank {
     font-size: 0.72rem;
     font-weight: 800;
-    font-family: 'Cinzel', serif;
+    font-family: 'Outfit', sans-serif;
 }
 
 .runner-rank.silver { color: #e2e8f0; }

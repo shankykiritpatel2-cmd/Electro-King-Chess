@@ -347,7 +347,7 @@ let gameMode = 'ai'; // 'ai', 'local'
 let playerSide = 'white';
 let botSide = 'black';
 let difficulty = 2;
-let playerNames = { white: lordProfile.name, black: 'Sir Galahad' };
+let playerNames = { white: lordProfile.name, black: 'CyberKnight 🛡️' };
 let isGameOver = false;
 let isGamePaused = false;
 let isMatchActive = false;
@@ -360,19 +360,19 @@ let moveHistoryNotation = [];
 let aiMoveTimeout = null;
 
 const BOT_PERSONALITIES = {
-    1: { name: 'Squire Leon', rating: '~600 Elo', icon: '🛡️' },
-    2: { name: 'Sir Galahad', rating: '~1200 Elo', icon: '⚔️' },
-    3: { name: 'Lady Morgana', rating: '~1700 Elo', icon: '🏰' },
-    4: { name: 'King Arthur', rating: '~2200 Elo', icon: '👑' }
+    1: { name: 'Sparky ⚡', rating: '~600 Elo', icon: '⚡' },
+    2: { name: 'CyberKnight 🛡️', rating: '~1200 Elo', icon: '🛡️' },
+    3: { name: 'VoltQueen 👑', rating: '~1700 Elo', icon: '👑' },
+    4: { name: 'ElectroKing 🌌', rating: '~2200 Elo', icon: '🌌' }
 };
 
 // 4-Player Realm State
 const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
 const FOUR_KINGDOM_NAMES = {
-    red: 'Red Lord',
-    blue: 'Blue Baron',
-    gold: 'Gold Emperor',
-    green: 'Green Duke'
+    red: 'Red Commander',
+    blue: 'Blue Voltage',
+    gold: 'Gold Spark',
+    green: 'Green Pulse'
 };
 let fourBoard = [];
 let fourTurn = 'red';
@@ -942,14 +942,14 @@ function make2PlayerAIMove() {
     let chosenMove = null;
     
     if (difficulty === 1) {
-        // Squire Leon (~600 Elo): Random with occasional capture
+        // Sparky (~600 Elo): Random with occasional capture
         chosenMove = allMoves[Math.floor(Math.random() * allMoves.length)];
     } else if (difficulty === 2) {
-        // Sir Galahad (~1200 Elo): Prefer captures, checks, and center control
+        // CyberKnight (~1200 Elo): Prefer captures, checks, and center control
         const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c] !== null);
         chosenMove = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
     } else if (difficulty === 3) {
-        // Lady Morgana (~1700 Elo): Material evaluation with center weighting
+        // VoltQueen (~1700 Elo): Material evaluation with center weighting
         let bestVal = -999999;
         const vals = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
         
@@ -970,7 +970,7 @@ function make2PlayerAIMove() {
         });
         if (!chosenMove) chosenMove = allMoves[0];
     } else {
-        // King Arthur (~2200 Elo): Deep tactical calculation with king safety
+        // ElectroKing (~2200 Elo): Deep tactical calculation with king safety
         let bestVal = -999999;
         const vals = { p: 100, n: 330, b: 340, r: 520, q: 950, k: 20000 };
         
@@ -1722,7 +1722,7 @@ function showFourPodiumModal(victor) {
     
     const sub = document.getElementById('four-podium-sub');
     if (sub) {
-        sub.textContent = `${FOUR_KINGDOM_NAMES[p1]} reigns supreme over all 4 Kingdoms!`;
+        sub.textContent = `${FOUR_KINGDOM_NAMES[p1]} reigns supreme!`;
     }
     
     if (p1 === 'red') {
@@ -2013,10 +2013,10 @@ function renderPuzzleStreak() {
     
     streakCountEl.textContent = `${currentStreak} Day Streak`;
     
-    let tier = '⭐ Squire Tactician';
-    if (currentStreak >= 14) tier = '👑 Grand Sovereign';
-    else if (currentStreak >= 7) tier = '🏰 Castle Master';
-    else if (currentStreak >= 3) tier = '⚔️ Knight Champion';
+    let tier = '⚡ Sparky Tactician';
+    if (currentStreak >= 14) tier = '🌌 Cyber Sovereign';
+    else if (currentStreak >= 7) tier = '👑 Electro Master';
+    else if (currentStreak >= 3) tier = '⚡ Volt Champion';
     
     if (streakTierEl) streakTierEl.textContent = tier;
     
@@ -2185,15 +2185,15 @@ function switchTab(tabId) {
     const headerSub = document.getElementById('header-mode-subtitle');
     
     if (tabId === 'home') {
-        if (headerSub) headerSub.textContent = 'Castle Battle Setup';
+        if (headerSub) headerSub.textContent = 'Cyber Battle Setup';
         pauseGame();
     } else if (tabId === 'arena' || tabId === 'battle') {
         if (arenaSubMode === '2p') {
-            if (headerSub) headerSub.textContent = 'Classic 2-Player Duel';
+            if (headerSub) headerSub.textContent = '2-Player Arena';
             draw2PlayerBoard();
             if (fx2p) fx2p.resize();
         } else {
-            if (headerSub) headerSub.textContent = 'Four Kingdoms Realm';
+            if (headerSub) headerSub.textContent = '4-Player Battle Grid';
             drawFourBoard();
             if (fx4p) fx4p.resize();
         }
@@ -2201,11 +2201,11 @@ function switchTab(tabId) {
             resumeGame();
         }
     } else if (tabId === 'puzzles') {
-        if (headerSub) headerSub.textContent = 'Castle Tactics Academy';
+        if (headerSub) headerSub.textContent = 'Daily Tactics & Puzzles';
         pauseGame();
         renderCurrentPuzzle();
     } else if (tabId === 'profile') {
-        if (headerSub) headerSub.textContent = 'Player Honor & Records';
+        if (headerSub) headerSub.textContent = 'Player Profile & Stats';
         pauseGame();
         updateProfileUI();
     }
@@ -2220,13 +2220,13 @@ function switchArenaSubMode(mode) {
     if (mode === '2p') {
         if (view2p) view2p.classList.remove('hidden');
         if (view4p) view4p.classList.add('hidden');
-        if (subTitle) subTitle.textContent = 'Classic 2-Player Duel';
+        if (subTitle) subTitle.textContent = '2-Player Arena';
         draw2PlayerBoard();
         if (fx2p) fx2p.resize();
     } else {
         if (view4p) view4p.classList.remove('hidden');
         if (view2p) view2p.classList.add('hidden');
-        if (subTitle) subTitle.textContent = 'Four Kingdoms Realm';
+        if (subTitle) subTitle.textContent = '4-Player Battle Grid';
         drawFourBoard();
         if (fx4p) fx4p.resize();
     }
@@ -2886,7 +2886,7 @@ function startNew2PlayerGame() {
         
         if (oppAvatar) oppAvatar.textContent = bot.icon;
         if (oppTag) oppTag.textContent = bot.name;
-        if (oppSub) oppSub.textContent = `AI Knight • ${bot.rating}`;
+        if (oppSub) oppSub.textContent = `AI Bot • ${bot.rating}`;
         if (myAvatar) myAvatar.textContent = '👑';
         if (myTag) myTag.textContent = pName;
         if (mySub) mySub.textContent = 'Grandmaster';
@@ -2943,9 +2943,9 @@ function startNew4PlayerGame() {
     } else {
         const pName = document.getElementById('home-4p-player-name')?.value.trim() || lordProfile.name || 'Player';
         FOUR_KINGDOM_NAMES.red = pName;
-        FOUR_KINGDOM_NAMES.blue = 'Blue Baron 🤖';
-        FOUR_KINGDOM_NAMES.gold = 'Gold Emperor 🤖';
-        FOUR_KINGDOM_NAMES.green = 'Green Duke 🤖';
+        FOUR_KINGDOM_NAMES.blue = 'Blue Voltage 🤖';
+        FOUR_KINGDOM_NAMES.gold = 'Gold Spark 🤖';
+        FOUR_KINGDOM_NAMES.green = 'Green Pulse 🤖';
         
         const redEl = document.getElementById('k-name-red');
         const blueEl = document.getElementById('k-name-blue');
@@ -2953,9 +2953,9 @@ function startNew4PlayerGame() {
         const greenEl = document.getElementById('k-name-green');
         
         if (redEl) redEl.textContent = pName;
-        if (blueEl) blueEl.textContent = 'Blue Baron';
-        if (goldEl) goldEl.textContent = 'Gold Emperor';
-        if (greenEl) greenEl.textContent = 'Green Duke';
+        if (blueEl) blueEl.textContent = 'Blue Voltage';
+        if (goldEl) goldEl.textContent = 'Gold Spark';
+        if (greenEl) greenEl.textContent = 'Green Pulse';
     }
     
     initFourPlayerBoard();
@@ -2965,50 +2965,50 @@ function startNew4PlayerGame() {
 const ROYAL_ACHIEVEMENTS = [
     {
         id: 'first_win',
-        icon: '🛡️',
-        title: 'First Blood',
+        icon: '⚡',
+        title: 'First Circuit',
         desc: 'Claim your first Classic victory',
         check: (p) => (p.wins || 0) >= 1
     },
     {
         id: 'knight_slayer',
-        icon: '⚔️',
-        title: 'Knight Slayer',
-        desc: 'Defeat Sir Galahad (~1200 Elo)',
+        icon: '🛡️',
+        title: 'Knight Offline',
+        desc: 'Defeat CyberKnight (~1200 Elo)',
         check: (p) => (p.botRecords && p.botRecords[2] && p.botRecords[2].w >= 1)
     },
     {
         id: 'queen_tamer',
-        icon: '🏰',
-        title: 'Morgana Falls',
-        desc: 'Defeat Lady Morgana (~1700 Elo)',
+        icon: '👑',
+        title: 'Volt Discharged',
+        desc: 'Defeat VoltQueen (~1700 Elo)',
         check: (p) => (p.botRecords && p.botRecords[3] && p.botRecords[3].w >= 1)
     },
     {
         id: 'king_subdued',
-        icon: '👑',
-        title: 'Arthur Subdued',
-        desc: 'Defeat King Arthur (~2200 Elo)',
+        icon: '🌌',
+        title: 'Electro Overload',
+        desc: 'Defeat ElectroKing (~2200 Elo)',
         check: (p) => (p.botRecords && p.botRecords[4] && p.botRecords[4].w >= 1)
     },
     {
         id: 'realm_conqueror',
         icon: '🏆',
-        title: 'Realm Conqueror',
-        desc: 'Conquer the 4-Player Realm',
+        title: 'Grid Conqueror',
+        desc: 'Conquer the 4-Player Battle',
         check: (p) => (p.fourWins || 0) >= 1
     },
     {
         id: 'puzzle_master',
         icon: '🧩',
-        title: 'Castle Tactician',
+        title: 'Neural Tactician',
         desc: 'Solve 5 Daily Chess Puzzles',
         check: (p) => (p.puzzles || 0) >= 5
     },
     {
         id: 'streak_3',
         icon: '🔥',
-        title: 'Royal Flame',
+        title: 'Overcharge Flame',
         desc: 'Maintain a 3-Day Puzzle Streak',
         check: (p) => {
             const s = getPuzzleStreakData();
@@ -3018,7 +3018,7 @@ const ROYAL_ACHIEVEMENTS = [
     {
         id: 'grand_sovereign',
         icon: '⚡',
-        title: 'Grand Sovereign',
+        title: 'Cyber Sovereign',
         desc: 'Achieve 10 total victories',
         check: (p) => ((p.wins || 0) + (p.fourWins || 0)) >= 10
     }
@@ -3148,5 +3148,5 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Open HOME SCREEN FIRST on launch!
     switchTab('home');
-    console.log('Electro King: Castle Realm initialized successfully on Home screen with theme ' + royalSettings.theme);
+    console.log('Electro King initialized successfully on Home screen with theme ' + royalSettings.theme);
 });
