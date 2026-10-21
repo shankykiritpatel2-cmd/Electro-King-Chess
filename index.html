@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Electro King 👑 - Cyber Chess 2.0</title>
+    <title>Electro King 👑⚡</title>
     <!-- Cyber Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
             </div>
             
             <div class="header-right">
-                <div class="turn-status-widget" id="turn-banner">
+                <div class="turn-status-widget" id="turn-banner" style="display: none;">
                     <span class="turn-dot-pulse" id="turn-dot"></span>
                     <span class="turn-label" id="turn-message">White's Turn</span>
                 </div>
@@ -436,95 +436,195 @@
             <section class="tab-screen" id="screen-profile">
                 <div class="scrollable-screen-content">
                     <h2 class="sub-screen-title">👑 Player Profile & Stats</h2>
-                    <p class="sub-screen-desc">Manage your player name, achievements, and game records.</p>
+                    <p class="sub-screen-desc">Manage your player identity, view verified records, and configure settings.</p>
 
                     <!-- USER AVATAR & ACCOUNT STATUS -->
                     <div class="profile-header-card">
-                        <div class="avatar-ring clickable-avatar" id="avatar-picker-btn" title="Tap to change avatar">
+                        <div class="avatar-ring clickable-avatar" id="avatar-picker-btn" title="Tap to change picture">
                             <img id="profile-avatar-img" class="avatar-custom-img hidden" src="" alt="Profile">
                             <span class="avatar-emoji" id="profile-avatar">👑</span>
                             <div class="avatar-badge-edit">📷</div>
-                            <input type="file" id="avatar-file-input" accept="image/*" class="hidden">
+                            <input type="file" id="avatar-file-input" accept="image/png, image/jpeg, image/webp" class="hidden">
                         </div>
                         <div class="profile-info-group">
                             <h3 class="profile-username" id="profile-name">Player</h3>
                             <div class="account-pill-group">
-                                <span class="account-badge guest" id="account-type-badge">👑 Player Profile</span>
-                                <button class="sign-in-link-btn" id="profile-auth-btn">Edit Name ✏️</button>
+                                <span class="account-badge guest" id="player-rating-badge">⚡ 1200 Elo • Electro Knight</span>
+                            </div>
+                            <div class="profile-action-links" style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+                                <button type="button" class="sign-in-link-btn" id="edit-avatar-btn">📷 Edit Picture</button>
+                                <button type="button" class="sign-in-link-btn" id="profile-auth-btn">✏️ Edit Name</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- CAREER STATS SUMMARY -->
-                    <div class="stats-overview-grid">
-                        <div class="stat-card">
-                            <span class="stat-num" id="stat-matches">0</span>
-                            <span class="stat-lbl">Classic Matches</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-num" id="stat-wins">0</span>
-                            <span class="stat-lbl">Victories</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-num" id="stat-winrate">0%</span>
-                            <span class="stat-lbl">Win Rate</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-num" id="stat-four-wins">0</span>
-                            <span class="stat-lbl">4-Player Crowns 👑</span>
+                    <div class="settings-card">
+                        <h4 class="settings-heading">📊 Career Statistics</h4>
+                        <div class="stats-overview-grid">
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-matches">0</span>
+                                <span class="stat-lbl">Matches</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-wins">0</span>
+                                <span class="stat-lbl">Victories</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-losses">0</span>
+                                <span class="stat-lbl">Defeats</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-draws">0</span>
+                                <span class="stat-lbl">Draws</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-winrate">0%</span>
+                                <span class="stat-lbl">Win Rate</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-current-streak">0</span>
+                                <span class="stat-lbl">Current Streak</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-best-streak">0</span>
+                                <span class="stat-lbl">Best Streak</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-num" id="stat-four-wins">0</span>
+                                <span class="stat-lbl">4-Player Crowns 👑</span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- HEAD-TO-HEAD BOT OPPONENTS RECORD -->
-                    <div class="settings-card" style="margin-top: 12px;">
-                        <h4 class="settings-heading">🤖 Opponent Bots Record</h4>
-                        <div class="bot-records-grid">
+                    <div class="settings-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 class="settings-heading">🤖 Computer Opponent Records</h4>
+                            <span style="font-size:0.68rem; color:var(--text-muted);" id="bot-total-defeated">0 Defeated</span>
+                        </div>
+                        <div class="bot-records-list" id="bot-records-list">
                             <div class="bot-record-row">
                                 <span class="bot-rec-icon">⚡</span>
                                 <div class="bot-rec-name-group">
                                     <span class="bot-rec-name">Sparky</span>
-                                    <span class="bot-rec-sub">~600 Elo</span>
+                                    <span class="bot-rec-sub">Novice • ~600 Elo</span>
                                 </div>
-                                <span class="bot-rec-score" id="rec-bot-1">0W - 0L</span>
+                                <span class="bot-rec-score" id="rec-bot-1">0W - 0L - 0D</span>
                             </div>
                             <div class="bot-record-row">
                                 <span class="bot-rec-icon">🛡️</span>
                                 <div class="bot-rec-name-group">
                                     <span class="bot-rec-name">CyberKnight</span>
-                                    <span class="bot-rec-sub">~1200 Elo</span>
+                                    <span class="bot-rec-sub">Tactician • ~1200 Elo</span>
                                 </div>
-                                <span class="bot-rec-score" id="rec-bot-2">0W - 0L</span>
+                                <span class="bot-rec-score" id="rec-bot-2">0W - 0L - 0D</span>
                             </div>
                             <div class="bot-record-row">
                                 <span class="bot-rec-icon">👑</span>
                                 <div class="bot-rec-name-group">
                                     <span class="bot-rec-name">VoltQueen</span>
-                                    <span class="bot-rec-sub">~1700 Elo</span>
+                                    <span class="bot-rec-sub">Master • ~1700 Elo</span>
                                 </div>
-                                <span class="bot-rec-score" id="rec-bot-3">0W - 0L</span>
+                                <span class="bot-rec-score" id="rec-bot-3">0W - 0L - 0D</span>
                             </div>
                             <div class="bot-record-row">
                                 <span class="bot-rec-icon">🌌</span>
                                 <div class="bot-rec-name-group">
                                     <span class="bot-rec-name">ElectroKing</span>
-                                    <span class="bot-rec-sub">~2200 Elo</span>
+                                    <span class="bot-rec-sub">Grandmaster • ~2200 Elo</span>
                                 </div>
-                                <span class="bot-rec-score" id="rec-bot-4">0W - 0L</span>
+                                <span class="bot-rec-score" id="rec-bot-4">0W - 0L - 0D</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ROYAL HONOR ACHIEVEMENTS -->
-                    <div class="settings-card" style="margin-top: 12px;">
-                        <h4 class="settings-heading">🏆 Achievements</h4>
-                        <div class="achievements-grid" id="achievements-grid">
-                            <!-- Populated dynamically -->
+                    <!-- RECENT MATCH HISTORY -->
+                    <div class="settings-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 class="settings-heading">📜 Recent Match History</h4>
+                            <span style="font-size:0.68rem; color:var(--text-muted);">Recorded Games</span>
                         </div>
+                        <div class="history-list" id="profile-history-list">
+                            <div class="history-empty-state" id="history-empty-state">
+                                <span>⚔️ No recorded games yet. Play a match to build your history!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ANDROID HOME SCREEN WIDGETS (ELECTRO KING) -->
+                    <div class="settings-card">
+                        <h4 class="settings-heading">📱 Android Home Screen Widgets</h4>
+                        <p style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 8px;">Configure your home-screen widget styling and quick actions for ELECTRO KING:</p>
+                        
+                        <!-- Live Widget Banner Preview (4x1 & Multi-Button) -->
+                        <div class="widget-preview-box" id="widget-preview-box">
+                            <div class="widget-preview-item style-cyber" id="widget-preview-card">
+                                <div class="wp-left">
+                                    <span class="wp-icon">⚡</span>
+                                    <div class="wp-text">
+                                        <span class="wp-title" id="wp-title-text">ELECTRO KING ⚡</span>
+                                        <span class="wp-sub" id="wp-sub-text">⚡ Ready to Battle</span>
+                                    </div>
+                                </div>
+                                <div class="wp-action-btns">
+                                    <button type="button" class="wp-play-btn" id="wp-play-btn">⚡ 2P</button>
+                                    <button type="button" class="wp-btn-sec" id="wp-4p-btn">⚔️ 4P</button>
+                                    <button type="button" class="wp-btn-sec" id="wp-puzzle-btn">🧩</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget Title Editor -->
+                        <div class="widget-input-row" style="margin-top: 10px;">
+                            <label class="setup-label">✏️ Widget Title</label>
+                            <input type="text" id="widget-title-input" value="ELECTRO KING ⚡" maxlength="24" placeholder="Enter widget title...">
+                        </div>
+
+                        <!-- Widget Subtitle Editor & Presets -->
+                        <div class="widget-input-row">
+                            <label class="setup-label">💬 Widget Subtitle / Status</label>
+                            <input type="text" id="widget-sub-input" value="⚡ Ready to Battle" maxlength="32" placeholder="Enter subtitle or status...">
+                            <div class="widget-preset-chips" id="widget-preset-chips">
+                                <button type="button" class="widget-preset-chip active" data-preset="⚡ Ready to Battle">⚡ Ready to Battle</button>
+                                <button type="button" class="widget-preset-chip" data-preset="🧩 Daily Puzzles">🧩 Daily Puzzles</button>
+                                <button type="button" class="widget-preset-chip" data-preset="👑 Grandmaster Grind">👑 Grandmaster</button>
+                                <button type="button" class="widget-preset-chip" data-preset="⚡ Electro Blitz">⚡ Electro Blitz</button>
+                            </div>
+                        </div>
+
+                        <!-- Widget Style Theme Grid -->
+                        <div style="margin-top: 10px;">
+                            <label class="setup-label">🎨 Widget Color Style</label>
+                            <div class="theme-toggle-grid" id="widget-style-toggle-grid">
+                                <button type="button" class="theme-card-btn active" data-wstyle="cyber">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #00f5d4 0%, #9d4edd 100%);"></span>
+                                    <span class="theme-name">⚡ Cyber Neon</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-wstyle="obsidian">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #4cc9f0 0%, #7209b7 100%);"></span>
+                                    <span class="theme-name">🌌 Obsidian</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-wstyle="gold">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #ffd166 0%, #ff9f1c 100%);"></span>
+                                    <span class="theme-name">👑 Gold Volt</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-wstyle="matrix">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #00ff66 0%, #07170c 100%);"></span>
+                                    <span class="theme-name">🌲 Matrix</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Save & Apply Button -->
+                        <button type="button" class="start-btn" id="widget-save-btn" style="margin-top: 12px; width: 100%; font-size: 0.88rem; padding: 12px;">
+                            ⚡ SAVE & APPLY TO WIDGETS
+                        </button>
                     </div>
 
                     <!-- PREFERENCES SETTINGS -->
                     <div class="settings-card">
-                        <h4 class="settings-heading">⚙️ Preferences</h4>
+                        <h4 class="settings-heading">⚙️ Game Preferences</h4>
                         <div class="pref-row">
                             <span>🔊 Sound Effects</span>
                             <input type="checkbox" id="pref-sound-toggle" checked>
@@ -541,8 +641,19 @@
                             <span>📊 Position Advantage Eval Bar</span>
                             <input type="checkbox" id="pref-eval-toggle" checked>
                         </div>
-                        <div style="margin-top: 14px;">
-                            <label class="setup-label">🎨 Board Theme</label>
+                        <div class="pref-row">
+                            <span>🔄 Flip Board Orientation</span>
+                            <select id="pref-orientation-select" class="setup-select" style="padding:4px 8px; font-size:0.75rem; background:#111827; border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px;">
+                                <option value="white">White (Standard)</option>
+                                <option value="black">Black (Flipped)</option>
+                            </select>
+                        </div>
+                        <div class="pref-row">
+                            <span>⚠️ Confirm Before Abandoning Match</span>
+                            <input type="checkbox" id="pref-confirm-abandon" checked>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <label class="setup-label">🎨 Chessboard Theme</label>
                             <div class="theme-toggle-grid">
                                 <button type="button" class="theme-card-btn active" data-theme="cyber">
                                     <span class="theme-swatch cyber"></span>
@@ -562,44 +673,26 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Reset & Restore Defaults Row -->
+                        <div style="display:flex; gap:8px; margin-top:14px;">
+                            <button type="button" class="secondary-btn" id="pref-restore-defaults-btn" style="flex:1; font-size:0.74rem; padding:8px 6px;">
+                                🎨 Default Appearance
+                            </button>
+                            <button type="button" class="secondary-btn" id="pref-reset-stats-btn" style="flex:1; font-size:0.74rem; padding:8px 6px; border-color:rgba(239,68,68,0.5); color:#ef4444;">
+                                🗑️ Reset Statistics
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- WIDGETS & PREFERENCES STYLING ("COOKING 🔥" / CYBER) -->
-                    <div class="settings-card" style="margin-top: 14px;">
-                        <h4 class="settings-heading">📱 Android Home Screen Widgets</h4>
-                        <p style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 10px;">Select your widget style so your home screen is cooking 🔥:</p>
-                        <div class="widget-preview-box" id="widget-preview-box">
-                            <div class="widget-preview-item" id="widget-preview-card">
-                                <div class="wp-left">
-                                    <span class="wp-icon">⚡</span>
-                                    <div class="wp-text">
-                                        <span class="wp-title">ELECTRO KING ⚡</span>
-                                        <span class="wp-sub" id="wp-sub-text">Cyber Chess 2.0 • Cooking 🔥</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="wp-play-btn" id="wp-play-btn">⚡ PLAY</button>
-                            </div>
+                    <!-- ROYAL HONOR ACHIEVEMENTS -->
+                    <div class="settings-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 class="settings-heading">🏆 Royal Honor Achievements</h4>
+                            <span style="font-size:0.68rem; color:var(--text-muted);" id="achievements-count">0 / 8 Unlocked</span>
                         </div>
-                        <div style="margin-top: 12px;">
-                            <label class="setup-label">🔥 Widget Color Style</label>
-                            <div class="theme-toggle-grid" id="widget-style-toggle-grid">
-                                <button type="button" class="theme-card-btn active" data-wstyle="cooking">
-                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #ff0054 0%, #ffd166 100%);"></span>
-                                    <span class="theme-name">🔥 Cooking Fire</span>
-                                </button>
-                                <button type="button" class="theme-card-btn" data-wstyle="cyber">
-                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #00f5d4 0%, #9d4edd 100%);"></span>
-                                    <span class="theme-name">⚡ Cyber Neon</span>
-                                </button>
-                                <button type="button" class="theme-card-btn" data-wstyle="obsidian">
-                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #4cc9f0 0%, #7209b7 100%);"></span>
-                                    <span class="theme-name">🌌 Obsidian</span>
-                                </button>
-                                <button type="button" class="theme-card-btn" data-wstyle="gold">
-                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #ffd166 0%, #ff9f1c 100%);"></span>
-                                    <span class="theme-name">👑 Gold Volt</span>
-                                </button>
-                            </div>
+                        <div class="achievements-grid" id="achievements-grid">
+                            <!-- Populated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -746,6 +839,79 @@
                 </div>
 
                 <button type="button" class="start-btn" id="auth-submit-btn">SAVE NAME ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE AVATAR PICKER MODAL -->
+    <div class="modal-overlay hidden" id="avatar-modal">
+        <div class="modal-card">
+            <button type="button" class="modal-close-btn" id="avatar-close-btn">&times;</button>
+            <h2 class="glow-text">EDIT PROFILE PICTURE 📷</h2>
+            <p class="modal-sub">Upload a custom photo or choose a royal icon</p>
+            
+            <div class="avatar-modal-body">
+                <div class="avatar-modal-current">
+                    <div class="avatar-ring large-ring" id="modal-preview-ring">
+                        <img id="modal-preview-img" class="avatar-custom-img hidden" src="" alt="Avatar">
+                        <span class="avatar-emoji" id="modal-preview-emoji">👑</span>
+                    </div>
+                    <span class="avatar-modal-lbl" id="modal-preview-lbl">Preview</span>
+                </div>
+
+                <!-- Custom Photo Upload Buttons -->
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <label class="setup-label">📷 Custom Photo (JPG, PNG, WebP &le; 5MB)</label>
+                    <button type="button" class="start-btn" id="modal-upload-btn" style="width:100%; padding:10px; font-size:0.82rem;">
+                        📁 Choose Photo from Device
+                    </button>
+                    <button type="button" class="secondary-btn" id="modal-default-avatar-btn" style="width:100%; padding:8px; font-size:0.75rem;">
+                        👑 Restore Default Avatar
+                    </button>
+                </div>
+
+                <label class="setup-label" style="margin-top:6px;">⚡ Or Select Royal &amp; Cyber Icon</label>
+                <div class="avatar-emoji-grid" id="avatar-emoji-grid">
+                    <button type="button" class="avatar-emoji-btn active" data-emoji="👑">👑</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="⚡">⚡</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🔥">🔥</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🛡️">🛡️</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="⚔️">⚔️</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🤖">🤖</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🌌">🌌</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="💎">💎</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🐉">🐉</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🦁">🦁</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🦅">🦅</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🐺">🐺</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🏆">🏆</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🎯">🎯</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🚀">🚀</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="⭐">⭐</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="😎">😎</button>
+                    <button type="button" class="avatar-emoji-btn" data-emoji="🐱">🐱</button>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:14px;">
+                    <button type="button" class="start-btn" id="avatar-save-btn" style="flex:1;">
+                        CONFIRM &amp; SAVE ⚡
+                    </button>
+                    <button type="button" class="secondary-btn" id="avatar-cancel-btn" style="flex:1;">
+                        CANCEL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESET STATS CONFIRMATION MODAL -->
+    <div class="modal-overlay hidden" id="reset-stats-modal">
+        <div class="modal-card text-center">
+            <h2 class="glow-text">RESET CAREER STATS? ⚠️</h2>
+            <p class="modal-sub">This will permanently reset your match statistics, win streaks, and recorded games. Unlocked achievements remain intact.</p>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button type="button" id="reset-stats-confirm-btn" class="secondary-btn" style="flex:1; border-color:#ef4444; color:#ef4444;">YES, RESET</button>
+                <button type="button" id="reset-stats-cancel-btn" class="start-btn" style="flex:1;">CANCEL</button>
             </div>
         </div>
     </div>

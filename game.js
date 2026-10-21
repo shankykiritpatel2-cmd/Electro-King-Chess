@@ -273,19 +273,100 @@ let currentTab = 'home'; // App starts on HOME!
 let arenaSubMode = '2p'; // '2p' or '4p'
 let lordProfile = {
     name: localStorage.getItem('electro_player_name') || 'Player',
-    avatar: '👑',
-    avatarUrl: '',
-    matches: 0,
-    wins: 0,
-    fourWins: 0,
-    puzzles: 0,
+    avatar: localStorage.getItem('electro_profile_avatar') || '👑',
+    avatarUrl: localStorage.getItem('electro_profile_avatar_url') || '',
+    matches: parseInt(localStorage.getItem('electro_stat_matches') || '0', 10),
+    wins: parseInt(localStorage.getItem('electro_stat_wins') || '0', 10),
+    losses: parseInt(localStorage.getItem('electro_stat_losses') || '0', 10),
+    draws: parseInt(localStorage.getItem('electro_stat_draws') || '0', 10),
+    currentStreak: parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10),
+    bestStreak: parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10),
+    rating: parseInt(localStorage.getItem('electro_player_rating') || '1200', 10),
+    fourWins: parseInt(localStorage.getItem('electro_stat_four_wins') || '0', 10),
+    puzzles: parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10),
     botRecords: {
-        1: { w: 0, l: 0 },
-        2: { w: 0, l: 0 },
-        3: { w: 0, l: 0 },
-        4: { w: 0, l: 0 }
+        1: { w: 0, l: 0, d: 0 },
+        2: { w: 0, l: 0, d: 0 },
+        3: { w: 0, l: 0, d: 0 },
+        4: { w: 0, l: 0, d: 0 }
     }
 };
+
+const BOT_INFO = {
+    1: { name: 'Sparky', title: 'Novice Bot', elo: 600, icon: '⚡' },
+    2: { name: 'CyberKnight', title: 'Tactician Bot', elo: 1200, icon: '🛡️' },
+    3: { name: 'VoltQueen', title: 'Master Bot', elo: 1700, icon: '👑' },
+    4: { name: 'ElectroKing', title: 'Grandmaster Bot', elo: 2200, icon: '🌌' }
+};
+
+function getRatingTitle(elo) {
+    if (elo >= 2000) return 'Electro Grandmaster 🌌';
+    if (elo >= 1600) return 'Volt Master 👑';
+    if (elo >= 1200) return 'Electro Knight 🛡️';
+    return 'Spark Novice ⚡';
+}
+
+function recordMatchHistory(opponent, result, moves) {
+    try {
+        let historyList = JSON.parse(localStorage.getItem('electro_game_history') || '[]');
+        const today = new Date();
+        const dateStr = today.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        historyList.unshift({
+            opponent: opponent || 'Opponent',
+            result: result || 'Completed',
+            moves: moves || 1,
+            date: dateStr,
+            mode: arenaSubMode === '4p' ? '4-Player Realm' : (gameMode === 'ai' ? 'vs Computer' : 'Pass & Play')
+        });
+        if (historyList.length > 20) historyList = historyList.slice(0, 20);
+        localStorage.setItem('electro_game_history', JSON.stringify(historyList));
+    } catch (e) {
+        console.error('Error saving game history:', e);
+    }
+}
+
+function onMatchConcluded(result, opponentName, moveCount) {
+    lordProfile.matches = (lordProfile.matches || 0) + 1;
+    if (result === 'win') {
+        lordProfile.wins = (lordProfile.wins || 0) + 1;
+        lordProfile.currentStreak = (lordProfile.currentStreak || 0) + 1;
+        if (lordProfile.currentStreak > (lordProfile.bestStreak || 0)) {
+            lordProfile.bestStreak = lordProfile.currentStreak;
+        }
+        lordProfile.rating = Math.max(400, (lordProfile.rating || 1200) + 16);
+        if (gameMode === 'ai') {
+            if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+            if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
+            lordProfile.botRecords[difficulty].w = (lordProfile.botRecords[difficulty].w || 0) + 1;
+        }
+        recordMatchHistory(opponentName, 'Victory', moveCount);
+        audio.victory();
+        triggerHaptic('victory');
+    } else if (result === 'loss') {
+        lordProfile.losses = (lordProfile.losses || 0) + 1;
+        lordProfile.currentStreak = 0;
+        lordProfile.rating = Math.max(400, (lordProfile.rating || 1200) - 16);
+        if (gameMode === 'ai') {
+            if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+            if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
+            lordProfile.botRecords[difficulty].l = (lordProfile.botRecords[difficulty].l || 0) + 1;
+        }
+        recordMatchHistory(opponentName, 'Defeat', moveCount);
+        audio.defeat();
+        triggerHaptic('check');
+    } else {
+        lordProfile.draws = (lordProfile.draws || 0) + 1;
+        if (gameMode === 'ai') {
+            if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+            if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
+            lordProfile.botRecords[difficulty].d = (lordProfile.botRecords[difficulty].d || 0) + 1;
+        }
+        recordMatchHistory(opponentName, 'Draw', moveCount);
+        triggerHaptic('move');
+    }
+    saveProfile();
+    checkAndUnlockAchievements();
+}
 
 // --- ELECTRO SETTINGS & HAPTIC ENGINE ---
 let initialTheme = localStorage.getItem('royal_chess_theme');
@@ -889,30 +970,14 @@ function execute2PlayerMove(from, to, promoPiece = null) {
             }, 650);
             
             if (winner === playerSide) {
-                lordProfile.wins++;
-                if (gameMode === 'ai') {
-                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
-                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
-                    lordProfile.botRecords[difficulty].w++;
-                }
-                audio.victory();
-                triggerHaptic('victory');
+                onMatchConcluded('win', playerNames[botSide || 'black'], history.length);
             } else {
-                if (gameMode === 'ai') {
-                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
-                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
-                    lordProfile.botRecords[difficulty].l++;
-                }
-                audio.defeat();
-                triggerHaptic('check');
+                onMatchConcluded('loss', playerNames[botSide || 'black'], history.length);
             }
         } else {
             showGameOverModal('Stalemate! The royal duel ends in a draw.', 'Draw');
-            triggerHaptic('move');
+            onMatchConcluded('draw', playerNames[botSide || 'black'], history.length);
         }
-        lordProfile.matches++;
-        saveProfile();
-        checkAndUnlockAchievements();
         return;
     }
     
@@ -1211,7 +1276,7 @@ function pauseGame() {
         aiMoveTimeout = null;
     }
     const banner = document.getElementById('turn-message');
-    if (banner && isMatchActive) {
+    if (banner && isMatchActive && (currentTab === 'arena' || currentTab === 'battle')) {
         banner.textContent = 'Match Paused ⏸️';
     }
 }
@@ -2183,11 +2248,16 @@ function switchTab(tabId) {
     if (targetNavBtn) targetNavBtn.classList.add('active');
     
     const headerSub = document.getElementById('header-mode-subtitle');
+    const banner = document.getElementById('turn-message');
+    const turnWidget = document.getElementById('turn-banner');
+    const turnDot = document.getElementById('turn-dot');
     
     if (tabId === 'home') {
-        if (headerSub) headerSub.textContent = 'Cyber Battle Setup';
+        if (headerSub) headerSub.textContent = 'Match Setup';
+        if (turnWidget) turnWidget.style.display = 'none';
         pauseGame();
     } else if (tabId === 'arena' || tabId === 'battle') {
+        if (turnWidget) turnWidget.style.display = 'flex';
         if (arenaSubMode === '2p') {
             if (headerSub) headerSub.textContent = '2-Player Arena';
             draw2PlayerBoard();
@@ -2199,13 +2269,17 @@ function switchTab(tabId) {
         }
         if (isMatchActive && !isGameOver) {
             resumeGame();
+        } else {
+            updateHUD();
         }
     } else if (tabId === 'puzzles') {
         if (headerSub) headerSub.textContent = 'Daily Tactics & Puzzles';
+        if (turnWidget) turnWidget.style.display = 'none';
         pauseGame();
         renderCurrentPuzzle();
     } else if (tabId === 'profile') {
         if (headerSub) headerSub.textContent = 'Player Profile & Stats';
+        if (turnWidget) turnWidget.style.display = 'none';
         pauseGame();
         updateProfileUI();
     }
@@ -2604,26 +2678,10 @@ function setupEventListeners() {
             const winnerName = playerNames[winnerColor];
             showGameOverModal(`${playerNames[turn]} resigned! ${winnerName} claims victory!`, winnerName);
             if (winnerColor === playerSide) {
-                lordProfile.wins++;
-                if (gameMode === 'ai') {
-                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
-                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
-                    lordProfile.botRecords[difficulty].w++;
-                }
-                audio.victory();
-                triggerHaptic('victory');
+                onMatchConcluded('win', playerNames[turn === 'white' ? 'black' : 'white'], history.length);
             } else {
-                if (gameMode === 'ai') {
-                    if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0} };
-                    if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0 };
-                    lordProfile.botRecords[difficulty].l++;
-                }
-                audio.defeat();
-                triggerHaptic('check');
+                onMatchConcluded('loss', playerNames[turn === 'white' ? 'black' : 'white'], history.length);
             }
-            lordProfile.matches++;
-            saveProfile();
-            checkAndUnlockAchievements();
         });
     }
     
@@ -2651,31 +2709,112 @@ function setupEventListeners() {
         });
     }
     
-    // Profile Android Widget Style Selector (Cooking Style)
+    // Android Home Screen Widget Customizer & Native Sync
     const widgetCard = document.getElementById('widget-preview-card');
+    const widgetTitleText = document.getElementById('wp-title-text');
     const widgetSubText = document.getElementById('wp-sub-text');
+    const widgetTitleInput = document.getElementById('widget-title-input');
+    const widgetSubInput = document.getElementById('widget-sub-input');
+    const widgetPresetChips = document.querySelectorAll('#widget-preset-chips .widget-preset-chip');
     const widgetStyleBtns = document.querySelectorAll('#widget-style-toggle-grid button');
-    
-    if (widgetStyleBtns.length > 0 && widgetCard) {
+    const widgetSaveBtn = document.getElementById('widget-save-btn');
+    const wpPlayBtn = document.getElementById('wp-play-btn');
+    const wp4pBtn = document.getElementById('wp-4p-btn');
+    const wpPuzzleBtn = document.getElementById('wp-puzzle-btn');
+
+    // Load saved widget settings
+    let savedWidgetTitle = localStorage.getItem('electro_widget_title') || 'ELECTRO KING ⚡';
+    let savedWidgetSub = localStorage.getItem('electro_widget_subtitle') || '⚡ Ready to Battle';
+    let savedWidgetStyle = localStorage.getItem('electro_widget_style') || 'cyber';
+
+    if (widgetTitleInput) widgetTitleInput.value = savedWidgetTitle;
+    if (widgetTitleText) widgetTitleText.textContent = savedWidgetTitle;
+    if (widgetSubInput) widgetSubInput.value = savedWidgetSub;
+    if (widgetSubText) widgetSubText.textContent = savedWidgetSub;
+    if (widgetCard) widgetCard.className = `widget-preview-item style-${savedWidgetStyle}`;
+
+    // Select active style button
+    if (widgetStyleBtns.length > 0) {
         widgetStyleBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                widgetStyleBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const style = btn.dataset.wstyle || 'cooking';
-                
-                widgetCard.className = `widget-preview-item style-${style}`;
-                if (widgetSubText) {
-                    if (style === 'cooking') widgetSubText.textContent = 'Cyber Chess 2.0 • Cooking 🔥';
-                    else if (style === 'cyber') widgetSubText.textContent = 'Cyber Chess 2.0 • Electric ⚡';
-                    else if (style === 'obsidian') widgetSubText.textContent = 'Cyber Chess 2.0 • Ice Obsidian 🌌';
-                    else if (style === 'gold') widgetSubText.textContent = 'Cyber Chess 2.0 • Voltage Gold 👑';
-                }
-                
-                showToast(`Widget style set to ${btn.querySelector('.theme-name')?.textContent || style}! 🔥`);
+            if (btn.dataset.wstyle === savedWidgetStyle) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+    }
+
+    // Live Title Input
+    if (widgetTitleInput) {
+        widgetTitleInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim() || 'ELECTRO KING ⚡';
+            if (widgetTitleText) widgetTitleText.textContent = val;
+        });
+    }
+
+    // Live Subtitle Input
+    if (widgetSubInput) {
+        widgetSubInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim() || '⚡ Ready to Battle';
+            if (widgetSubText) widgetSubText.textContent = val;
+            if (widgetPresetChips.length > 0) {
+                widgetPresetChips.forEach(chip => {
+                    chip.classList.toggle('active', chip.dataset.preset === e.target.value);
+                });
+            }
+        });
+    }
+
+    // Preset Chips
+    if (widgetPresetChips.length > 0) {
+        widgetPresetChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                widgetPresetChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                const preset = chip.dataset.preset;
+                if (widgetSubInput) widgetSubInput.value = preset;
+                if (widgetSubText) widgetSubText.textContent = preset;
                 triggerHaptic('move');
             });
         });
     }
+
+    // Style Selector Buttons
+    if (widgetStyleBtns.length > 0) {
+        widgetStyleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                widgetStyleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                savedWidgetStyle = btn.dataset.wstyle || 'cyber';
+                if (widgetCard) widgetCard.className = `widget-preview-item style-${savedWidgetStyle}`;
+                triggerHaptic('move');
+            });
+        });
+    }
+
+    // Save and Apply to Android Widgets
+    if (widgetSaveBtn) {
+        widgetSaveBtn.addEventListener('click', () => {
+            const title = (widgetTitleInput ? widgetTitleInput.value.trim() : '') || 'ELECTRO KING ⚡';
+            const subtitle = (widgetSubInput ? widgetSubInput.value.trim() : '') || '⚡ Ready to Battle';
+            const style = savedWidgetStyle || 'cyber';
+
+            localStorage.setItem('electro_widget_title', title);
+            localStorage.setItem('electro_widget_subtitle', subtitle);
+            localStorage.setItem('electro_widget_style', style);
+
+            if (window.AndroidBridge && typeof window.AndroidBridge.updateAndroidWidgets === 'function') {
+                window.AndroidBridge.updateAndroidWidgets(title, subtitle, style);
+            }
+            showToast('⚡ Widget Settings Saved! Applied to Preview.', 'success');
+            triggerHaptic('strike');
+        });
+    }
+
+    // Interactive Preview Buttons
+    if (wpPlayBtn) wpPlayBtn.addEventListener('click', () => switchTab('home'));
+    if (wp4pBtn) wp4pBtn.addEventListener('click', () => {
+        if (typeof start4PGame === 'function') start4PGame();
+        else { switchTab('arena'); switchArenaSubMode('4p'); }
+    });
+    if (wpPuzzleBtn) wpPuzzleBtn.addEventListener('click', () => switchTab('puzzles'));
     
     // Replay Stepper buttons
     const repStartBtn = document.getElementById('replay-start-btn');
@@ -2854,6 +2993,231 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Profile Avatar Picker Modal
+    const avatarPickerBtn = document.getElementById('avatar-picker-btn');
+    const editAvatarBtn = document.getElementById('edit-avatar-btn');
+    const avatarModal = document.getElementById('avatar-modal');
+    const avatarCloseBtn = document.getElementById('avatar-close-btn');
+    const avatarCancelBtn = document.getElementById('avatar-cancel-btn');
+    const avatarSaveBtn = document.getElementById('avatar-save-btn');
+    const modalUploadBtn = document.getElementById('modal-upload-btn');
+    const modalDefaultAvatarBtn = document.getElementById('modal-default-avatar-btn');
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    const modalPreviewEmoji = document.getElementById('modal-preview-emoji');
+    const modalPreviewImg = document.getElementById('modal-preview-img');
+    const modalPreviewLbl = document.getElementById('modal-preview-lbl');
+    const avatarEmojiBtns = document.querySelectorAll('.avatar-emoji-grid .avatar-emoji-btn');
+
+    let tempSelectedEmoji = lordProfile.avatar || '👑';
+    let tempSelectedImgUrl = lordProfile.avatarUrl || '';
+
+    function updateModalAvatarPreview(emoji, imgUrl) {
+        if (imgUrl) {
+            if (modalPreviewImg) {
+                modalPreviewImg.src = imgUrl;
+                modalPreviewImg.classList.remove('hidden');
+            }
+            if (modalPreviewEmoji) modalPreviewEmoji.classList.add('hidden');
+            if (modalPreviewLbl) modalPreviewLbl.textContent = 'Custom Photo Selected (Circular Crop)';
+        } else {
+            if (modalPreviewEmoji) {
+                modalPreviewEmoji.textContent = emoji || '👑';
+                modalPreviewEmoji.classList.remove('hidden');
+            }
+            if (modalPreviewImg) modalPreviewImg.classList.add('hidden');
+            if (modalPreviewLbl) modalPreviewLbl.textContent = 'Royal Icon Selected';
+        }
+    }
+
+    function openAvatarModal() {
+        tempSelectedEmoji = lordProfile.avatar || '👑';
+        tempSelectedImgUrl = lordProfile.avatarUrl || '';
+        updateModalAvatarPreview(tempSelectedEmoji, tempSelectedImgUrl);
+
+        avatarEmojiBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.emoji === tempSelectedEmoji && !tempSelectedImgUrl);
+        });
+
+        if (avatarModal) avatarModal.classList.remove('hidden');
+        triggerHaptic('move');
+    }
+
+    if (avatarPickerBtn) avatarPickerBtn.addEventListener('click', openAvatarModal);
+    if (editAvatarBtn) editAvatarBtn.addEventListener('click', openAvatarModal);
+
+    if (avatarCloseBtn) {
+        avatarCloseBtn.addEventListener('click', () => {
+            if (avatarModal) avatarModal.classList.add('hidden');
+        });
+    }
+
+    if (avatarCancelBtn) {
+        avatarCancelBtn.addEventListener('click', () => {
+            if (avatarModal) avatarModal.classList.add('hidden');
+        });
+    }
+
+    if (modalDefaultAvatarBtn) {
+        modalDefaultAvatarBtn.addEventListener('click', () => {
+            tempSelectedEmoji = '👑';
+            tempSelectedImgUrl = '';
+            avatarEmojiBtns.forEach(b => b.classList.toggle('active', b.dataset.emoji === '👑'));
+            updateModalAvatarPreview('👑', '');
+            showToast('Default royal avatar selected 👑');
+            triggerHaptic('move');
+        });
+    }
+
+    avatarEmojiBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            avatarEmojiBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tempSelectedEmoji = btn.dataset.emoji;
+            tempSelectedImgUrl = '';
+            updateModalAvatarPreview(tempSelectedEmoji, '');
+            triggerHaptic('move');
+        });
+    });
+
+    if (modalUploadBtn && avatarFileInput) {
+        modalUploadBtn.addEventListener('click', () => {
+            avatarFileInput.click();
+        });
+    }
+
+    function processProfileImage(file) {
+        if (!file) return;
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type) && !file.type.startsWith('image/')) {
+            showToast('⚠️ Please select a valid JPG, PNG, or WebP image.', 'error');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('⚠️ Image too large! Please choose an image under 5MB.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onerror = () => {
+            showToast('⚠️ Error reading image file.', 'error');
+        };
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onerror = () => {
+                showToast('⚠️ Invalid image file.', 'error');
+            };
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 256;
+                    canvas.height = 256;
+                    const ctx = canvas.getContext('2d');
+                    const minSide = Math.min(img.naturalWidth, img.naturalHeight);
+                    const sx = (img.naturalWidth - minSide) / 2;
+                    const sy = (img.naturalHeight - minSide) / 2;
+                    ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 256, 256);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                    
+                    tempSelectedImgUrl = dataUrl;
+                    avatarEmojiBtns.forEach(b => b.classList.remove('active'));
+                    updateModalAvatarPreview(tempSelectedEmoji, tempSelectedImgUrl);
+                    showToast('Photo loaded! Tap CONFIRM & SAVE to apply 📷', 'success');
+                } catch (err) {
+                    showToast('⚠️ Could not crop image.', 'error');
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (avatarFileInput) {
+        avatarFileInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+                processProfileImage(file);
+            }
+        });
+    }
+
+    if (avatarSaveBtn) {
+        avatarSaveBtn.addEventListener('click', () => {
+            lordProfile.avatar = tempSelectedEmoji;
+            lordProfile.avatarUrl = tempSelectedImgUrl;
+
+            localStorage.setItem('electro_profile_avatar', tempSelectedEmoji);
+            localStorage.setItem('electro_profile_avatar_url', tempSelectedImgUrl);
+
+            applyProfileAvatarUI();
+
+            if (avatarModal) avatarModal.classList.add('hidden');
+            showToast('Profile Picture Updated! 👑', 'success');
+            triggerHaptic('strike');
+        });
+    }
+
+    // Preferences & Reset Statistics Handlers
+    const orientSelect = document.getElementById('pref-orientation-select');
+    if (orientSelect) {
+        orientSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            isManualFlipped = val === 'black';
+            localStorage.setItem('electro_board_orientation', val);
+            draw2PlayerBoard();
+            showToast(isManualFlipped ? 'Board Flipped (Black View) 🔄' : 'Board Standard (White View) 🔄');
+            triggerHaptic('move');
+        });
+    }
+
+    const restoreDefaultsBtn = document.getElementById('pref-restore-defaults-btn');
+    if (restoreDefaultsBtn) {
+        restoreDefaultsBtn.addEventListener('click', () => {
+            applyTheme('cyber');
+            showToast('Default appearance restored: ⚡ Electro Theme', 'success');
+            triggerHaptic('move');
+        });
+    }
+
+    const resetStatsBtn = document.getElementById('pref-reset-stats-btn');
+    const resetStatsModal = document.getElementById('reset-stats-modal');
+    const resetConfirmBtn = document.getElementById('reset-stats-confirm-btn');
+    const resetCancelBtn = document.getElementById('reset-stats-cancel-btn');
+
+    if (resetStatsBtn && resetStatsModal) {
+        resetStatsBtn.addEventListener('click', () => {
+            resetStatsModal.classList.remove('hidden');
+            triggerHaptic('move');
+        });
+    }
+    if (resetCancelBtn && resetStatsModal) {
+        resetCancelBtn.addEventListener('click', () => {
+            resetStatsModal.classList.add('hidden');
+        });
+    }
+    if (resetConfirmBtn && resetStatsModal) {
+        resetConfirmBtn.addEventListener('click', () => {
+            lordProfile.matches = 0;
+            lordProfile.wins = 0;
+            lordProfile.losses = 0;
+            lordProfile.draws = 0;
+            lordProfile.currentStreak = 0;
+            lordProfile.bestStreak = 0;
+            lordProfile.rating = 1200;
+            lordProfile.fourWins = 0;
+            lordProfile.botRecords = {
+                1: { w: 0, l: 0, d: 0 },
+                2: { w: 0, l: 0, d: 0 },
+                3: { w: 0, l: 0, d: 0 },
+                4: { w: 0, l: 0, d: 0 }
+            };
+            localStorage.removeItem('electro_game_history');
+            saveProfile();
+            resetStatsModal.classList.add('hidden');
+            showToast('Career statistics reset successfully.', 'info');
+            triggerHaptic('strike');
+        });
+    }
     
     const gameoverHomeBtn = document.getElementById('gameover-home-btn');
     const restartBtn = document.getElementById('gameover-restart-btn');
@@ -3006,61 +3370,58 @@ const ROYAL_ACHIEVEMENTS = [
     {
         id: 'first_win',
         icon: '⚡',
-        title: 'First Circuit',
+        title: 'First Victory',
         desc: 'Claim your first Classic victory',
         check: (p) => (p.wins || 0) >= 1
+    },
+    {
+        id: 'five_played',
+        icon: '⚔️',
+        title: 'Five Games Played',
+        desc: 'Complete 5 recorded chess matches',
+        check: (p) => (p.matches || 0) >= 5
+    },
+    {
+        id: 'ten_wins',
+        icon: '🏆',
+        title: 'Ten Victories',
+        desc: 'Achieve 10 total match victories',
+        check: (p) => ((p.wins || 0) + (p.fourWins || 0)) >= 10
+    },
+    {
+        id: 'winning_streak',
+        icon: '🔥',
+        title: 'Winning Streak',
+        desc: 'Win 3 consecutive matches in a row',
+        check: (p) => (p.bestStreak || 0) >= 3 || (p.currentStreak || 0) >= 3
     },
     {
         id: 'knight_slayer',
         icon: '🛡️',
         title: 'Knight Offline',
         desc: 'Defeat CyberKnight (~1200 Elo)',
-        check: (p) => (p.botRecords && p.botRecords[2] && p.botRecords[2].w >= 1)
-    },
-    {
-        id: 'queen_tamer',
-        icon: '👑',
-        title: 'Volt Discharged',
-        desc: 'Defeat VoltQueen (~1700 Elo)',
-        check: (p) => (p.botRecords && p.botRecords[3] && p.botRecords[3].w >= 1)
+        check: (p) => Boolean(p.botRecords && p.botRecords[2] && p.botRecords[2].w >= 1)
     },
     {
         id: 'king_subdued',
         icon: '🌌',
         title: 'Electro Overload',
         desc: 'Defeat ElectroKing (~2200 Elo)',
-        check: (p) => (p.botRecords && p.botRecords[4] && p.botRecords[4].w >= 1)
+        check: (p) => Boolean(p.botRecords && p.botRecords[4] && p.botRecords[4].w >= 1)
     },
     {
         id: 'realm_conqueror',
-        icon: '🏆',
+        icon: '👑',
         title: 'Grid Conqueror',
-        desc: 'Conquer the 4-Player Battle',
+        desc: 'Conquer a 4-Player Battle match',
         check: (p) => (p.fourWins || 0) >= 1
     },
     {
         id: 'puzzle_master',
         icon: '🧩',
-        title: 'Neural Tactician',
-        desc: 'Solve 5 Daily Chess Puzzles',
+        title: 'Puzzle Solver',
+        desc: 'Solve 5 Daily Chess Tactics puzzles',
         check: (p) => (p.puzzles || 0) >= 5
-    },
-    {
-        id: 'streak_3',
-        icon: '🔥',
-        title: 'Overcharge Flame',
-        desc: 'Maintain a 3-Day Puzzle Streak',
-        check: (p) => {
-            const s = getPuzzleStreakData();
-            return (s.streak || 0) >= 3;
-        }
-    },
-    {
-        id: 'grand_sovereign',
-        icon: '⚡',
-        title: 'Cyber Sovereign',
-        desc: 'Achieve 10 total victories',
-        check: (p) => ((p.wins || 0) + (p.fourWins || 0)) >= 10
     }
 ];
 
@@ -3070,23 +3431,88 @@ function checkAndUnlockAchievements() {
 
 function renderAchievements() {
     const grid = document.getElementById('achievements-grid');
+    const countEl = document.getElementById('achievements-count');
     if (!grid) return;
     grid.innerHTML = '';
     
+    let unlockedCount = 0;
     ROYAL_ACHIEVEMENTS.forEach(ach => {
-        const isUnlocked = ach.check(lordProfile);
+        const isUnlocked = Boolean(ach.check(lordProfile));
+        if (isUnlocked) unlockedCount++;
         const card = document.createElement('div');
         card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
         card.innerHTML = `
-            <span class="ach-icon">${ach.icon}</span>
-            <div class="ach-info">
-                <span class="ach-title">${ach.title}</span>
-                <span class="ach-desc">${ach.desc}</span>
+            <div class="ach-card-top">
+                <div class="ach-title-group">
+                    <span class="ach-icon">${ach.icon}</span>
+                    <span class="ach-title">${ach.title}</span>
+                </div>
+                <span class="ach-badge ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? '⚡ Unlocked' : '🔒 Locked'}</span>
             </div>
-            <span class="ach-badge ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? 'Unlocked' : 'Locked'}</span>
+            <span class="ach-desc">${ach.desc}</span>
         `;
         grid.appendChild(card);
     });
+
+    if (countEl) countEl.textContent = `${unlockedCount} / ${ROYAL_ACHIEVEMENTS.length} Unlocked`;
+}
+
+function renderGameHistoryUI() {
+    const listEl = document.getElementById('profile-history-list');
+    if (!listEl) return;
+    try {
+        const games = JSON.parse(localStorage.getItem('electro_game_history') || '[]');
+        if (games.length === 0) {
+            listEl.innerHTML = `
+                <div class="history-empty-state" id="history-empty-state">
+                    <span>⚔️ No recorded games yet. Play a match to build your history!</span>
+                </div>
+            `;
+            return;
+        }
+        listEl.innerHTML = '';
+        games.slice(0, 10).forEach(g => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            const badgeClass = g.result === 'Victory' ? 'win' : (g.result === 'Defeat' ? 'loss' : 'draw');
+            item.innerHTML = `
+                <div class="history-item-left">
+                    <span class="history-item-title">${g.opponent}</span>
+                    <span class="history-item-meta">${g.date} • ${g.mode} • ${g.moves} moves</span>
+                </div>
+                <span class="history-result-badge ${badgeClass}">${g.result}</span>
+            `;
+            listEl.appendChild(item);
+        });
+    } catch (e) {
+        console.error('Error rendering history:', e);
+    }
+}
+
+function applyProfileAvatarUI() {
+    const profEmoji = document.getElementById('profile-avatar');
+    const profImg = document.getElementById('profile-avatar-img');
+    const myMatchAvatar = document.getElementById('bottom-player-avatar');
+
+    if (lordProfile.avatarUrl) {
+        if (profImg) {
+            profImg.src = lordProfile.avatarUrl;
+            profImg.classList.remove('hidden');
+        }
+        if (profEmoji) profEmoji.classList.add('hidden');
+        if (myMatchAvatar) {
+            myMatchAvatar.innerHTML = `<img src="${lordProfile.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        }
+    } else {
+        if (profImg) profImg.classList.add('hidden');
+        if (profEmoji) {
+            profEmoji.textContent = lordProfile.avatar || '👑';
+            profEmoji.classList.remove('hidden');
+        }
+        if (myMatchAvatar) {
+            myMatchAvatar.textContent = lordProfile.avatar || '👑';
+        }
+    }
 }
 
 function loadProfile() {
@@ -3094,8 +3520,20 @@ function loadProfile() {
     if (savedName && savedName !== 'Lord Sovereign') {
         lordProfile.name = savedName;
     } else {
-        lordProfile.name = 'Player';
+        lordProfile.name = 'Viaan';
     }
+    
+    lordProfile.avatar = localStorage.getItem('electro_profile_avatar') || '👑';
+    lordProfile.avatarUrl = localStorage.getItem('electro_profile_avatar_url') || '';
+    lordProfile.matches = parseInt(localStorage.getItem('electro_stat_matches') || '0', 10);
+    lordProfile.wins = parseInt(localStorage.getItem('electro_stat_wins') || '0', 10);
+    lordProfile.losses = parseInt(localStorage.getItem('electro_stat_losses') || '0', 10);
+    lordProfile.draws = parseInt(localStorage.getItem('electro_stat_draws') || '0', 10);
+    lordProfile.currentStreak = parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10);
+    lordProfile.bestStreak = parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10);
+    lordProfile.rating = parseInt(localStorage.getItem('electro_player_rating') || '1200', 10);
+    lordProfile.fourWins = parseInt(localStorage.getItem('electro_stat_four_wins') || '0', 10);
+    lordProfile.puzzles = parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10);
     
     try {
         const savedRecs = localStorage.getItem('royal_bot_records');
@@ -3103,6 +3541,13 @@ function loadProfile() {
             lordProfile.botRecords = JSON.parse(savedRecs);
         }
     } catch (e) {}
+
+    const orientSelect = document.getElementById('pref-orientation-select');
+    if (orientSelect) {
+        const savedOrient = localStorage.getItem('electro_board_orientation') || 'white';
+        orientSelect.value = savedOrient;
+        isManualFlipped = savedOrient === 'black';
+    }
     
     const homeInput = document.getElementById('home-player-name');
     const fourInput = document.getElementById('home-4p-player-name');
@@ -3122,6 +3567,21 @@ function saveProfile() {
         localStorage.setItem('royal_player_name', lordProfile.name);
         localStorage.setItem('electro_player_name', lordProfile.name);
     }
+    if (lordProfile.avatar) {
+        localStorage.setItem('electro_profile_avatar', lordProfile.avatar);
+    }
+    if (lordProfile.avatarUrl !== undefined) {
+        localStorage.setItem('electro_profile_avatar_url', lordProfile.avatarUrl);
+    }
+    localStorage.setItem('electro_stat_matches', String(lordProfile.matches || 0));
+    localStorage.setItem('electro_stat_wins', String(lordProfile.wins || 0));
+    localStorage.setItem('electro_stat_losses', String(lordProfile.losses || 0));
+    localStorage.setItem('electro_stat_draws', String(lordProfile.draws || 0));
+    localStorage.setItem('electro_stat_current_streak', String(lordProfile.currentStreak || 0));
+    localStorage.setItem('electro_stat_best_streak', String(lordProfile.bestStreak || 0));
+    localStorage.setItem('electro_player_rating', String(lordProfile.rating || 1200));
+    localStorage.setItem('electro_stat_four_wins', String(lordProfile.fourWins || 0));
+    
     if (lordProfile.botRecords) {
         localStorage.setItem('royal_bot_records', JSON.stringify(lordProfile.botRecords));
     }
@@ -3129,32 +3589,52 @@ function saveProfile() {
 }
 
 function updateProfileUI() {
+    applyProfileAvatarUI();
     const pName = document.getElementById('profile-name');
+    const pRating = document.getElementById('player-rating-badge');
     const statMatches = document.getElementById('stat-matches');
     const statWins = document.getElementById('stat-wins');
+    const statLosses = document.getElementById('stat-losses');
+    const statDraws = document.getElementById('stat-draws');
     const statWinrate = document.getElementById('stat-winrate');
+    const statCurrentStreak = document.getElementById('stat-current-streak');
+    const statBestStreak = document.getElementById('stat-best-streak');
     const statFourWins = document.getElementById('stat-four-wins');
+    const botDefeatedCount = document.getElementById('bot-total-defeated');
     
     if (pName) pName.textContent = lordProfile.name;
-    if (statMatches) statMatches.textContent = lordProfile.matches;
-    if (statWins) statWins.textContent = lordProfile.wins;
-    if (statWinrate) {
-        const rate = lordProfile.matches > 0 ? Math.round((lordProfile.wins / lordProfile.matches) * 100) : 0;
-        statWinrate.textContent = `${rate}%`;
+    if (pRating) {
+        const r = lordProfile.rating || 1200;
+        pRating.textContent = `⚡ ${r} Elo • ${getRatingTitle(r)}`;
     }
-    if (statFourWins) statFourWins.textContent = lordProfile.fourWins;
+    if (statMatches) statMatches.textContent = lordProfile.matches || 0;
+    if (statWins) statWins.textContent = lordProfile.wins || 0;
+    if (statLosses) statLosses.textContent = lordProfile.losses || 0;
+    if (statDraws) statDraws.textContent = lordProfile.draws || 0;
+    if (statWinrate) {
+        const m = lordProfile.matches || 0;
+        const w = lordProfile.wins || 0;
+        statWinrate.textContent = m > 0 ? `${Math.round((w / m) * 100)}%` : '0%';
+    }
+    if (statCurrentStreak) statCurrentStreak.textContent = lordProfile.currentStreak || 0;
+    if (statBestStreak) statBestStreak.textContent = lordProfile.bestStreak || 0;
+    if (statFourWins) statFourWins.textContent = lordProfile.fourWins || 0;
     
-    // Opponent Knights Head-to-Head Records
+    // Opponent Computer Records
+    let totalBotsDefeated = 0;
     if (lordProfile.botRecords) {
         for (let d = 1; d <= 4; d++) {
             const el = document.getElementById(`rec-bot-${d}`);
             if (el && lordProfile.botRecords[d]) {
                 const rec = lordProfile.botRecords[d];
-                el.textContent = `${rec.w || 0}W - ${rec.l || 0}L`;
+                el.textContent = `${rec.w || 0}W - ${rec.l || 0}L - ${rec.d || 0}D`;
+                if ((rec.w || 0) > 0) totalBotsDefeated++;
             }
         }
     }
-    
+    if (botDefeatedCount) botDefeatedCount.textContent = `${totalBotsDefeated} / 4 Defeated`;
+
+    renderGameHistoryUI();
     renderAchievements();
 }
 
@@ -3185,6 +3665,14 @@ window.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     init2PlayerBoard();
     initFourPlayerBoard();
+    
+    // Sync widgets to native Android with official Electro King branding
+    if (window.AndroidBridge && typeof window.AndroidBridge.updateAndroidWidgets === 'function') {
+        const title = localStorage.getItem('electro_widget_title') || 'ELECTRO KING ⚡';
+        const subtitle = localStorage.getItem('electro_widget_subtitle') || '⚡ Ready to Battle';
+        const style = localStorage.getItem('electro_widget_style') || 'cyber';
+        window.AndroidBridge.updateAndroidWidgets(title, subtitle, style);
+    }
     
     // Open HOME SCREEN FIRST on launch!
     switchTab('home');
