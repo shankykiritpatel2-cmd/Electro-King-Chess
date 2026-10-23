@@ -43,15 +43,6 @@
                         <p class="home-subtext">Configure your battle rules and engage</p>
                     </div>
 
-                    <!-- GAME VARIATION SELECTOR (2P vs 4P) -->
-                    <div class="home-card-section">
-                        <label class="setup-label">⚡ Game Mode</label>
-                        <div class="mode-toggle-group">
-                            <button type="button" class="mode-btn active" id="home-cat-2p">⚡ Classic 2-Player</button>
-                            <button type="button" class="mode-btn" id="home-cat-4p">⚔️ 4-Player Battle</button>
-                        </div>
-                    </div>
-
                     <!-- 2-PLAYER SETTINGS CONTAINER -->
                     <div id="home-2p-group">
                         <!-- PLAY MODE -->
@@ -164,50 +155,6 @@
                         </div>
                     </div>
 
-                    <!-- 4-PLAYER SETTINGS CONTAINER -->
-                    <div id="home-4p-group" class="hidden">
-                        <div class="home-card-section">
-                            <label class="setup-label">⚔️ 4-Player Battle Mode</label>
-                            <div class="mode-toggle-group">
-                                <button type="button" class="mode-btn active" id="home-4p-ai-btn">🤖 vs 3 Bots</button>
-                                <button type="button" class="mode-btn" id="home-4p-pass-btn">👥 Pass & Play</button>
-                            </div>
-                        </div>
-
-                        <!-- 4P vs 3 Bots Single Name Section -->
-                        <div class="home-card-section" id="home-4p-ai-name-section">
-                            <label class="setup-label" for="home-4p-player-name">🔴 Your Name (South Red)</label>
-                            <input type="text" id="home-4p-player-name" class="setup-input" placeholder="Enter your name">
-                        </div>
-
-                        <!-- 4P Pass & Play 4-Player Names Grid -->
-                        <div class="home-card-section hidden" id="home-4p-pass-names-section">
-                            <label class="setup-label">👥 4-Player Names</label>
-                            <div class="name-grid-4p">
-                                <div>
-                                    <label class="setup-sub-label" for="home-4p-name-red">🔴 Red (South)</label>
-                                    <input type="text" id="home-4p-name-red" class="setup-input" placeholder="Player 1">
-                                </div>
-                                <div>
-                                    <label class="setup-sub-label" for="home-4p-name-blue">🔵 Blue (West)</label>
-                                    <input type="text" id="home-4p-name-blue" class="setup-input" placeholder="Player 2">
-                                </div>
-                                <div>
-                                    <label class="setup-sub-label" for="home-4p-name-gold">🟡 Gold (North)</label>
-                                    <input type="text" id="home-4p-name-gold" class="setup-input" placeholder="Player 3">
-                                </div>
-                                <div>
-                                    <label class="setup-sub-label" for="home-4p-name-green">🟢 Green (East)</label>
-                                    <input type="text" id="home-4p-name-green" class="setup-input" placeholder="Player 4">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="rules-scroll-content" style="margin-top:6px;">
-                            <p>👑 <strong>4-Player Chess</strong>: 14x14 cross board with Red (South), Blue (West), Gold (North), Green (East). Last surviving player wins!</p>
-                        </div>
-                    </div>
-
                     <div class="home-action-row">
                         <button id="home-start-btn" class="start-btn">START BATTLE ⚔️</button>
                     </div>
@@ -295,67 +242,6 @@
                             <span class="clock-icon">⏳</span>
                             <span class="clock-time" id="time-white">∞</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- 4-PLAYER BATTLE VIEW -->
-                <div class="arena-view-wrapper hidden" id="view-4player-arena">
-                    <!-- 4 ARMIES STATUS CARDS GRID -->
-                    <div class="four-kingdoms-hud-grid">
-                        <div class="kingdom-card red-kingdom active-turn" id="hud-k-red">
-                            <div class="k-crest-badge red">🔴</div>
-                            <div class="k-details">
-                                <span class="k-name" id="k-name-red">Red Commander</span>
-                                <span class="k-status" id="k-status-red">16 Pieces</span>
-                            </div>
-                        </div>
-                        <div class="kingdom-card blue-kingdom" id="hud-k-blue">
-                            <div class="k-crest-badge blue">🔵</div>
-                            <div class="k-details">
-                                <span class="k-name" id="k-name-blue">Blue Voltage</span>
-                                <span class="k-status" id="k-status-blue">16 Pieces</span>
-                            </div>
-                        </div>
-                        <div class="kingdom-card gold-kingdom" id="hud-k-gold">
-                            <div class="k-crest-badge gold">🟡</div>
-                            <div class="k-details">
-                                <span class="k-name" id="k-name-gold">Gold Spark</span>
-                                <span class="k-status" id="k-status-gold">16 Pieces</span>
-                            </div>
-                        </div>
-                        <div class="kingdom-card green-kingdom" id="hud-k-green">
-                            <div class="k-crest-badge green">🟢</div>
-                            <div class="k-details">
-                                <span class="k-name" id="k-name-green">Green Pulse</span>
-                                <span class="k-status" id="k-status-green">16 Pieces</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TURN INDICATOR BANNER -->
-                    <div class="four-turn-banner red" id="four-turn-banner">
-                        <span class="four-turn-dot" id="four-turn-dot"></span>
-                        <span class="four-turn-text" id="four-turn-text">🔴 Red's Turn (South)</span>
-                    </div>
-
-                    <!-- 14x14 FOUR KINGDOMS CHESSBOARD -->
-                    <div class="four-board-outer-wrapper">
-                        <div class="four-board-frame turn-red" id="four-board-frame">
-                            <div class="four-board" id="four-chessboard">
-                                <!-- 14x14 grid dynamically rendered -->
-                            </div>
-                            <canvas id="four-fx-canvas" class="fx-canvas"></canvas>
-                            <div class="four-elimination-banner hidden" id="four-elim-banner">
-                                <span class="elim-icon">💀</span>
-                                <span class="elim-text" id="four-elim-text">Blue Has Fallen!</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4-PLAYER ACTIONS WIDGET -->
-                    <div class="four-quick-actions-widget">
-                        <button id="four-reset-btn" class="secondary-btn btn-sm">🔄 Reset Match</button>
-                        <button id="four-rules-btn" class="secondary-btn btn-sm">📜 Rules</button>
                     </div>
                 </div>
 
@@ -491,8 +377,8 @@
                                 <span class="stat-lbl">Best Streak</span>
                             </div>
                             <div class="stat-card">
-                                <span class="stat-num" id="stat-four-wins">0</span>
-                                <span class="stat-lbl">4-Player Crowns 👑</span>
+                                <span class="stat-num" id="stat-puzzles">0</span>
+                                <span class="stat-lbl">Tactics Solved 🧩</span>
                             </div>
                         </div>
                     </div>
@@ -568,9 +454,8 @@
                                     </div>
                                 </div>
                                 <div class="wp-action-btns">
-                                    <button type="button" class="wp-play-btn" id="wp-play-btn">⚡ 2P</button>
-                                    <button type="button" class="wp-btn-sec" id="wp-4p-btn">⚔️ 4P</button>
-                                    <button type="button" class="wp-btn-sec" id="wp-puzzle-btn">🧩</button>
+                                    <button type="button" class="wp-play-btn" id="wp-play-btn">⚡ Play</button>
+                                    <button type="button" class="wp-btn-sec" id="wp-puzzle-btn">🧩 Tactics</button>
                                 </div>
                             </div>
                         </div>
@@ -716,78 +601,6 @@
         </nav>
     </div>
 
-    <!-- 4-PLAYER RULES MODAL -->
-    <div class="modal-overlay hidden" id="four-rules-modal">
-        <div class="modal-card">
-            <button type="button" class="modal-close-btn" id="four-rules-close-btn">&times;</button>
-            <h2 class="glow-text">📜 4-PLAYER RULES</h2>
-            <div class="rules-scroll-content">
-                <p><strong>1. Turn Order:</strong> Red (South) ➡️ Blue (West) ➡️ Gold (North) ➡️ Green (East).</p>
-                <p><strong>2. Board Geometry:</strong> 14x14 cross board with the 4 corner 3x3 areas removed.</p>
-                <p><strong>3. Pawn Movement:</strong> Pawns march forward relative to kingdom orientation and capture diagonally forward. Pawns promote to Queens upon crossing the center into rank 8 from spawn.</p>
-                <p><strong>4. Elimination:</strong> When an army's King is captured, that army is eliminated.</p>
-                <p><strong>5. Victory:</strong> The last surviving player wins!</p>
-            </div>
-            <button type="button" class="start-btn" id="four-rules-ok-btn">UNDERSTOOD ⚡</button>
-        </div>
-    </div>
-
-    <!-- 4-PLAYER DEFEAT DIALOG OVERLAY -->
-    <div class="modal-overlay hidden" id="four-defeat-modal">
-        <div class="modal-card text-center">
-            <h2 class="glow-text">YOU HAVE BEEN ELIMINATED ⚔️</h2>
-            <p class="gameover-desc" id="four-defeat-msg">You were eliminated from the 4-Player match.</p>
-            <div class="gameover-stats">
-                <p>Status: <span style="color:#ef4444; font-weight:bold;">Defeated</span></p>
-            </div>
-            <div style="display:flex; gap:8px; margin-top:14px;">
-                <button id="four-defeat-home-btn" class="secondary-btn" style="flex:1;">🏠 RETURN HOME</button>
-                <button id="four-defeat-restart-btn" class="start-btn" style="flex:1;">⚔️ NEW GAME</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4-PLAYER VICTORY PODIUM MODAL -->
-    <div class="modal-overlay hidden" id="four-podium-modal">
-        <div class="modal-card text-center podium-modal-card">
-            <h2 class="glow-text">MATCH CONCLUDED! 👑</h2>
-            <p class="modal-sub" id="four-podium-sub">The 4-Player battle has concluded.</p>
-            
-            <div class="podium-container">
-                <!-- 1st Place (Conqueror) -->
-                <div class="podium-champion-card" id="podium-pos-1">
-                    <span class="podium-crown-icon">👑</span>
-                    <div class="podium-crest-large" id="podium-crest-1">🔴</div>
-                    <span class="podium-champ-name" id="podium-name-1">Red Commander</span>
-                    <span class="podium-badge gold">🥇 1st Place • Match Winner</span>
-                </div>
-                
-                <!-- Runners Up 2nd, 3rd, 4th -->
-                <div class="podium-runners-grid">
-                    <div class="podium-runner-card" id="podium-pos-2">
-                        <span class="runner-rank silver">🥈 2nd</span>
-                        <div class="podium-crest-mini" id="podium-crest-2">🔵</div>
-                        <span class="runner-name" id="podium-name-2">Blue Voltage</span>
-                    </div>
-                    <div class="podium-runner-card" id="podium-pos-3">
-                        <span class="runner-rank bronze">🥉 3rd</span>
-                        <div class="podium-crest-mini" id="podium-crest-3">🟡</div>
-                        <span class="runner-name" id="podium-name-3">Gold Spark</span>
-                    </div>
-                    <div class="podium-runner-card" id="podium-pos-4">
-                        <span class="runner-rank fallen">💀 4th</span>
-                        <div class="podium-crest-mini" id="podium-crest-4">🟢</div>
-                        <span class="runner-name" id="podium-name-4">Green Pulse</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display:flex; gap:8px; margin-top:16px;">
-                <button type="button" id="podium-restart-btn" class="start-btn" style="flex:1;">⚔️ NEW BATTLE</button>
-                <button type="button" id="podium-home-btn" class="secondary-btn" style="flex:1;">🏠 HOME</button>
-            </div>
-        </div>
-    </div>
 
     <!-- PAWN PROMOTION DIALOG OVERLAY -->
     <div class="modal-overlay hidden" id="promotion-modal">

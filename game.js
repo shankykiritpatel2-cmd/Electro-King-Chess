@@ -1,6 +1,6 @@
 // =========================================================
-// ELECTRO KING 👑 - CASTLE REALM EDITION
-// Royal Medieval Chess & Four Kingdoms Engine
+// ELECTRO KING 👑 - OFFICIAL EDITION
+// Professional Chess & Tactics Engine
 // =========================================================
 
 // --- ROYAL GOLD PARTICLE & LIGHTNING FX SYSTEM ---
@@ -147,7 +147,6 @@ class CastleFX {
 }
 
 let fx2p = null;
-let fx4p = null;
 
 // --- AUDIO SYNTHESIS SYSTEM ---
 class CastleAudio {
@@ -270,7 +269,6 @@ function getPieceSvg(color, type) {
 
 // --- GLOBAL STATE ---
 let currentTab = 'home'; // App starts on HOME!
-let arenaSubMode = '2p'; // '2p' or '4p'
 let lordProfile = {
     name: localStorage.getItem('electro_player_name') || 'Player',
     avatar: localStorage.getItem('electro_profile_avatar') || '👑',
@@ -282,7 +280,6 @@ let lordProfile = {
     currentStreak: parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10),
     bestStreak: parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10),
     rating: parseInt(localStorage.getItem('electro_player_rating') || '1200', 10),
-    fourWins: parseInt(localStorage.getItem('electro_stat_four_wins') || '0', 10),
     puzzles: parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10),
     botRecords: {
         1: { w: 0, l: 0, d: 0 },
@@ -316,7 +313,7 @@ function recordMatchHistory(opponent, result, moves) {
             result: result || 'Completed',
             moves: moves || 1,
             date: dateStr,
-            mode: arenaSubMode === '4p' ? '4-Player Realm' : (gameMode === 'ai' ? 'vs Computer' : 'Pass & Play')
+            mode: gameMode === 'ai' ? 'vs Computer' : 'Pass & Play'
         });
         if (historyList.length > 20) historyList = historyList.slice(0, 20);
         localStorage.setItem('electro_game_history', JSON.stringify(historyList));
@@ -446,29 +443,6 @@ const BOT_PERSONALITIES = {
     3: { name: 'VoltQueen 👑', rating: '~1700 Elo', icon: '👑' },
     4: { name: 'ElectroKing 🌌', rating: '~2200 Elo', icon: '🌌' }
 };
-
-// 4-Player Realm State
-const FOUR_KINGDOMS = ['red', 'blue', 'gold', 'green'];
-const FOUR_KINGDOM_NAMES = {
-    red: 'Red Commander',
-    blue: 'Blue Voltage',
-    gold: 'Gold Spark',
-    green: 'Green Pulse'
-};
-let fourBoard = [];
-let fourTurn = 'red';
-let fourSelected = null;
-let fourLastMove = null;
-let fourArmies = {
-    red: { alive: true, count: 16 },
-    blue: { alive: true, count: 16 },
-    gold: { alive: true, count: 16 },
-    green: { alive: true, count: 16 }
-};
-let fourMode = 'ai'; // 'ai', 'pass'
-let isHumanDefeated4P = false;
-let isFourMatchActive = false;
-let fourEliminationOrder = [];
 
 // Puzzles & Openings State
 let currentPuzzleIdx = 0;
@@ -1363,529 +1337,7 @@ function showGameOverModal(msg, victor = 'Player') {
 }
 
 // =========================================================
-// 4. 14x14 FOUR KINGDOMS CHESS ENGINE & BOARD
-// =========================================================
-
-function isVoidSquare(r, c) {
-    if (r < 3 && c < 3) return true;
-    if (r < 3 && c > 10) return true;
-    if (r > 10 && c < 3) return true;
-    if (r > 10 && c > 10) return true;
-    return false;
-}
-
-function onFourBoard(r, c) {
-    return r >= 0 && r < 14 && c >= 0 && c < 14 && !isVoidSquare(r, c);
-}
-
-function initFourPlayerBoard() {
-    fourBoard = Array(14).fill(null).map(() => Array(14).fill(null));
-    fourTurn = 'red';
-    fourSelected = null;
-    fourLastMove = null;
-    isHumanDefeated4P = false;
-    isFourMatchActive = true;
-    fourEliminationOrder = [];
-    
-    const podiumModal = document.getElementById('four-podium-modal');
-    if (podiumModal) podiumModal.classList.add('hidden');
-    const elimBanner = document.getElementById('four-elim-banner');
-    if (elimBanner) elimBanner.classList.add('hidden');
-    
-    fourArmies = {
-        red: { alive: true, count: 16 },
-        blue: { alive: true, count: 16 },
-        gold: { alive: true, count: 16 },
-        green: { alive: true, count: 16 }
-    };
-    
-    const backPieces = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
-    const backPiecesMirror = ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'];
-    
-    // Red (South) - Rows 13 & 12, Columns 3..10
-    for (let c = 3; c <= 10; c++) {
-        fourBoard[12][c] = { type: 'p', color: 'red', dir: 'up', hasMoved: false };
-        fourBoard[13][c] = { type: backPieces[c - 3], color: 'red', hasMoved: false };
-    }
-    
-    // Gold (North) - Rows 0 & 1, Columns 3..10
-    for (let c = 3; c <= 10; c++) {
-        fourBoard[1][c] = { type: 'p', color: 'gold', dir: 'down', hasMoved: false };
-        fourBoard[0][c] = { type: backPieces[c - 3], color: 'gold', hasMoved: false };
-    }
-    
-    // Blue (West) - Columns 0 & 1, Rows 3..10
-    for (let r = 3; r <= 10; r++) {
-        fourBoard[r][1] = { type: 'p', color: 'blue', dir: 'right', hasMoved: false };
-        fourBoard[r][0] = { type: backPiecesMirror[r - 3], color: 'blue', hasMoved: false };
-    }
-    
-    // Green (East) - Columns 13 & 12, Rows 3..10
-    for (let r = 3; r <= 10; r++) {
-        fourBoard[r][12] = { type: 'p', color: 'green', dir: 'left', hasMoved: false };
-        fourBoard[r][13] = { type: backPiecesMirror[r - 3], color: 'green', hasMoved: false };
-    }
-    
-    updateFourHUD();
-    drawFourBoard();
-}
-
-function getFourMoves(r, c) {
-    const piece = fourBoard[r][c];
-    if (!piece) return [];
-    const moves = [];
-    const color = piece.color;
-    
-    if (piece.type === 'p') {
-        let dr = 0, dc = 0;
-        if (piece.dir === 'up') dr = -1;
-        else if (piece.dir === 'down') dr = 1;
-        else if (piece.dir === 'right') dc = 1;
-        else if (piece.dir === 'left') dc = -1;
-        
-        const nr = r + dr, nc = c + dc;
-        if (onFourBoard(nr, nc) && !fourBoard[nr][nc]) {
-            moves.push({ r: nr, c: nc });
-            if (!piece.hasMoved && onFourBoard(r + 2 * dr, c + 2 * dc) && !fourBoard[r + 2 * dr][c + 2 * dc]) {
-                moves.push({ r: r + 2 * dr, c: c + 2 * dc });
-            }
-        }
-        
-        let capDeltas = dr !== 0 ? [[dr, -1], [dr, 1]] : [[-1, dc], [1, dc]];
-        capDeltas.forEach(([cdr, cdc]) => {
-            const tr = r + cdr, tc = c + cdc;
-            if (onFourBoard(tr, tc) && fourBoard[tr][tc] && fourBoard[tr][tc].color !== color) {
-                moves.push({ r: tr, c: tc });
-            }
-        });
-    } else if (piece.type === 'n') {
-        const knightDeltas = [
-            [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-            [1, -2], [1, 2], [2, -1], [2, 1]
-        ];
-        knightDeltas.forEach(([dr, dc]) => {
-            const tr = r + dr, tc = c + dc;
-            if (onFourBoard(tr, tc) && (!fourBoard[tr][tc] || fourBoard[tr][tc].color !== color)) {
-                moves.push({ r: tr, c: tc });
-            }
-        });
-    } else if (piece.type === 'b') {
-        slideFourMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1]], moves, color);
-    } else if (piece.type === 'r') {
-        slideFourMoves(r, c, [[-1, 0], [1, 0], [0, -1], [0, 1]], moves, color);
-    } else if (piece.type === 'q') {
-        slideFourMoves(r, c, [[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]], moves, color);
-    } else if (piece.type === 'k') {
-        const kingDeltas = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1],           [0, 1],
-            [1, -1],  [1, 0],  [1, 1]
-        ];
-        kingDeltas.forEach(([dr, dc]) => {
-            const tr = r + dr, tc = c + dc;
-            if (onFourBoard(tr, tc) && (!fourBoard[tr][tc] || fourBoard[tr][tc].color !== color)) {
-                moves.push({ r: tr, c: tc });
-            }
-        });
-    }
-    
-    return moves;
-}
-
-function slideFourMoves(r, c, directions, moves, color) {
-    directions.forEach(([dr, dc]) => {
-        let tr = r + dr, tc = c + dc;
-        while (onFourBoard(tr, tc)) {
-            if (!fourBoard[tr][tc]) {
-                moves.push({ r: tr, c: tc });
-            } else {
-                if (fourBoard[tr][tc].color !== color) {
-                    moves.push({ r: tr, c: tc });
-                }
-                break;
-            }
-            tr += dr;
-            tc += dc;
-        }
-    });
-}
-
-function drawFourBoard() {
-    const el = document.getElementById('four-chessboard');
-    if (!el) return;
-    el.innerHTML = '';
-    
-    const selectedMoves = (fourSelected && (!isHumanDefeated4P || fourMode === 'pass')) ? getFourMoves(fourSelected.r, fourSelected.c) : [];
-    
-    for (let r = 0; r < 14; r++) {
-        for (let c = 0; c < 14; c++) {
-            const sq = document.createElement('div');
-            
-            if (isVoidSquare(r, c)) {
-                sq.className = 'four-square void-square';
-                el.appendChild(sq);
-                continue;
-            }
-            
-            const isLight = (r + c) % 2 === 0;
-            sq.className = `four-square ${isLight ? 'light' : 'dark'}`;
-            sq.dataset.r = r;
-            sq.dataset.c = c;
-            
-            if (fourSelected && fourSelected.r === r && fourSelected.c === c) {
-                sq.classList.add('selected');
-            }
-            if (fourLastMove && ((fourLastMove.from.r === r && fourLastMove.from.c === c) || (fourLastMove.to.r === r && fourLastMove.to.c === c))) {
-                sq.classList.add('last-move');
-            }
-            
-            const destMove = selectedMoves.find(m => m.r === r && m.c === c);
-            if (destMove) {
-                if (fourBoard[r][c]) {
-                    const ring = document.createElement('div');
-                    ring.className = 'capture-ring';
-                    sq.appendChild(ring);
-                } else {
-                    const dot = document.createElement('div');
-                    dot.className = 'move-dest-dot';
-                    sq.appendChild(dot);
-                }
-            }
-            
-            const piece = fourBoard[r][c];
-            if (piece) {
-                const pEl = document.createElement('div');
-                pEl.className = 'piece-svg animate-land';
-                pEl.innerHTML = getPieceSvg(piece.color, piece.type);
-                sq.appendChild(pEl);
-            }
-            
-            sq.addEventListener('click', () => handleFourSquareClick(r, c));
-            el.appendChild(sq);
-        }
-    }
-}
-
-function handleFourSquareClick(r, c) {
-    if (isGameOver || isGamePaused) return;
-    if (fourMode === 'ai') {
-        if (isHumanDefeated4P) return; // Human eliminated, prevent all moves!
-        if (fourTurn !== 'red') return; // Not human turn
-    }
-    
-    const clickedPiece = fourBoard[r][c];
-    
-    if (fourSelected) {
-        if (fourSelected.r === r && fourSelected.c === c) {
-            fourSelected = null;
-            drawFourBoard();
-            return;
-        }
-        
-        const legals = getFourMoves(fourSelected.r, fourSelected.c);
-        const chosen = legals.find(m => m.r === r && m.c === c);
-        
-        if (chosen) {
-            executeFourMove(fourSelected, chosen);
-            fourSelected = null;
-            return;
-        }
-        
-        if (clickedPiece && clickedPiece.color === fourTurn) {
-            fourSelected = { r, c };
-            drawFourBoard();
-            return;
-        }
-        
-        fourSelected = null;
-        drawFourBoard();
-    } else {
-        if (clickedPiece && clickedPiece.color === fourTurn) {
-            fourSelected = { r, c };
-            drawFourBoard();
-        }
-    }
-}
-
-function executeFourMove(from, to) {
-    const movingPiece = fourBoard[from.r][from.c];
-    if (!movingPiece) return;
-    
-    const targetPiece = fourBoard[to.r][to.c];
-    
-    // Sparkle FX on 4-Player board
-    const sqEl = document.querySelector(`.four-square[data-r="${to.r}"][data-c="${to.c}"]`);
-    if (sqEl && fx4p) {
-        const rect = sqEl.getBoundingClientRect();
-        const canvasRect = fx4p.canvas.getBoundingClientRect();
-        const px = rect.left - canvasRect.left + rect.width / 2;
-        const py = rect.top - canvasRect.top + rect.height / 2;
-        if (targetPiece) {
-            fx4p.shockwave(px, py, '#ef4444');
-        } else {
-            fx4p.spark(px, py, 12, '#d4af37');
-        }
-    }
-    
-    if (targetPiece) {
-        audio.capture();
-        fourArmies[targetPiece.color].count--;
-        if (targetPiece.type === 'k') {
-            eliminateKingdom(targetPiece.color);
-        }
-    } else {
-        audio.move();
-    }
-    
-    let finalPiece = { ...movingPiece, hasMoved: true };
-    if (movingPiece.type === 'p') {
-        if (movingPiece.dir === 'up' && to.r <= 5) finalPiece.type = 'q';
-        else if (movingPiece.dir === 'down' && to.r >= 8) finalPiece.type = 'q';
-        else if (movingPiece.dir === 'right' && to.c >= 8) finalPiece.type = 'q';
-        else if (movingPiece.dir === 'left' && to.c <= 5) finalPiece.type = 'q';
-    }
-    
-    fourBoard[to.r][to.c] = finalPiece;
-    fourBoard[from.r][from.c] = null;
-    fourLastMove = { from, to };
-    
-    advanceFourTurn();
-    updateFourHUD();
-    drawFourBoard();
-    
-    const aliveKingdoms = FOUR_KINGDOMS.filter(k => fourArmies[k].alive);
-    if (aliveKingdoms.length === 1) {
-        showFourPodiumModal(aliveKingdoms[0]);
-        return;
-    }
-    
-    if (fourMode === 'ai' && fourTurn !== 'red' && !isGameOver) {
-        setTimeout(makeFourAIMove, 450);
-    }
-}
-
-function advanceFourTurn() {
-    let curIdx = FOUR_KINGDOMS.indexOf(fourTurn);
-    for (let i = 1; i <= 4; i++) {
-        const nextIdx = (curIdx + i) % 4;
-        const nextK = FOUR_KINGDOMS[nextIdx];
-        if (fourArmies[nextK].alive) {
-            fourTurn = nextK;
-            break;
-        }
-    }
-}
-
-function eliminateKingdom(color) {
-    fourArmies[color].alive = false;
-    if (!fourEliminationOrder.includes(color)) {
-        fourEliminationOrder.push(color);
-    }
-    
-    // Dynamic floating elimination banner
-    const elimBanner = document.getElementById('four-elim-banner');
-    const elimText = document.getElementById('four-elim-text');
-    if (elimBanner && elimText) {
-        elimText.textContent = `💀 ${FOUR_KINGDOM_NAMES[color]} Has Fallen!`;
-        elimBanner.classList.remove('hidden');
-        clearTimeout(window._elimBannerTimeout);
-        window._elimBannerTimeout = setTimeout(() => {
-            elimBanner.classList.add('hidden');
-        }, 3200);
-    }
-    
-    // Board shake animation on the 4-player frame
-    const frame = document.getElementById('four-board-frame');
-    if (frame) {
-        frame.classList.add('shake-board');
-        setTimeout(() => frame.classList.remove('shake-board'), 500);
-    }
-    
-    showToast(`${FOUR_KINGDOM_NAMES[color]} King was captured!`, 'error');
-    
-    // Find King coordinates for lightning defeat effect
-    let kingSq = null;
-    for (let r = 0; r < 14; r++) {
-        for (let c = 0; c < 14; c++) {
-            if (fourBoard[r][c] && fourBoard[r][c].color === color && fourBoard[r][c].type === 'k') {
-                kingSq = { r, c };
-                break;
-            }
-        }
-    }
-    
-    if (kingSq && fx4p) {
-        const sqEl = document.querySelector(`.four-square[data-r="${kingSq.r}"][data-c="${kingSq.c}"]`);
-        if (sqEl) {
-            const rect = sqEl.getBoundingClientRect();
-            const canvasRect = fx4p.canvas.getBoundingClientRect();
-            const px = rect.left - canvasRect.left + rect.width / 2;
-            const py = rect.top - canvasRect.top + rect.height / 2;
-            fx4p.lightningDefeat(px, py, '#ef4444', '#ffd700');
-            audio.strike();
-        }
-    }
-    
-    // Clear defeated army pieces
-    for (let r = 0; r < 14; r++) {
-        for (let c = 0; c < 14; c++) {
-            if (fourBoard[r][c] && fourBoard[r][c].color === color) {
-                fourBoard[r][c] = null;
-            }
-        }
-    }
-    
-    // IF HUMAN (RED) IS ELIMINATED: STOP ACTIVE GAMEPLAY IMMEDIATELY!
-    if (color === 'red' && fourMode === 'ai') {
-        isHumanDefeated4P = true;
-        fourSelected = null;
-        setTimeout(() => {
-            showFourDefeatModal();
-        }, 700);
-    }
-}
-
-function showFourDefeatModal() {
-    const modal = document.getElementById('four-defeat-modal');
-    if (modal) modal.classList.remove('hidden');
-    audio.defeat();
-}
-
-function showFourPodiumModal(victor) {
-    const modal = document.getElementById('four-podium-modal');
-    if (!modal) return;
-    
-    isGameOver = true;
-    isFourMatchActive = false;
-    
-    const crests = { red: '🔴', blue: '🔵', gold: '🟡', green: '🟢' };
-    
-    const p1 = victor;
-    const p2 = fourEliminationOrder[2] || FOUR_KINGDOMS.find(k => k !== p1) || 'blue';
-    const p3 = fourEliminationOrder[1] || FOUR_KINGDOMS.find(k => k !== p1 && k !== p2) || 'gold';
-    const p4 = fourEliminationOrder[0] || FOUR_KINGDOMS.find(k => k !== p1 && k !== p2 && k !== p3) || 'green';
-    
-    const n1 = document.getElementById('podium-name-1');
-    const c1 = document.getElementById('podium-crest-1');
-    if (n1) n1.textContent = FOUR_KINGDOM_NAMES[p1];
-    if (c1) c1.textContent = crests[p1] || '👑';
-    
-    const n2 = document.getElementById('podium-name-2');
-    const c2 = document.getElementById('podium-crest-2');
-    if (n2) n2.textContent = FOUR_KINGDOM_NAMES[p2];
-    if (c2) c2.textContent = crests[p2] || '⚔️';
-    
-    const n3 = document.getElementById('podium-name-3');
-    const c3 = document.getElementById('podium-crest-3');
-    if (n3) n3.textContent = FOUR_KINGDOM_NAMES[p3];
-    if (c3) c3.textContent = crests[p3] || '🛡️';
-    
-    const n4 = document.getElementById('podium-name-4');
-    const c4 = document.getElementById('podium-crest-4');
-    if (n4) n4.textContent = FOUR_KINGDOM_NAMES[p4];
-    if (c4) c4.textContent = crests[p4] || '💀';
-    
-    const sub = document.getElementById('four-podium-sub');
-    if (sub) {
-        sub.textContent = `${FOUR_KINGDOM_NAMES[p1]} reigns supreme!`;
-    }
-    
-    if (p1 === 'red') {
-        lordProfile.fourWins++;
-        saveProfile();
-        audio.victory();
-        triggerHaptic('victory');
-    } else {
-        audio.defeat();
-        triggerHaptic('check');
-    }
-    
-    modal.classList.remove('hidden');
-    checkAndUnlockAchievements();
-}
-
-function makeFourAIMove() {
-    if (fourTurn === 'red' || !fourArmies[fourTurn].alive || isGamePaused || isGameOver) return;
-    
-    const allMoves = [];
-    for (let r = 0; r < 14; r++) {
-        for (let c = 0; c < 14; c++) {
-            if (fourBoard[r][c] && fourBoard[r][c].color === fourTurn) {
-                const moves = getFourMoves(r, c);
-                moves.forEach(m => allMoves.push({ from: { r, c }, to: m }));
-            }
-        }
-    }
-    
-    if (allMoves.length === 0) {
-        eliminateKingdom(fourTurn);
-        advanceFourTurn();
-        updateFourHUD();
-        drawFourBoard();
-        const aliveKingdoms = FOUR_KINGDOMS.filter(k => fourArmies[k].alive);
-        if (aliveKingdoms.length === 1) {
-            showFourPodiumModal(aliveKingdoms[0]);
-            return;
-        }
-        if (fourMode === 'ai' && fourTurn !== 'red') {
-            setTimeout(makeFourAIMove, 450);
-        }
-        return;
-    }
-    
-    const kingCaptures = allMoves.filter(m => fourBoard[m.to.r][m.to.c] && fourBoard[m.to.r][m.to.c].type === 'k');
-    const pieceCaptures = allMoves.filter(m => fourBoard[m.to.r][m.to.c] !== null);
-    
-    let chosen = null;
-    if (kingCaptures.length > 0) {
-        chosen = kingCaptures[0];
-    } else if (pieceCaptures.length > 0 && Math.random() < 0.6) {
-        chosen = pieceCaptures[Math.floor(Math.random() * pieceCaptures.length)];
-    } else {
-        chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
-    }
-    
-    executeFourMove(chosen.from, chosen.to);
-}
-
-function updateFourHUD() {
-    const turnMsg = document.getElementById('turn-message');
-    const turnDot = document.getElementById('turn-dot');
-    const kColors = { red: '#ef4444', blue: '#38bdf8', gold: '#facc15', green: '#22c55e' };
-    
-    if (turnMsg) turnMsg.textContent = `${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn`;
-    if (turnDot) turnDot.style.backgroundColor = kColors[fourTurn] || 'var(--primary)';
-    
-    // Active Kingdom Turn Banner with kingdom crest and player name
-    const turnBanner = document.getElementById('four-turn-banner');
-    if (turnBanner) {
-        turnBanner.className = `four-turn-banner ${fourTurn}`;
-        const crest = { red: '🔴', blue: '🔵', gold: '🟡', green: '🟢' }[fourTurn] || '👑';
-        const roleNote = (fourMode === 'ai' && fourTurn === 'red') ? ' (You)' : '';
-        turnBanner.innerHTML = `<span class="crest">${crest}</span> <strong>${FOUR_KINGDOM_NAMES[fourTurn]}'s Turn${roleNote}</strong>`;
-    }
-    
-    // Dynamic glowing perimeter border on board frame matching active kingdom
-    const boardFrame = document.getElementById('four-board-frame');
-    if (boardFrame) {
-        boardFrame.className = `four-board-frame turn-${fourTurn}`;
-    }
-    
-    FOUR_KINGDOMS.forEach(k => {
-        const card = document.getElementById(`hud-k-${k}`);
-        const status = document.getElementById(`k-status-${k}`);
-        if (card) {
-            card.classList.toggle('active-turn', fourTurn === k && fourArmies[k].alive);
-            card.classList.toggle('eliminated', !fourArmies[k].alive);
-        }
-        if (status) {
-            status.textContent = fourArmies[k].alive ? `${fourArmies[k].count} Army` : 'Defeated';
-        }
-    });
-}
-
-// =========================================================
-// 5. 5 DAILY CASTLE PUZZLES ENGINE (1 ATTEMPT PER DAY)
+// 4. 5 DAILY CASTLE PUZZLES ENGINE (1 ATTEMPT PER DAY)
 // =========================================================
 
 const PUZZLES = [
@@ -2258,15 +1710,9 @@ function switchTab(tabId) {
         pauseGame();
     } else if (tabId === 'arena' || tabId === 'battle') {
         if (turnWidget) turnWidget.style.display = 'flex';
-        if (arenaSubMode === '2p') {
-            if (headerSub) headerSub.textContent = '2-Player Arena';
-            draw2PlayerBoard();
-            if (fx2p) fx2p.resize();
-        } else {
-            if (headerSub) headerSub.textContent = '4-Player Battle Grid';
-            drawFourBoard();
-            if (fx4p) fx4p.resize();
-        }
+        if (headerSub) headerSub.textContent = '2-Player Arena';
+        draw2PlayerBoard();
+        if (fx2p) fx2p.resize();
         if (isMatchActive && !isGameOver) {
             resumeGame();
         } else {
@@ -2285,26 +1731,6 @@ function switchTab(tabId) {
     }
 }
 
-function switchArenaSubMode(mode) {
-    arenaSubMode = mode;
-    const view2p = document.getElementById('view-2player-arena');
-    const view4p = document.getElementById('view-4player-arena');
-    const subTitle = document.getElementById('header-mode-subtitle');
-    
-    if (mode === '2p') {
-        if (view2p) view2p.classList.remove('hidden');
-        if (view4p) view4p.classList.add('hidden');
-        if (subTitle) subTitle.textContent = '2-Player Arena';
-        draw2PlayerBoard();
-        if (fx2p) fx2p.resize();
-    } else {
-        if (view4p) view4p.classList.remove('hidden');
-        if (view2p) view2p.classList.add('hidden');
-        if (subTitle) subTitle.textContent = '4-Player Battle Grid';
-        drawFourBoard();
-        if (fx4p) fx4p.resize();
-    }
-}
 
 // =========================================================
 // 7. EVENT LISTENERS & INITIALIZATION
@@ -2354,29 +1780,7 @@ function setupEventListeners() {
     });
     
     // HOME SCREEN CONTROLS
-    // Variation: 2-Player vs 4-Player
-    const cat2p = document.getElementById('home-cat-2p');
-    const cat4p = document.getElementById('home-cat-4p');
-    const group2p = document.getElementById('home-2p-group');
-    const group4p = document.getElementById('home-4p-group');
-    
-    if (cat2p && cat4p) {
-        cat2p.addEventListener('click', () => {
-            cat2p.classList.add('active');
-            cat4p.classList.remove('active');
-            group2p.classList.remove('hidden');
-            group4p.classList.add('hidden');
-            arenaSubMode = '2p';
-        });
-        cat4p.addEventListener('click', () => {
-            cat4p.classList.add('active');
-            cat2p.classList.remove('active');
-            group4p.classList.remove('hidden');
-            group2p.classList.add('hidden');
-            arenaSubMode = '4p';
-        });
-    }
-    
+        
     // 2P Play Mode: vs AI vs Pass & Play
     const modeAiBtn = document.getElementById('home-2p-mode-ai');
     const modeLocalBtn = document.getElementById('home-2p-mode-local');
@@ -2458,53 +1862,22 @@ function setupEventListeners() {
         });
     });
     
-    // 4P Mode (vs 3 Bots vs Pass & Play)
-    const fourAiBtn = document.getElementById('home-4p-ai-btn');
-    const fourPassBtn = document.getElementById('home-4p-pass-btn');
-    const fourAiNameSec = document.getElementById('home-4p-ai-name-section');
-    const fourPassNamesSec = document.getElementById('home-4p-pass-names-section');
-    
-    if (fourAiBtn && fourPassBtn) {
-        fourAiBtn.addEventListener('click', () => {
-            fourAiBtn.classList.add('active');
-            fourPassBtn.classList.remove('active');
-            fourMode = 'ai';
-            if (fourAiNameSec) fourAiNameSec.classList.remove('hidden');
-            if (fourPassNamesSec) fourPassNamesSec.classList.add('hidden');
-        });
-        fourPassBtn.addEventListener('click', () => {
-            fourPassBtn.classList.add('active');
-            fourAiBtn.classList.remove('active');
-            fourMode = 'pass';
-            if (fourAiNameSec) fourAiNameSec.classList.add('hidden');
-            if (fourPassNamesSec) fourPassNamesSec.classList.remove('hidden');
-        });
-    }
-    
+        
     // COMMENCE BATTLE ⚔️ (HOME START BUTTON)
     const homeStartBtn = document.getElementById('home-start-btn');
     if (homeStartBtn) {
         homeStartBtn.addEventListener('click', () => {
             // Save player name
             const nameInput = document.getElementById('home-player-name');
-            const fourNameInput = document.getElementById('home-4p-player-name');
-            const fourRedInput = document.getElementById('home-4p-name-red');
-            const customName = (arenaSubMode === '4p' ? (fourMode === 'pass' ? fourRedInput?.value : fourNameInput?.value) : nameInput?.value)?.trim();
+            const customName = nameInput?.value?.trim();
             if (customName) {
                 lordProfile.name = customName;
                 saveProfile();
             }
             
-            // Switch to Arena tab first so elements are visible
+            // Switch to Arena tab and start match
             switchTab('arena');
-            
-            if (arenaSubMode === '2p') {
-                switchArenaSubMode('2p');
-                startNew2PlayerGame();
-            } else {
-                switchArenaSubMode('4p');
-                startNew4PlayerGame();
-            }
+            startNew2PlayerGame();
         });
     }
     
@@ -2719,7 +2092,6 @@ function setupEventListeners() {
     const widgetStyleBtns = document.querySelectorAll('#widget-style-toggle-grid button');
     const widgetSaveBtn = document.getElementById('widget-save-btn');
     const wpPlayBtn = document.getElementById('wp-play-btn');
-    const wp4pBtn = document.getElementById('wp-4p-btn');
     const wpPuzzleBtn = document.getElementById('wp-puzzle-btn');
 
     // Load saved widget settings
@@ -2810,10 +2182,6 @@ function setupEventListeners() {
 
     // Interactive Preview Buttons
     if (wpPlayBtn) wpPlayBtn.addEventListener('click', () => switchTab('home'));
-    if (wp4pBtn) wp4pBtn.addEventListener('click', () => {
-        if (typeof start4PGame === 'function') start4PGame();
-        else { switchTab('arena'); switchArenaSubMode('4p'); }
-    });
     if (wpPuzzleBtn) wpPuzzleBtn.addEventListener('click', () => switchTab('puzzles'));
     
     // Replay Stepper buttons
@@ -2895,52 +2263,7 @@ function setupEventListeners() {
         });
     }
     
-    // 4-Player Rules
-    const rulesBtn = document.getElementById('four-rules-btn');
-    const rulesModal = document.getElementById('four-rules-modal');
-    const rulesOkBtn = document.getElementById('four-rules-ok-btn');
-    const rulesClose = document.getElementById('four-rules-close-btn');
-    if (rulesBtn) rulesBtn.addEventListener('click', () => rulesModal.classList.remove('hidden'));
-    if (rulesOkBtn) rulesOkBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
-    if (rulesClose) rulesClose.addEventListener('click', () => rulesModal.classList.add('hidden'));
-    
-    const fourResetBtn = document.getElementById('four-reset-btn');
-    if (fourResetBtn) fourResetBtn.addEventListener('click', () => initFourPlayerBoard());
-    
-    // 4-Player Defeat Modal Buttons
-    const fourDefeatHomeBtn = document.getElementById('four-defeat-home-btn');
-    const fourDefeatRestartBtn = document.getElementById('four-defeat-restart-btn');
-    if (fourDefeatHomeBtn) {
-        fourDefeatHomeBtn.addEventListener('click', () => {
-            document.getElementById('four-defeat-modal').classList.add('hidden');
-            switchTab('home');
-        });
-    }
-    if (fourDefeatRestartBtn) {
-        fourDefeatRestartBtn.addEventListener('click', () => {
-            document.getElementById('four-defeat-modal').classList.add('hidden');
-            initFourPlayerBoard();
-        });
-    }
-    
-    // 4-Player Podium Modal Buttons
-    const podiumHomeBtn = document.getElementById('podium-home-btn');
-    const podiumRestartBtn = document.getElementById('podium-restart-btn');
-    if (podiumHomeBtn) {
-        podiumHomeBtn.addEventListener('click', () => {
-            const modal = document.getElementById('four-podium-modal');
-            if (modal) modal.classList.add('hidden');
-            switchTab('home');
-        });
-    }
-    if (podiumRestartBtn) {
-        podiumRestartBtn.addEventListener('click', () => {
-            const modal = document.getElementById('four-podium-modal');
-            if (modal) modal.classList.add('hidden');
-            initFourPlayerBoard();
-        });
-    }
-    
+        
     // 5 Daily Puzzles Action Buttons
     const puzzlePrevBtn = document.getElementById('puzzle-prev-btn');
     const puzzleNextBtn = document.getElementById('puzzle-next-btn');
@@ -3204,7 +2527,7 @@ function setupEventListeners() {
             lordProfile.currentStreak = 0;
             lordProfile.bestStreak = 0;
             lordProfile.rating = 1200;
-            lordProfile.fourWins = 0;
+            
             lordProfile.botRecords = {
                 1: { w: 0, l: 0, d: 0 },
                 2: { w: 0, l: 0, d: 0 },
@@ -3230,11 +2553,7 @@ function setupEventListeners() {
     if (restartBtn) {
         restartBtn.addEventListener('click', () => {
             document.getElementById('gameover-modal').classList.add('hidden');
-            if (arenaSubMode === '2p') {
-                startNew2PlayerGame();
-            } else {
-                startNew4PlayerGame();
-            }
+            startNew2PlayerGame();
         });
     }
 }
@@ -3313,58 +2632,6 @@ function startNew2PlayerGame() {
     }
 }
 
-function startNew4PlayerGame() {
-    isGameOver = false;
-    isGamePaused = false;
-    isHumanDefeated4P = false;
-    isFourMatchActive = true;
-    isMatchActive = true;
-    if (aiMoveTimeout) {
-        clearTimeout(aiMoveTimeout);
-        aiMoveTimeout = null;
-    }
-    
-    if (fourMode === 'pass') {
-        const nRed = document.getElementById('home-4p-name-red')?.value.trim() || lordProfile.name || 'Player 1';
-        const nBlue = document.getElementById('home-4p-name-blue')?.value.trim() || 'Player 2';
-        const nGold = document.getElementById('home-4p-name-gold')?.value.trim() || 'Player 3';
-        const nGreen = document.getElementById('home-4p-name-green')?.value.trim() || 'Player 4';
-        
-        FOUR_KINGDOM_NAMES.red = nRed;
-        FOUR_KINGDOM_NAMES.blue = nBlue;
-        FOUR_KINGDOM_NAMES.gold = nGold;
-        FOUR_KINGDOM_NAMES.green = nGreen;
-        
-        const redEl = document.getElementById('k-name-red');
-        const blueEl = document.getElementById('k-name-blue');
-        const goldEl = document.getElementById('k-name-gold');
-        const greenEl = document.getElementById('k-name-green');
-        
-        if (redEl) redEl.textContent = nRed;
-        if (blueEl) blueEl.textContent = nBlue;
-        if (goldEl) goldEl.textContent = nGold;
-        if (greenEl) greenEl.textContent = nGreen;
-    } else {
-        const pName = document.getElementById('home-4p-player-name')?.value.trim() || lordProfile.name || 'Player';
-        FOUR_KINGDOM_NAMES.red = pName;
-        FOUR_KINGDOM_NAMES.blue = 'Blue Voltage 🤖';
-        FOUR_KINGDOM_NAMES.gold = 'Gold Spark 🤖';
-        FOUR_KINGDOM_NAMES.green = 'Green Pulse 🤖';
-        
-        const redEl = document.getElementById('k-name-red');
-        const blueEl = document.getElementById('k-name-blue');
-        const goldEl = document.getElementById('k-name-gold');
-        const greenEl = document.getElementById('k-name-green');
-        
-        if (redEl) redEl.textContent = pName;
-        if (blueEl) blueEl.textContent = 'Blue Voltage';
-        if (goldEl) goldEl.textContent = 'Gold Spark';
-        if (greenEl) greenEl.textContent = 'Green Pulse';
-    }
-    
-    initFourPlayerBoard();
-    if (fx4p) fx4p.resize();
-}
 
 const ROYAL_ACHIEVEMENTS = [
     {
@@ -3386,7 +2653,7 @@ const ROYAL_ACHIEVEMENTS = [
         icon: '🏆',
         title: 'Ten Victories',
         desc: 'Achieve 10 total match victories',
-        check: (p) => ((p.wins || 0) + (p.fourWins || 0)) >= 10
+        check: (p) => (p.wins || 0) >= 10
     },
     {
         id: 'winning_streak',
@@ -3410,11 +2677,11 @@ const ROYAL_ACHIEVEMENTS = [
         check: (p) => Boolean(p.botRecords && p.botRecords[4] && p.botRecords[4].w >= 1)
     },
     {
-        id: 'realm_conqueror',
+        id: 'puzzle_master_3',
         icon: '👑',
-        title: 'Grid Conqueror',
-        desc: 'Conquer a 4-Player Battle match',
-        check: (p) => (p.fourWins || 0) >= 1
+        title: 'Tactics Maestro',
+        desc: 'Solve 3 or more Daily Chess Tactics puzzles',
+        check: (p) => (p.puzzles || 0) >= 3
     },
     {
         id: 'puzzle_master',
@@ -3532,8 +2799,7 @@ function loadProfile() {
     lordProfile.currentStreak = parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10);
     lordProfile.bestStreak = parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10);
     lordProfile.rating = parseInt(localStorage.getItem('electro_player_rating') || '1200', 10);
-    lordProfile.fourWins = parseInt(localStorage.getItem('electro_stat_four_wins') || '0', 10);
-    lordProfile.puzzles = parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10);
+        lordProfile.puzzles = parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10);
     
     try {
         const savedRecs = localStorage.getItem('royal_bot_records');
@@ -3550,14 +2816,10 @@ function loadProfile() {
     }
     
     const homeInput = document.getElementById('home-player-name');
-    const fourInput = document.getElementById('home-4p-player-name');
-    const fourRedInput = document.getElementById('home-4p-name-red');
-    const authInput = document.getElementById('auth-username-input');
+            const authInput = document.getElementById('auth-username-input');
     
     if (homeInput) homeInput.value = lordProfile.name;
-    if (fourInput) fourInput.value = lordProfile.name;
-    if (fourRedInput) fourRedInput.value = lordProfile.name;
-    if (authInput) authInput.value = lordProfile.name;
+            if (authInput) authInput.value = lordProfile.name;
     
     updateProfileUI();
 }
@@ -3580,8 +2842,7 @@ function saveProfile() {
     localStorage.setItem('electro_stat_current_streak', String(lordProfile.currentStreak || 0));
     localStorage.setItem('electro_stat_best_streak', String(lordProfile.bestStreak || 0));
     localStorage.setItem('electro_player_rating', String(lordProfile.rating || 1200));
-    localStorage.setItem('electro_stat_four_wins', String(lordProfile.fourWins || 0));
-    
+        
     if (lordProfile.botRecords) {
         localStorage.setItem('royal_bot_records', JSON.stringify(lordProfile.botRecords));
     }
@@ -3599,7 +2860,7 @@ function updateProfileUI() {
     const statWinrate = document.getElementById('stat-winrate');
     const statCurrentStreak = document.getElementById('stat-current-streak');
     const statBestStreak = document.getElementById('stat-best-streak');
-    const statFourWins = document.getElementById('stat-four-wins');
+    const statPuzzles = document.getElementById('stat-puzzles');
     const botDefeatedCount = document.getElementById('bot-total-defeated');
     
     if (pName) pName.textContent = lordProfile.name;
@@ -3618,7 +2879,7 @@ function updateProfileUI() {
     }
     if (statCurrentStreak) statCurrentStreak.textContent = lordProfile.currentStreak || 0;
     if (statBestStreak) statBestStreak.textContent = lordProfile.bestStreak || 0;
-    if (statFourWins) statFourWins.textContent = lordProfile.fourWins || 0;
+    if (statPuzzles) statPuzzles.textContent = lordProfile.puzzles || 0;
     
     // Opponent Computer Records
     let totalBotsDefeated = 0;
@@ -3657,15 +2918,13 @@ function showToast(msg, type = 'info') {
 
 window.addEventListener('DOMContentLoaded', () => {
     fx2p = new CastleFX('fx-canvas');
-    fx4p = new CastleFX('four-fx-canvas');
-    
+        
     applyTheme(royalSettings.theme);
     syncSettingsCheckboxes();
     loadProfile();
     setupEventListeners();
     init2PlayerBoard();
-    initFourPlayerBoard();
-    
+        
     // Sync widgets to native Android with official Electro King branding
     if (window.AndroidBridge && typeof window.AndroidBridge.updateAndroidWidgets === 'function') {
         const title = localStorage.getItem('electro_widget_title') || 'ELECTRO KING ⚡';
