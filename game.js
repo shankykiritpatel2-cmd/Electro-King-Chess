@@ -3,8 +3,8 @@
 // Professional Chess & Tactics Engine
 // =========================================================
 
-// --- ROYAL GOLD PARTICLE & LIGHTNING FX SYSTEM ---
-class CastleFX {
+// --- ELECTRO NEON PARTICLE & LIGHTNING FX SYSTEM ---
+class ElectroFX {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
@@ -149,7 +149,7 @@ class CastleFX {
 let fx2p = null;
 
 // --- AUDIO SYNTHESIS SYSTEM ---
-class CastleAudio {
+class ElectroAudio {
     constructor() {
         this.ctx = null;
         this.enabled = true;
@@ -227,7 +227,7 @@ class CastleAudio {
     }
 }
 
-const audio = new CastleAudio();
+const audio = new ElectroAudio();
 
 // --- HIGH-DEF PIECE SVG RENDERER ---
 const PIECE_SVGS = {
@@ -269,7 +269,7 @@ function getPieceSvg(color, type) {
 
 // --- GLOBAL STATE ---
 let currentTab = 'home'; // App starts on HOME!
-let lordProfile = {
+let playerProfile = {
     name: localStorage.getItem('electro_player_name') || 'Player',
     avatar: localStorage.getItem('electro_profile_avatar') || '👑',
     avatarUrl: localStorage.getItem('electro_profile_avatar_url') || '',
@@ -280,7 +280,7 @@ let lordProfile = {
     currentStreak: parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10),
     bestStreak: parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10),
     rating: parseInt(localStorage.getItem('electro_player_rating') || '1200', 10),
-    puzzles: parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10),
+    puzzles: parseInt(localStorage.getItem('electro_puzzles_solved') || '0', 10),
     botRecords: {
         1: { w: 0, l: 0, d: 0 },
         2: { w: 0, l: 0, d: 0 },
@@ -323,40 +323,40 @@ function recordMatchHistory(opponent, result, moves) {
 }
 
 function onMatchConcluded(result, opponentName, moveCount) {
-    lordProfile.matches = (lordProfile.matches || 0) + 1;
+    playerProfile.matches = (playerProfile.matches || 0) + 1;
     if (result === 'win') {
-        lordProfile.wins = (lordProfile.wins || 0) + 1;
-        lordProfile.currentStreak = (lordProfile.currentStreak || 0) + 1;
-        if (lordProfile.currentStreak > (lordProfile.bestStreak || 0)) {
-            lordProfile.bestStreak = lordProfile.currentStreak;
+        playerProfile.wins = (playerProfile.wins || 0) + 1;
+        playerProfile.currentStreak = (playerProfile.currentStreak || 0) + 1;
+        if (playerProfile.currentStreak > (playerProfile.bestStreak || 0)) {
+            playerProfile.bestStreak = playerProfile.currentStreak;
         }
-        lordProfile.rating = Math.max(400, (lordProfile.rating || 1200) + 16);
+        playerProfile.rating = Math.max(400, (playerProfile.rating || 1200) + 16);
         if (gameMode === 'ai') {
-            if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
-            if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
-            lordProfile.botRecords[difficulty].w = (lordProfile.botRecords[difficulty].w || 0) + 1;
+            if (!playerProfile.botRecords) playerProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+            if (!playerProfile.botRecords[difficulty]) playerProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
+            playerProfile.botRecords[difficulty].w = (playerProfile.botRecords[difficulty].w || 0) + 1;
         }
         recordMatchHistory(opponentName, 'Victory', moveCount);
         audio.victory();
         triggerHaptic('victory');
     } else if (result === 'loss') {
-        lordProfile.losses = (lordProfile.losses || 0) + 1;
-        lordProfile.currentStreak = 0;
-        lordProfile.rating = Math.max(400, (lordProfile.rating || 1200) - 16);
+        playerProfile.losses = (playerProfile.losses || 0) + 1;
+        playerProfile.currentStreak = 0;
+        playerProfile.rating = Math.max(400, (playerProfile.rating || 1200) - 16);
         if (gameMode === 'ai') {
-            if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
-            if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
-            lordProfile.botRecords[difficulty].l = (lordProfile.botRecords[difficulty].l || 0) + 1;
+            if (!playerProfile.botRecords) playerProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+            if (!playerProfile.botRecords[difficulty]) playerProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
+            playerProfile.botRecords[difficulty].l = (playerProfile.botRecords[difficulty].l || 0) + 1;
         }
         recordMatchHistory(opponentName, 'Defeat', moveCount);
         audio.defeat();
         triggerHaptic('check');
     } else {
-        lordProfile.draws = (lordProfile.draws || 0) + 1;
+        playerProfile.draws = (playerProfile.draws || 0) + 1;
         if (gameMode === 'ai') {
-            if (!lordProfile.botRecords) lordProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
-            if (!lordProfile.botRecords[difficulty]) lordProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
-            lordProfile.botRecords[difficulty].d = (lordProfile.botRecords[difficulty].d || 0) + 1;
+            if (!playerProfile.botRecords) playerProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+            if (!playerProfile.botRecords[difficulty]) playerProfile.botRecords[difficulty] = { w: 0, l: 0, d: 0 };
+            playerProfile.botRecords[difficulty].d = (playerProfile.botRecords[difficulty].d || 0) + 1;
         }
         recordMatchHistory(opponentName, 'Draw', moveCount);
         triggerHaptic('move');
@@ -366,18 +366,18 @@ function onMatchConcluded(result, opponentName, moveCount) {
 }
 
 // --- ELECTRO SETTINGS & HAPTIC ENGINE ---
-let initialTheme = localStorage.getItem('royal_chess_theme');
-if (!initialTheme || initialTheme === 'castle') {
+let initialTheme = localStorage.getItem('electro_chess_theme');
+if (!initialTheme || !['cyber', 'obsidian', 'gold', 'matrix'].includes(initialTheme)) {
     initialTheme = 'cyber';
-    localStorage.setItem('royal_chess_theme', 'cyber');
 }
+localStorage.setItem('electro_chess_theme', initialTheme);
 
-const royalSettings = {
+const electroSettings = {
     theme: initialTheme,
-    sound: localStorage.getItem('royal_chess_sound') !== 'false',
-    vibration: localStorage.getItem('royal_chess_vibration') !== 'false',
-    coords: localStorage.getItem('royal_chess_coords') !== 'false',
-    evalBar: localStorage.getItem('royal_chess_eval') !== 'false'
+    sound: (localStorage.getItem('electro_chess_sound')) !== 'false',
+    vibration: (localStorage.getItem('electro_chess_vibration')) !== 'false',
+    coords: (localStorage.getItem('electro_chess_coords')) !== 'false',
+    evalBar: (localStorage.getItem('electro_chess_eval')) !== 'false'
 };
 
 const PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
@@ -385,7 +385,7 @@ let replayIndex = -1; // -1 for live game, 0..N-1 for historical snapshot review
 let isManualFlipped = false;
 
 function triggerHaptic(type = 'move') {
-    if (!royalSettings.vibration) return;
+    if (!electroSettings.vibration) return;
     try {
         let ms = 15;
         if (type === 'capture') ms = 45;
@@ -405,9 +405,9 @@ function triggerHaptic(type = 'move') {
 }
 
 function applyTheme(themeName) {
-    if (!['cyber', 'obsidian', 'gold', 'matrix', 'castle', 'wood'].includes(themeName)) themeName = 'cyber';
-    royalSettings.theme = themeName;
-    localStorage.setItem('royal_chess_theme', themeName);
+    if (!['cyber', 'obsidian', 'gold', 'matrix'].includes(themeName)) themeName = 'cyber';
+    electroSettings.theme = themeName;
+    localStorage.setItem('electro_chess_theme', themeName);
     document.body.className = `theme-${themeName}`;
     document.querySelectorAll('.theme-card-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === themeName);
@@ -425,7 +425,7 @@ let gameMode = 'ai'; // 'ai', 'local'
 let playerSide = 'white';
 let botSide = 'black';
 let difficulty = 2;
-let playerNames = { white: lordProfile.name, black: 'CyberKnight 🛡️' };
+let playerNames = { white: playerProfile.name, black: 'CyberKnight 🛡️' };
 let isGameOver = false;
 let isGamePaused = false;
 let isMatchActive = false;
@@ -719,7 +719,7 @@ function draw2PlayerBoard() {
             }
             
             // Coordinates on board edge
-            if (royalSettings.coords) {
+            if (electroSettings.coords) {
                 if (cIdx === 0) {
                     const rankLbl = document.createElement('span');
                     rankLbl.className = 'sq-coord sq-coord-rank';
@@ -787,7 +787,7 @@ function drawBoardSnapshot(snapBoard, snapLastMove, snapTurn) {
                 sq.classList.add('check-danger');
             }
             
-            if (royalSettings.coords) {
+            if (electroSettings.coords) {
                 if (cIdx === 0) {
                     const rankLbl = document.createElement('span');
                     rankLbl.className = 'sq-coord sq-coord-rank';
@@ -949,7 +949,7 @@ function execute2PlayerMove(from, to, promoPiece = null) {
                 onMatchConcluded('loss', playerNames[botSide || 'black'], history.length);
             }
         } else {
-            showGameOverModal('Stalemate! The royal duel ends in a draw.', 'Draw');
+            showGameOverModal('Stalemate! The match ends in a draw.', 'Draw');
             onMatchConcluded('draw', playerNames[botSide || 'black'], history.length);
         }
         return;
@@ -1054,7 +1054,7 @@ function renderMoveHistoryChips() {
     if (!container) return;
     
     if (moveHistoryNotation.length === 0) {
-        container.innerHTML = '<span class="history-empty-placeholder">Royal duel ready to commence...</span>';
+        container.innerHTML = '<span class="history-empty-placeholder">Chess match ready to commence...</span>';
         return;
     }
     
@@ -1337,7 +1337,7 @@ function showGameOverModal(msg, victor = 'Player') {
 }
 
 // =========================================================
-// 4. 5 DAILY CASTLE PUZZLES ENGINE (1 ATTEMPT PER DAY)
+// 4. 5 DAILY TACTICS PUZZLES ENGINE (1 ATTEMPT PER DAY)
 // =========================================================
 
 const PUZZLES = [
@@ -1433,7 +1433,7 @@ function getDailyPuzzleStorageKey() {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    return `royal_daily_puzzles_${year}-${month}-${day}`;
+    return `electro_daily_puzzles_${year}-${month}-${day}`;
 }
 
 function getCompletedPuzzlesToday() {
@@ -1458,7 +1458,7 @@ function markPuzzleCompletedToday(idx) {
         if (!completed.includes(idx)) {
             completed.push(idx);
             localStorage.setItem(key, JSON.stringify(completed));
-            lordProfile.puzzles++;
+            playerProfile.puzzles++;
             saveProfile();
             if (completed.length === PUZZLES.length) {
                 updatePuzzleStreakOnCompletion();
@@ -1486,7 +1486,7 @@ function getYesterdayDateStr() {
 
 function getPuzzleStreakData() {
     try {
-        const raw = localStorage.getItem('royal_puzzle_streak');
+        const raw = localStorage.getItem('electro_puzzle_streak');
         return raw ? JSON.parse(raw) : { streak: 0, lastDate: '' };
     } catch (e) {
         return { streak: 0, lastDate: '' };
@@ -1508,7 +1508,7 @@ function updatePuzzleStreakOnCompletion() {
         data.streak = 1;
     }
     data.lastDate = today;
-    localStorage.setItem('royal_puzzle_streak', JSON.stringify(data));
+    localStorage.setItem('electro_puzzle_streak', JSON.stringify(data));
     renderPuzzleStreak();
     checkAndUnlockAchievements();
 }
@@ -1739,31 +1739,31 @@ function switchTab(tabId) {
 function syncSettingsCheckboxes() {
     ['modal-sound-toggle', 'pref-sound-toggle'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.checked = royalSettings.sound;
+        if (el) el.checked = electroSettings.sound;
     });
     ['modal-vibrate-toggle', 'pref-vibrate-toggle'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.checked = royalSettings.vibration;
+        if (el) el.checked = electroSettings.vibration;
     });
     ['modal-coords-toggle', 'pref-coords-toggle'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.checked = royalSettings.coords;
+        if (el) el.checked = electroSettings.coords;
     });
     ['modal-eval-toggle', 'pref-eval-toggle'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.checked = royalSettings.evalBar;
+        if (el) el.checked = electroSettings.evalBar;
     });
     const evalWrapper = document.getElementById('eval-bar-wrapper');
-    if (evalWrapper) evalWrapper.style.display = royalSettings.evalBar ? 'flex' : 'none';
-    audio.enabled = royalSettings.sound;
+    if (evalWrapper) evalWrapper.style.display = electroSettings.evalBar ? 'flex' : 'none';
+    audio.enabled = electroSettings.sound;
 }
 
 function bindCheckbox(id, key, onChange) {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('change', () => {
-        royalSettings[key] = el.checked;
-        localStorage.setItem(`royal_chess_${key}`, el.checked);
+        electroSettings[key] = el.checked;
+        localStorage.setItem(`electro_chess_${key}`, el.checked);
         syncSettingsCheckboxes();
         if (onChange) onChange();
         triggerHaptic('move');
@@ -1871,7 +1871,7 @@ function setupEventListeners() {
             const nameInput = document.getElementById('home-player-name');
             const customName = nameInput?.value?.trim();
             if (customName) {
-                lordProfile.name = customName;
+                playerProfile.name = customName;
                 saveProfile();
             }
             
@@ -1982,13 +1982,13 @@ function setupEventListeners() {
                 if (score <= 0.8) {
                     isGameOver = true;
                     stopClock();
-                    showGameOverModal(`Peace Treaty Signed! ${bot.name} accepted your Royal Draw. 🤝`, 'Royal Draw');
+                    showGameOverModal(`Draw Agreed! ${bot.name} accepted your draw offer. 🤝`, 'Draw');
                     audio.victory();
                     triggerHaptic('victory');
-                    lordProfile.matches++;
+                    playerProfile.matches++;
                     saveProfile();
                 } else {
-                    showToast(`${bot.name} declined: "The kingdom shall be mine!" ⚔️`, 'error');
+                    showToast(`${bot.name} declined: "I fight for checkmate!" ⚡`, 'info');
                     audio.defeat();
                     triggerHaptic('check');
                 }
@@ -2005,10 +2005,10 @@ function setupEventListeners() {
             if (drawRespondModal) drawRespondModal.classList.add('hidden');
             isGameOver = true;
             stopClock();
-            showGameOverModal('Peace Treaty Signed! Both players agreed to a Royal Draw. 🤝', 'Royal Draw');
+            showGameOverModal('Draw Agreed! Both players agreed to a draw. 🤝', 'Draw');
             audio.victory();
             triggerHaptic('victory');
-            lordProfile.matches++;
+            playerProfile.matches++;
             saveProfile();
         });
     }
@@ -2222,19 +2222,19 @@ function setupEventListeners() {
     });
     
     // Settings Checkbox Sync
-    bindCheckbox('modal-sound-toggle', 'sound', () => { audio.enabled = royalSettings.sound; });
-    bindCheckbox('pref-sound-toggle', 'sound', () => { audio.enabled = royalSettings.sound; });
+    bindCheckbox('modal-sound-toggle', 'sound', () => { audio.enabled = electroSettings.sound; });
+    bindCheckbox('pref-sound-toggle', 'sound', () => { audio.enabled = electroSettings.sound; });
     bindCheckbox('modal-vibrate-toggle', 'vibration');
     bindCheckbox('pref-vibrate-toggle', 'vibration');
     bindCheckbox('modal-coords-toggle', 'coords', () => draw2PlayerBoard());
     bindCheckbox('pref-coords-toggle', 'coords', () => draw2PlayerBoard());
     bindCheckbox('modal-eval-toggle', 'evalBar', () => {
         const ew = document.getElementById('eval-bar-wrapper');
-        if (ew) ew.style.display = royalSettings.evalBar ? 'flex' : 'none';
+        if (ew) ew.style.display = electroSettings.evalBar ? 'flex' : 'none';
     });
     bindCheckbox('pref-eval-toggle', 'evalBar', () => {
         const ew = document.getElementById('eval-bar-wrapper');
-        if (ew) ew.style.display = royalSettings.evalBar ? 'flex' : 'none';
+        if (ew) ew.style.display = electroSettings.evalBar ? 'flex' : 'none';
     });
     
     // In-Game Menu Button -> PAUSE & RETURN TO HOME
@@ -2309,7 +2309,7 @@ function setupEventListeners() {
         authSubmit.addEventListener('click', () => {
             const val = document.getElementById('auth-username-input').value.trim();
             if (val) {
-                lordProfile.name = val;
+                playerProfile.name = val;
                 saveProfile();
                 authModal.classList.add('hidden');
                 showToast(`Name saved: ${val} 👑`, 'success');
@@ -2332,8 +2332,8 @@ function setupEventListeners() {
     const modalPreviewLbl = document.getElementById('modal-preview-lbl');
     const avatarEmojiBtns = document.querySelectorAll('.avatar-emoji-grid .avatar-emoji-btn');
 
-    let tempSelectedEmoji = lordProfile.avatar || '👑';
-    let tempSelectedImgUrl = lordProfile.avatarUrl || '';
+    let tempSelectedEmoji = playerProfile.avatar || '👑';
+    let tempSelectedImgUrl = playerProfile.avatarUrl || '';
 
     function updateModalAvatarPreview(emoji, imgUrl) {
         if (imgUrl) {
@@ -2349,13 +2349,13 @@ function setupEventListeners() {
                 modalPreviewEmoji.classList.remove('hidden');
             }
             if (modalPreviewImg) modalPreviewImg.classList.add('hidden');
-            if (modalPreviewLbl) modalPreviewLbl.textContent = 'Royal Icon Selected';
+            if (modalPreviewLbl) modalPreviewLbl.textContent = 'Avatar Selected';
         }
     }
 
     function openAvatarModal() {
-        tempSelectedEmoji = lordProfile.avatar || '👑';
-        tempSelectedImgUrl = lordProfile.avatarUrl || '';
+        tempSelectedEmoji = playerProfile.avatar || '👑';
+        tempSelectedImgUrl = playerProfile.avatarUrl || '';
         updateModalAvatarPreview(tempSelectedEmoji, tempSelectedImgUrl);
 
         avatarEmojiBtns.forEach(btn => {
@@ -2387,7 +2387,7 @@ function setupEventListeners() {
             tempSelectedImgUrl = '';
             avatarEmojiBtns.forEach(b => b.classList.toggle('active', b.dataset.emoji === '👑'));
             updateModalAvatarPreview('👑', '');
-            showToast('Default royal avatar selected 👑');
+            showToast('Default avatar selected 👑');
             triggerHaptic('move');
         });
     }
@@ -2466,8 +2466,8 @@ function setupEventListeners() {
 
     if (avatarSaveBtn) {
         avatarSaveBtn.addEventListener('click', () => {
-            lordProfile.avatar = tempSelectedEmoji;
-            lordProfile.avatarUrl = tempSelectedImgUrl;
+            playerProfile.avatar = tempSelectedEmoji;
+            playerProfile.avatarUrl = tempSelectedImgUrl;
 
             localStorage.setItem('electro_profile_avatar', tempSelectedEmoji);
             localStorage.setItem('electro_profile_avatar_url', tempSelectedImgUrl);
@@ -2520,15 +2520,15 @@ function setupEventListeners() {
     }
     if (resetConfirmBtn && resetStatsModal) {
         resetConfirmBtn.addEventListener('click', () => {
-            lordProfile.matches = 0;
-            lordProfile.wins = 0;
-            lordProfile.losses = 0;
-            lordProfile.draws = 0;
-            lordProfile.currentStreak = 0;
-            lordProfile.bestStreak = 0;
-            lordProfile.rating = 1200;
+            playerProfile.matches = 0;
+            playerProfile.wins = 0;
+            playerProfile.losses = 0;
+            playerProfile.draws = 0;
+            playerProfile.currentStreak = 0;
+            playerProfile.bestStreak = 0;
+            playerProfile.rating = 1200;
             
-            lordProfile.botRecords = {
+            playerProfile.botRecords = {
                 1: { w: 0, l: 0, d: 0 },
                 2: { w: 0, l: 0, d: 0 },
                 3: { w: 0, l: 0, d: 0 },
@@ -2579,7 +2579,7 @@ function startNew2PlayerGame() {
     if (gameMode === 'local') {
         const p1Val = document.getElementById('home-p1-name')?.value.trim();
         const p2Val = document.getElementById('home-p2-name')?.value.trim();
-        playerNames.white = p1Val || lordProfile.name || 'Player 1';
+        playerNames.white = p1Val || playerProfile.name || 'Player 1';
         playerNames.black = p2Val || 'Player 2';
         
         const oppAvatar = document.getElementById('top-player-avatar');
@@ -2596,7 +2596,7 @@ function startNew2PlayerGame() {
         if (myTag) myTag.textContent = playerNames.white;
         if (mySub) mySub.textContent = 'White Army';
     } else {
-        const pName = lordProfile.name || 'Player';
+        const pName = playerProfile.name || 'Player';
         playerNames[playerSide] = pName;
         playerNames[botSide] = bot.name;
         
@@ -2633,7 +2633,7 @@ function startNew2PlayerGame() {
 }
 
 
-const ROYAL_ACHIEVEMENTS = [
+const ELECTRO_ACHIEVEMENTS = [
     {
         id: 'first_win',
         icon: '⚡',
@@ -2703,8 +2703,8 @@ function renderAchievements() {
     grid.innerHTML = '';
     
     let unlockedCount = 0;
-    ROYAL_ACHIEVEMENTS.forEach(ach => {
-        const isUnlocked = Boolean(ach.check(lordProfile));
+    ELECTRO_ACHIEVEMENTS.forEach(ach => {
+        const isUnlocked = Boolean(ach.check(playerProfile));
         if (isUnlocked) unlockedCount++;
         const card = document.createElement('div');
         card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
@@ -2721,7 +2721,7 @@ function renderAchievements() {
         grid.appendChild(card);
     });
 
-    if (countEl) countEl.textContent = `${unlockedCount} / ${ROYAL_ACHIEVEMENTS.length} Unlocked`;
+    if (countEl) countEl.textContent = `${unlockedCount} / ${ELECTRO_ACHIEVEMENTS.length} Unlocked`;
 }
 
 function renderGameHistoryUI() {
@@ -2761,50 +2761,50 @@ function applyProfileAvatarUI() {
     const profImg = document.getElementById('profile-avatar-img');
     const myMatchAvatar = document.getElementById('bottom-player-avatar');
 
-    if (lordProfile.avatarUrl) {
+    if (playerProfile.avatarUrl) {
         if (profImg) {
-            profImg.src = lordProfile.avatarUrl;
+            profImg.src = playerProfile.avatarUrl;
             profImg.classList.remove('hidden');
         }
         if (profEmoji) profEmoji.classList.add('hidden');
         if (myMatchAvatar) {
-            myMatchAvatar.innerHTML = `<img src="${lordProfile.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            myMatchAvatar.innerHTML = `<img src="${playerProfile.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         }
     } else {
         if (profImg) profImg.classList.add('hidden');
         if (profEmoji) {
-            profEmoji.textContent = lordProfile.avatar || '👑';
+            profEmoji.textContent = playerProfile.avatar || '👑';
             profEmoji.classList.remove('hidden');
         }
         if (myMatchAvatar) {
-            myMatchAvatar.textContent = lordProfile.avatar || '👑';
+            myMatchAvatar.textContent = playerProfile.avatar || '👑';
         }
     }
 }
 
 function loadProfile() {
-    const savedName = localStorage.getItem('royal_player_name') || localStorage.getItem('electro_player_name');
-    if (savedName && savedName !== 'Lord Sovereign') {
-        lordProfile.name = savedName;
+    const savedName = localStorage.getItem('electro_player_name');
+    if (savedName) {
+        playerProfile.name = savedName;
     } else {
-        lordProfile.name = 'Viaan';
+        playerProfile.name = 'Viaan';
     }
     
-    lordProfile.avatar = localStorage.getItem('electro_profile_avatar') || '👑';
-    lordProfile.avatarUrl = localStorage.getItem('electro_profile_avatar_url') || '';
-    lordProfile.matches = parseInt(localStorage.getItem('electro_stat_matches') || '0', 10);
-    lordProfile.wins = parseInt(localStorage.getItem('electro_stat_wins') || '0', 10);
-    lordProfile.losses = parseInt(localStorage.getItem('electro_stat_losses') || '0', 10);
-    lordProfile.draws = parseInt(localStorage.getItem('electro_stat_draws') || '0', 10);
-    lordProfile.currentStreak = parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10);
-    lordProfile.bestStreak = parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10);
-    lordProfile.rating = parseInt(localStorage.getItem('electro_player_rating') || '1200', 10);
-        lordProfile.puzzles = parseInt(localStorage.getItem('royal_puzzles_solved') || '0', 10);
+    playerProfile.avatar = localStorage.getItem('electro_profile_avatar') || '👑';
+    playerProfile.avatarUrl = localStorage.getItem('electro_profile_avatar_url') || '';
+    playerProfile.matches = parseInt(localStorage.getItem('electro_stat_matches') || '0', 10);
+    playerProfile.wins = parseInt(localStorage.getItem('electro_stat_wins') || '0', 10);
+    playerProfile.losses = parseInt(localStorage.getItem('electro_stat_losses') || '0', 10);
+    playerProfile.draws = parseInt(localStorage.getItem('electro_stat_draws') || '0', 10);
+    playerProfile.currentStreak = parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10);
+    playerProfile.bestStreak = parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10);
+    playerProfile.rating = parseInt(localStorage.getItem('electro_player_rating') || '1200', 10);
+    playerProfile.puzzles = parseInt(localStorage.getItem('electro_puzzles_solved') || '0', 10);
     
     try {
-        const savedRecs = localStorage.getItem('royal_bot_records');
+        const savedRecs = localStorage.getItem('electro_bot_records');
         if (savedRecs) {
-            lordProfile.botRecords = JSON.parse(savedRecs);
+            playerProfile.botRecords = JSON.parse(savedRecs);
         }
     } catch (e) {}
 
@@ -2816,35 +2816,35 @@ function loadProfile() {
     }
     
     const homeInput = document.getElementById('home-player-name');
-            const authInput = document.getElementById('auth-username-input');
+    const authInput = document.getElementById('auth-username-input');
     
-    if (homeInput) homeInput.value = lordProfile.name;
-            if (authInput) authInput.value = lordProfile.name;
+    if (homeInput) homeInput.value = playerProfile.name;
+    if (authInput) authInput.value = playerProfile.name;
     
     updateProfileUI();
 }
 
 function saveProfile() {
-    if (lordProfile.name) {
-        localStorage.setItem('royal_player_name', lordProfile.name);
-        localStorage.setItem('electro_player_name', lordProfile.name);
+    if (playerProfile.name) {
+        localStorage.setItem('electro_player_name', playerProfile.name);
     }
-    if (lordProfile.avatar) {
-        localStorage.setItem('electro_profile_avatar', lordProfile.avatar);
+    if (playerProfile.avatar) {
+        localStorage.setItem('electro_profile_avatar', playerProfile.avatar);
     }
-    if (lordProfile.avatarUrl !== undefined) {
-        localStorage.setItem('electro_profile_avatar_url', lordProfile.avatarUrl);
+    if (playerProfile.avatarUrl !== undefined) {
+        localStorage.setItem('electro_profile_avatar_url', playerProfile.avatarUrl);
     }
-    localStorage.setItem('electro_stat_matches', String(lordProfile.matches || 0));
-    localStorage.setItem('electro_stat_wins', String(lordProfile.wins || 0));
-    localStorage.setItem('electro_stat_losses', String(lordProfile.losses || 0));
-    localStorage.setItem('electro_stat_draws', String(lordProfile.draws || 0));
-    localStorage.setItem('electro_stat_current_streak', String(lordProfile.currentStreak || 0));
-    localStorage.setItem('electro_stat_best_streak', String(lordProfile.bestStreak || 0));
-    localStorage.setItem('electro_player_rating', String(lordProfile.rating || 1200));
+    localStorage.setItem('electro_stat_matches', String(playerProfile.matches || 0));
+    localStorage.setItem('electro_stat_wins', String(playerProfile.wins || 0));
+    localStorage.setItem('electro_stat_losses', String(playerProfile.losses || 0));
+    localStorage.setItem('electro_stat_draws', String(playerProfile.draws || 0));
+    localStorage.setItem('electro_stat_current_streak', String(playerProfile.currentStreak || 0));
+    localStorage.setItem('electro_stat_best_streak', String(playerProfile.bestStreak || 0));
+    localStorage.setItem('electro_player_rating', String(playerProfile.rating || 1200));
+    localStorage.setItem('electro_puzzles_solved', String(playerProfile.puzzles || 0));
         
-    if (lordProfile.botRecords) {
-        localStorage.setItem('royal_bot_records', JSON.stringify(lordProfile.botRecords));
+    if (playerProfile.botRecords) {
+        localStorage.setItem('electro_bot_records', JSON.stringify(playerProfile.botRecords));
     }
     updateProfileUI();
 }
@@ -2863,31 +2863,31 @@ function updateProfileUI() {
     const statPuzzles = document.getElementById('stat-puzzles');
     const botDefeatedCount = document.getElementById('bot-total-defeated');
     
-    if (pName) pName.textContent = lordProfile.name;
+    if (pName) pName.textContent = playerProfile.name;
     if (pRating) {
-        const r = lordProfile.rating || 1200;
+        const r = playerProfile.rating || 1200;
         pRating.textContent = `⚡ ${r} Elo • ${getRatingTitle(r)}`;
     }
-    if (statMatches) statMatches.textContent = lordProfile.matches || 0;
-    if (statWins) statWins.textContent = lordProfile.wins || 0;
-    if (statLosses) statLosses.textContent = lordProfile.losses || 0;
-    if (statDraws) statDraws.textContent = lordProfile.draws || 0;
+    if (statMatches) statMatches.textContent = playerProfile.matches || 0;
+    if (statWins) statWins.textContent = playerProfile.wins || 0;
+    if (statLosses) statLosses.textContent = playerProfile.losses || 0;
+    if (statDraws) statDraws.textContent = playerProfile.draws || 0;
     if (statWinrate) {
-        const m = lordProfile.matches || 0;
-        const w = lordProfile.wins || 0;
+        const m = playerProfile.matches || 0;
+        const w = playerProfile.wins || 0;
         statWinrate.textContent = m > 0 ? `${Math.round((w / m) * 100)}%` : '0%';
     }
-    if (statCurrentStreak) statCurrentStreak.textContent = lordProfile.currentStreak || 0;
-    if (statBestStreak) statBestStreak.textContent = lordProfile.bestStreak || 0;
-    if (statPuzzles) statPuzzles.textContent = lordProfile.puzzles || 0;
+    if (statCurrentStreak) statCurrentStreak.textContent = playerProfile.currentStreak || 0;
+    if (statBestStreak) statBestStreak.textContent = playerProfile.bestStreak || 0;
+    if (statPuzzles) statPuzzles.textContent = playerProfile.puzzles || 0;
     
     // Opponent Computer Records
     let totalBotsDefeated = 0;
-    if (lordProfile.botRecords) {
+    if (playerProfile.botRecords) {
         for (let d = 1; d <= 4; d++) {
             const el = document.getElementById(`rec-bot-${d}`);
-            if (el && lordProfile.botRecords[d]) {
-                const rec = lordProfile.botRecords[d];
+            if (el && playerProfile.botRecords[d]) {
+                const rec = playerProfile.botRecords[d];
                 el.textContent = `${rec.w || 0}W - ${rec.l || 0}L - ${rec.d || 0}D`;
                 if ((rec.w || 0) > 0) totalBotsDefeated++;
             }
@@ -2917,9 +2917,9 @@ function showToast(msg, type = 'info') {
 // =========================================================
 
 window.addEventListener('DOMContentLoaded', () => {
-    fx2p = new CastleFX('fx-canvas');
+    fx2p = new ElectroFX('fx-canvas');
         
-    applyTheme(royalSettings.theme);
+    applyTheme(electroSettings.theme);
     syncSettingsCheckboxes();
     loadProfile();
     setupEventListeners();
@@ -2935,5 +2935,5 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Open HOME SCREEN FIRST on launch!
     switchTab('home');
-    console.log('Electro King initialized successfully on Home screen with theme ' + royalSettings.theme);
+    console.log('Electro King initialized successfully on Home screen with theme ' + electroSettings.theme);
 });

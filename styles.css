@@ -92,8 +92,8 @@ body.theme-obsidian {
     --panel-border: rgba(76, 201, 240, 0.22);
 }
 
-/* THEME 3: ROYAL GOLD */
-body.theme-gold, body.theme-castle {
+/* THEME 3: GOLD VOLT */
+body.theme-gold {
     --bg-color: #0d0903;
     --bg-surface: #171005;
     --bg-card: #221808;
@@ -167,7 +167,7 @@ body {
 }
 
 /* =========================================================
-   HEADER & ROYAL WIDGETS
+   HEADER & TOP DOCK
    ========================================================= */
 .game-header {
     background: var(--panel-bg);
@@ -265,27 +265,6 @@ body {
     color: var(--text-color);
 }
 
-/* Lord Badge Widget */
-.lord-badge-widget {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(184, 46, 56, 0.18) 100%);
-    border: 1px solid var(--primary);
-    border-radius: 20px;
-    padding: 4px 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.lord-crown-icon {
-    font-size: 0.9rem;
-}
-
-.lord-title-text {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: var(--primary-light);
-}
 
 /* =========================================================
    TAB SCREENS VIEWPORT
@@ -825,14 +804,12 @@ body {
     box-shadow: 0 0 8px rgba(76, 201, 240, 0.3);
 }
 
-.theme-swatch.gold,
-.theme-swatch.castle {
+.theme-swatch.gold {
     background: linear-gradient(135deg, #ffd166 50%, #1b1306 50%);
     box-shadow: 0 0 8px rgba(255, 209, 102, 0.3);
 }
 
-.theme-swatch.matrix,
-.theme-swatch.wood {
+.theme-swatch.matrix {
     background: linear-gradient(135deg, #00ff66 50%, #07170c 50%);
     box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
 }
@@ -2135,7 +2112,7 @@ body {
     border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-/* Royal Honor Achievements Grid */
+/* Electro Achievements Grid */
 .achievements-grid {
     display: grid;
     grid-template-columns: 1fr;
