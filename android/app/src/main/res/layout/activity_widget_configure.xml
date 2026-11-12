@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0b071e"
+    android:fillViewport="true"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ELECTRO KING ⚡"
+            android:textColor="#00f5d4"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Widget Customizer &amp; Quick Launch Settings"
+            android:textColor="#9d99b3"
+            android:textSize="12sp" />
+
+        <!-- Title Editor -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="✏️ Widget Title"
+            android:textColor="#ffffff"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/cfg_title_input"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="#18123c"
+            android:hint="ELECTRO KING ⚡"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColor="#ffffff"
+            android:textColorHint="#6b7280"
+            android:textSize="14sp" />
+
+        <!-- Subtitle Editor -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="💬 Status / Subtitle"
+            android:textColor="#ffffff"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/cfg_sub_input"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="#18123c"
+            android:hint="🔥 5 Daily Puzzles"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColor="#ffffff"
+            android:textColorHint="#6b7280"
+            android:textSize="14sp" />
+
+        <!-- Theme Selection -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="🎨 Widget Style"
+            android:textColor="#ffffff"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:id="@+id/cfg_theme_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <RadioButton
+                android:id="@+id/cfg_radio_cyber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="⚡ Cyber Neon (Default)"
+                android:textColor="#00f5d4"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/cfg_radio_obsidian"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌌 Obsidian"
+                android:textColor="#4cc9f0"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/cfg_radio_gold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👑 Gold Volt"
+                android:textColor="#ffd166"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/cfg_radio_matrix"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌲 Matrix"
+                android:textColor="#00ff66"
+                android:textSize="14sp" />
+        </RadioGroup>
+
+        <!-- Save Button -->
+        <Button
+            android:id="@+id/cfg_save_btn"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="28dp"
+            android:background="#00f5d4"
+            android:text="⚡ SAVE &amp; APPLY WIDGET"
+            android:textColor="#0b071e"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</ScrollView>

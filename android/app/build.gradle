@@ -1,0 +1,52 @@
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+}
+
+android {
+    namespace 'com.electroking.chess'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.electroking.chess"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            debuggable true
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Single source of truth: package game assets directly from web/ directory
+    sourceSets {
+        main {
+            assets {
+                srcDirs = [file("${projectDir}/../../web")]
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'com.google.android.gms:play-services-auth:21.3.0'
+    implementation 'com.google.firebase:firebase-crashlytics:20.1.1'
+}

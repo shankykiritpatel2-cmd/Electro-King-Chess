@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "438419947496",
+    "project_id": "electrokingnew",
+    "storage_bucket": "electrokingnew.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438419947496:android:d5d2fac7b9ccbb69502e5d",
+        "android_client_info": {
+          "package_name": "com.electroking.chess"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB99iLBFSPHLCHt4VKWMz_RRyG51JPkkmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

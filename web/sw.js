@@ -1,18 +1,18 @@
-const CACHE_NAME = 'electro-king-v17';
+const CACHE_NAME = 'electro-king-v18';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './game.js',
   './manifest.json',
-  './icon_192.png',
-  './icon_512.png',
-  './launchericon-48x48.png',
-  './launchericon-72x72.png',
-  './launchericon-96x96.png',
-  './launchericon-144x144.png',
-  './screenshot_phone.png',
-  './screenshot_wide.png'
+  './assets/icon_192.png',
+  './assets/icon_512.png',
+  './assets/launchericon-48x48.png',
+  './assets/launchericon-72x72.png',
+  './assets/launchericon-96x96.png',
+  './assets/launchericon-144x144.png',
+  './assets/launchericon-192x192.png',
+  './assets/launchericon-512x512.png'
 ];
 
 // Install Event - cache core assets
