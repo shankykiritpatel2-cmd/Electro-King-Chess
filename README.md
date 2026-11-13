@@ -71,10 +71,31 @@ android {
 
 ---
 
-## 🌐 Web Version (PWA)
+## 🌐 Web Version (PWA & PC Desktop)
+
+The web version is fully optimized for **both Mobile and Desktop PC browsers** (Chrome, Edge, Firefox, Safari, Brave):
+
+### 💻 PC Web Features
+* **Mouse Drag & Drop:** Click and drag pieces directly to valid destination squares with live hover feedback, or use classic click-to-move.
+* **Responsive Desktop Layout:**
+  - Board automatically expands up to **560px** on desktop and widescreen monitors.
+  - Setup screen adapts into a clean **2-column grid** without vertical cramping.
+* **Full Keyboard Shortcuts:**
+  | Shortcut | Action |
+  | :--- | :--- |
+  | `←` / `→` | Step backward / forward through match move history |
+  | `↑` / `↓` (`Home` / `End`) | Jump to match start / return to live position |
+  | `Z` or `U` | Undo last move |
+  | `H` | Tactical Hint advisor |
+  | `F` | Flip board orientation (White ↔ Black) |
+  | `Esc` | Close active dialog / return to match |
+  | `1`, `2`, `3` | Switch tabs (1: Home, 2: Tactics, 3: Profile) |
+  | `⛶` (`F11`) | Toggle distraction-free Fullscreen mode |
+  | `?` | Show Keyboard Shortcuts help dialog |
+* **Cyber Aesthetic on PC:** Sleek electric-neon scrollbars, piece hover glow effects, square highlights, and high-voltage sound synthesis via the Web Audio API.
 
 ### Running Locally
-To test the web version locally with full Service Worker and PWA support:
+To test the web version locally with full PWA and PC desktop support:
 
 Using Python:
 ```bash

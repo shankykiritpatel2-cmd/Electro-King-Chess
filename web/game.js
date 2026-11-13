@@ -752,9 +752,53 @@ function draw2PlayerBoard() {
                 const pEl = document.createElement('div');
                 pEl.className = 'piece-svg animate-land';
                 pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+
+                // PC Mouse Drag & Drop
+                const canDrag = !isGameOver && !isGamePaused && (gameMode !== 'ai' || turn !== botSide) && (piece.color === turn);
+                if (canDrag) {
+                    pEl.classList.add('draggable');
+                    pEl.setAttribute('draggable', 'true');
+                    pEl.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({ r, c }));
+                        e.dataTransfer.effectAllowed = 'move';
+                        selectedSquare = { r, c };
+                        draw2PlayerBoard();
+                    });
+                }
                 sq.appendChild(pEl);
             }
             
+            // PC Drag & Drop Listeners on Square
+            sq.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            sq.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                sq.classList.add('drag-hover');
+            });
+            sq.addEventListener('dragleave', () => {
+                sq.classList.remove('drag-hover');
+            });
+            sq.addEventListener('drop', (e) => {
+                e.preventDefault();
+                sq.classList.remove('drag-hover');
+                try {
+                    const raw = e.dataTransfer.getData('text/plain');
+                    if (raw) {
+                        const from = JSON.parse(raw);
+                        if (from && typeof from.r === 'number' && typeof from.c === 'number') {
+                            selectedSquare = from;
+                            handle2PlayerSquareClick(r, c);
+                            return;
+                        }
+                    }
+                } catch (err) {}
+                if (selectedSquare) {
+                    handle2PlayerSquareClick(r, c);
+                }
+            });
+
             sq.addEventListener('click', () => handle2PlayerSquareClick(r, c));
             boardEl.appendChild(sq);
         }
@@ -1632,32 +1676,43 @@ function renderCurrentPuzzle() {
                     const pEl = document.createElement('div');
                     pEl.className = 'piece-svg';
                     pEl.innerHTML = getPieceSvg(piece.color, piece.type);
+                    if (!isCompleted && piece.color === 'white') {
+                        pEl.classList.add('draggable');
+                        pEl.setAttribute('draggable', 'true');
+                        pEl.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('text/plain', JSON.stringify({ r, c }));
+                            e.dataTransfer.effectAllowed = 'move';
+                            pzSelected = { r, c };
+                            drawPzBoard();
+                        });
+                    }
                     sq.appendChild(pEl);
                 }
-                
-                sq.addEventListener('click', () => {
+
+                function handlePzMove(targetR, targetC) {
                     if (isCompleted) {
                         showToast('✅ Puzzle already completed today!', 'info');
                         return;
                     }
                     
                     if (pzSelected) {
-                        if (pzSelected.r === r && pzSelected.c === c) {
+                        if (pzSelected.r === targetR && pzSelected.c === targetC) {
                             pzSelected = null;
                             drawPzBoard();
                             return;
                         }
                         
-                        if (piece && piece.color === 'white') {
-                            pzSelected = { r, c };
+                        const targetPiece = pzBoard[targetR][targetC];
+                        if (targetPiece && targetPiece.color === 'white') {
+                            pzSelected = { r: targetR, c: targetC };
                             drawPzBoard();
                             return;
                         }
                         
                         if (pzSelected.r === pz.solution.from.r && pzSelected.c === pz.solution.from.c &&
-                            r === pz.solution.to.r && c === pz.solution.to.c) {
+                            targetR === pz.solution.to.r && targetC === pz.solution.to.c) {
                             
-                            pzBoard[r][c] = pzBoard[pzSelected.r][pzSelected.c];
+                            pzBoard[targetR][targetC] = pzBoard[pzSelected.r][pzSelected.c];
                             pzBoard[pzSelected.r][pzSelected.c] = null;
                             pzSelected = null;
                             markPuzzleCompletedToday(currentPuzzleIdx);
@@ -1670,11 +1725,43 @@ function renderCurrentPuzzle() {
                             pzSelected = null;
                             drawPzBoard();
                         }
-                    } else if (piece && piece.color === 'white') {
-                        pzSelected = { r, c };
-                        drawPzBoard();
+                    } else {
+                        const curPiece = pzBoard[targetR][targetC];
+                        if (curPiece && curPiece.color === 'white') {
+                            pzSelected = { r: targetR, c: targetC };
+                            drawPzBoard();
+                        }
                     }
+                }
+
+                // Drag & Drop dropzone for Puzzle board
+                sq.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
                 });
+                sq.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    sq.classList.add('drag-hover');
+                });
+                sq.addEventListener('dragleave', () => {
+                    sq.classList.remove('drag-hover');
+                });
+                sq.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    sq.classList.remove('drag-hover');
+                    try {
+                        const raw = e.dataTransfer.getData('text/plain');
+                        if (raw) {
+                            const from = JSON.parse(raw);
+                            if (from && typeof from.r === 'number' && typeof from.c === 'number') {
+                                pzSelected = from;
+                            }
+                        }
+                    } catch (err) {}
+                    handlePzMove(r, c);
+                });
+                
+                sq.addEventListener('click', () => handlePzMove(r, c));
                 boardEl.appendChild(sq);
             }
         }
@@ -2556,6 +2643,135 @@ function setupEventListeners() {
             startNew2PlayerGame();
         });
     }
+
+    // --- PC WEB ENHANCEMENTS: Fullscreen & Shortcuts Modal ---
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+            }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '🗗<span class="header-btn-label"> Exit</span>';
+                fullscreenBtn.title = 'Exit Fullscreen (F11 / Esc)';
+            } else {
+                fullscreenBtn.innerHTML = '⛶<span class="header-btn-label"> Fullscreen</span>';
+                fullscreenBtn.title = 'Toggle Fullscreen (F11)';
+            }
+        });
+    }
+
+    const shortcutsInfoBtn = document.getElementById('shortcuts-info-btn');
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    const shortcutsCloseBtn = document.getElementById('shortcuts-close-btn');
+    const shortcutsDoneBtn = document.getElementById('shortcuts-done-btn');
+    if (shortcutsInfoBtn && shortcutsModal) {
+        shortcutsInfoBtn.addEventListener('click', () => shortcutsModal.classList.remove('hidden'));
+    }
+    if (shortcutsCloseBtn && shortcutsModal) {
+        shortcutsCloseBtn.addEventListener('click', () => shortcutsModal.classList.add('hidden'));
+    }
+    if (shortcutsDoneBtn && shortcutsModal) {
+        shortcutsDoneBtn.addEventListener('click', () => shortcutsModal.classList.add('hidden'));
+    }
+
+    // --- PC WEB KEYBOARD SHORTCUTS ---
+    window.addEventListener('keydown', (e) => {
+        // Do not intercept keystrokes if player is typing in an input field
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) return;
+
+        // Escape: close topmost open modal or return to home
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal-overlay:not(.hidden)');
+            if (openModals.length > 0) {
+                openModals.forEach(m => m.classList.add('hidden'));
+                e.preventDefault();
+                return;
+            }
+            const arenaScreen = document.getElementById('screen-arena');
+            if (arenaScreen && arenaScreen.classList.contains('active')) {
+                const menuBtn = document.getElementById('menu-btn');
+                if (menuBtn) menuBtn.click();
+                e.preventDefault();
+                return;
+            }
+        }
+
+        // Arrow Left: Replay Previous Move
+        if (e.key === 'ArrowLeft') {
+            const repPrevBtn = document.getElementById('replay-prev-btn');
+            if (repPrevBtn) repPrevBtn.click();
+            e.preventDefault();
+            return;
+        }
+
+        // Arrow Right: Replay Next Move
+        if (e.key === 'ArrowRight') {
+            const repNextBtn = document.getElementById('replay-next-btn');
+            if (repNextBtn) repNextBtn.click();
+            e.preventDefault();
+            return;
+        }
+
+        // Arrow Up / Home: Match Start
+        if (e.key === 'ArrowUp' || e.key === 'Home') {
+            const repStartBtn = document.getElementById('replay-start-btn');
+            if (repStartBtn) repStartBtn.click();
+            e.preventDefault();
+            return;
+        }
+
+        // Arrow Down / End: Return to Live Game
+        if (e.key === 'ArrowDown' || e.key === 'End') {
+            const repEndBtn = document.getElementById('replay-end-btn');
+            if (repEndBtn) repEndBtn.click();
+            e.preventDefault();
+            return;
+        }
+
+        // Z or U or Ctrl+Z: Undo Move
+        if ((e.key === 'z' || e.key === 'Z' || e.key === 'u' || e.key === 'U') && !e.shiftKey) {
+            const undoBtn = document.getElementById('undo-btn');
+            if (undoBtn) undoBtn.click();
+            e.preventDefault();
+            return;
+        }
+
+        // H: Tactical Hint
+        if (e.key === 'h' || e.key === 'H') {
+            const hintBtn = document.getElementById('hint-btn');
+            if (hintBtn) hintBtn.click();
+            e.preventDefault();
+            return;
+        }
+
+        // F: Flip Board Orientation
+        if (e.key === 'f' || e.key === 'F') {
+            isManualFlipped = !isManualFlipped;
+            localStorage.setItem('royal_chess_manual_flip', isManualFlipped);
+            draw2PlayerBoard();
+            showToast(isManualFlipped ? 'Board Flipped (Black View) 🔄' : 'Board Normal (White View) ⚪');
+            e.preventDefault();
+            return;
+        }
+
+        // ?: Toggle Shortcuts Modal
+        if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+            if (shortcutsModal) shortcutsModal.classList.toggle('hidden');
+            e.preventDefault();
+            return;
+        }
+
+        // 1, 2, 3: Tab Switching
+        if (e.key === '1') { switchTab('home'); e.preventDefault(); return; }
+        if (e.key === '2') { switchTab('puzzles'); e.preventDefault(); return; }
+        if (e.key === '3') { switchTab('profile'); e.preventDefault(); return; }
+    });
 }
 
 function startNew2PlayerGame() {

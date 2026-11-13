@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=39">
+    <link rel="stylesheet" href="styles.css?v=40">
     <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/launchericon-48x48.png">
@@ -30,6 +30,10 @@
                 <div class="turn-status-widget" id="turn-banner" style="display: none;">
                     <span class="turn-dot-pulse" id="turn-dot"></span>
                     <span class="turn-label" id="turn-message">White's Turn</span>
+                </div>
+                <div class="header-pc-controls">
+                    <button type="button" class="header-btn" id="shortcuts-info-btn" title="Keyboard Shortcuts (?)">⌨️<span class="header-btn-label"> Shortcuts</span></button>
+                    <button type="button" class="header-btn" id="fullscreen-btn" title="Toggle Fullscreen (F11)">⛶<span class="header-btn-label"> Fullscreen</span></button>
                 </div>
             </div>
         </header>
@@ -214,10 +218,10 @@
                             <span class="history-empty-placeholder">Match ready to commence...</span>
                         </div>
                         <div class="replay-controls-group">
-                            <button type="button" class="replay-step-btn" id="replay-start-btn" title="Start of Match">⏮️</button>
-                            <button type="button" class="replay-step-btn" id="replay-prev-btn" title="Previous Move">◀</button>
-                            <button type="button" class="replay-step-btn" id="replay-next-btn" title="Next Move">▶</button>
-                            <button type="button" class="replay-step-btn" id="replay-end-btn" title="Live Position">⏭️</button>
+                            <button type="button" class="replay-step-btn" id="replay-start-btn" title="Start of Match [↑ / Home]">⏮️</button>
+                            <button type="button" class="replay-step-btn" id="replay-prev-btn" title="Previous Move [←]">◀</button>
+                            <button type="button" class="replay-step-btn" id="replay-next-btn" title="Next Move [→]">▶</button>
+                            <button type="button" class="replay-step-btn" id="replay-end-btn" title="Live Position [↓ / End]">⏭️</button>
                         </div>
                     </div>
 
@@ -249,19 +253,19 @@
 
                 <!-- BOTTOM IN-GAME ACTION DOCK -->
                 <div class="in-game-controls-widget">
-                    <button id="undo-btn" class="clean-action-btn" title="Undo Move">
+                    <button id="undo-btn" class="clean-action-btn" title="Undo Move [Z / U]">
                         <span class="action-icon">↩️</span>
-                        <span class="action-txt">Undo</span>
+                        <span class="action-txt">Undo<kbd class="pc-kbd">Z</kbd></span>
                     </button>
                     
-                    <button id="hint-btn" class="clean-action-btn accent-action" title="Tactical Advisor">
+                    <button id="hint-btn" class="clean-action-btn accent-action" title="Tactical Advisor [H]">
                         <span class="action-icon">💡</span>
-                        <span class="action-txt">Hint</span>
+                        <span class="action-txt">Hint<kbd class="pc-kbd">H</kbd></span>
                     </button>
 
-                    <button id="menu-btn" class="clean-action-btn" title="Return to Home">
+                    <button id="menu-btn" class="clean-action-btn" title="Return to Home [Esc]">
                         <span class="action-icon">🏠</span>
-                        <span class="action-txt">Home</span>
+                        <span class="action-txt">Home<kbd class="pc-kbd">Esc</kbd></span>
                     </button>
                 </div>
             </section>
@@ -818,6 +822,58 @@
             <div style="display:flex; gap:8px; margin-top:16px;">
                 <button id="draw-accept-btn" class="start-btn" style="flex:1;">ACCEPT DRAW 🤝</button>
                 <button id="draw-decline-btn" class="secondary-btn" style="flex:1;">DECLINE ⚔️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PC KEYBOARD SHORTCUTS MODAL -->
+    <div class="modal-overlay hidden" id="shortcuts-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⌨️ PC Keyboard Shortcuts</h3>
+                <button class="modal-close-btn" id="shortcuts-close-btn">&times;</button>
+            </div>
+            <p class="modal-sub">Master keyboard controls for desktop play:</p>
+            <div class="shortcuts-list-widget">
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>←</kbd> / <kbd>→</kbd></span>
+                    <span class="shortcut-desc">Step backward / forward through match moves</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>↑</kbd> / <kbd>↓</kbd></span>
+                    <span class="shortcut-desc">Jump to match start / return to live position</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>Z</kbd> or <kbd>U</kbd></span>
+                    <span class="shortcut-desc">Undo last move</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>H</kbd></span>
+                    <span class="shortcut-desc">Request tactical advice / hint</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>F</kbd></span>
+                    <span class="shortcut-desc">Flip board orientation (White ↔ Black)</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>Esc</kbd></span>
+                    <span class="shortcut-desc">Close dialog / return to match</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span>
+                    <span class="shortcut-desc">Switch Tabs (1: Home, 2: Tactics, 3: Profile)</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>F11</kbd></span>
+                    <span class="shortcut-desc">Toggle fullscreen mode</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-keys"><kbd>Mouse</kbd></span>
+                    <span class="shortcut-desc">Click-to-move OR Drag-and-drop pieces</span>
+                </div>
+            </div>
+            <div style="margin-top: 14px;">
+                <button type="button" class="start-btn" id="shortcuts-done-btn" style="width: 100%;">GOT IT ⚡</button>
             </div>
         </div>
     </div>
