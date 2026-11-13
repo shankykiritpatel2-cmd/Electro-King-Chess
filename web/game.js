@@ -3133,6 +3133,16 @@ function showToast(msg, type = 'info') {
 // =========================================================
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Detect platform: Android app/device vs PC
+    const isAndroid = !!window.AndroidBridge || /Android/i.test(navigator.userAgent || '');
+    if (isAndroid) {
+        document.body.classList.add('is-android');
+        document.body.classList.remove('is-pc');
+    } else {
+        document.body.classList.add('is-pc');
+        document.body.classList.remove('is-android');
+    }
+
     fx2p = new ElectroFX('fx-canvas');
         
     applyTheme(electroSettings.theme);

@@ -2296,6 +2296,16 @@ body {
    PC DESKTOP SYSTEM & ENHANCEMENTS
    ========================================================= */
 
+/* Android Home Screen Widget Editor - Hidden on PC, stays on Android */
+.android-only-widget {
+    display: none !important;
+}
+
+.is-android .android-only-widget,
+body.is-android .android-only-widget {
+    display: flex !important;
+}
+
 /* 1. Sleek Cyber Scrollbars for PC Browsers */
 ::-webkit-scrollbar {
     width: 8px;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'electro-king-v19';
+const CACHE_NAME = 'electro-king-v20';
 const ASSETS = [
   './',
   './index.html',

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=40">
+    <link rel="stylesheet" href="styles.css?v=41">
     <!-- PWA Manifest link -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/launchericon-48x48.png">
@@ -16,6 +16,14 @@
     <meta name="theme-color" content="#0b071e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        // Instant platform detection: Android vs PC
+        if (window.AndroidBridge || /Android/i.test(navigator.userAgent || '')) {
+            document.documentElement.classList.add('is-android');
+        } else {
+            document.documentElement.classList.add('is-pc');
+        }
+    </script>
 </head>
 <body class="theme-cyber">
     <div class="game-container">
@@ -444,8 +452,8 @@
                         </div>
                     </div>
 
-                    <!-- ANDROID HOME SCREEN WIDGETS (ELECTRO KING) -->
-                    <div class="settings-card">
+                    <!-- ANDROID HOME SCREEN WIDGETS (ELECTRO KING) - Only on Android devices/app -->
+                    <div class="settings-card android-only-widget" id="android-widgets-card">
                         <h4 class="settings-heading">📱 Android Home Screen Widgets</h4>
                         <p style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 8px;">Configure your home-screen widget styling and quick actions for ELECTRO KING:</p>
                         
