@@ -955,7 +955,11 @@ function execute2PlayerMove(from, to, promoPiece = null) {
         board[from.r][0] = null;
     }
     
-    const finalPiece = promoPiece ? { type: promoPiece, color: movingPiece.color, hasMoved: true } : { ...movingPiece, hasMoved: true };
+    let effectivePromo = promoPiece;
+    if (!effectivePromo && movingPiece.type === 'p' && (to.r === 0 || to.r === 7)) {
+        effectivePromo = 'q';
+    }
+    const finalPiece = effectivePromo ? { type: effectivePromo, color: movingPiece.color, hasMoved: true } : { ...movingPiece, hasMoved: true };
     board[to.r][to.c] = finalPiece;
     board[from.r][from.c] = null;
     
@@ -1017,69 +1021,363 @@ function triggerDefeatLightning2P(kingSq) {
     }
 }
 
+// =========================================================
+// CALIBRATED CHESS AI ENGINE (SPARKY, CYBERKNIGHT, VOLTQUEEN, ELECTROKING)
+// =========================================================
+
+const AI_VALS = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+
+const AI_PST_P = [
+    [  0,   0,   0,   0,   0,   0,   0,   0],
+    [ 50,  50,  50,  50,  50,  50,  50,  50],
+    [ 10,  10,  20,  30,  30,  20,  10,  10],
+    [  5,   5,  10,  25,  25,  10,   5,   5],
+    [  0,   0,   0,  20,  20,   0,   0,   0],
+    [  5,  -5, -10,   0,   0, -10,  -5,   5],
+    [  5,  10,  10, -20, -20,  10,  10,   5],
+    [  0,   0,   0,   0,   0,   0,   0,   0]
+];
+
+const AI_PST_N = [
+    [-50, -40, -30, -30, -30, -30, -40, -50],
+    [-40, -20,   0,   5,   5,   0, -20, -40],
+    [-30,   5,  15,  20,  20,  15,   5, -30],
+    [-30,   0,  15,  25,  25,  15,   0, -30],
+    [-30,   5,  15,  25,  25,  15,   5, -30],
+    [-30,   0,  10,  15,  15,  10,   0, -30],
+    [-40, -20,   0,   0,   0,   0, -20, -40],
+    [-50, -40, -30, -30, -30, -30, -40, -50]
+];
+
+const AI_PST_B = [
+    [-20, -10, -10, -10, -10, -10, -10, -20],
+    [-10,   5,   0,   0,   0,   0,   5, -10],
+    [-10,  10,  10,  10,  10,  10,  10, -10],
+    [-10,   0,  10,  15,  15,  10,   0, -10],
+    [-10,   5,   5,  15,  15,   5,   5, -10],
+    [-10,   0,   5,  10,  10,   5,   0, -10],
+    [-10,   0,   0,   0,   0,   0,   0, -10],
+    [-20, -10, -10, -10, -10, -10, -10, -20]
+];
+
+const AI_PST_R = [
+    [  0,   0,   0,   5,   5,   0,   0,   0],
+    [ -5,   0,   0,   0,   0,   0,   0,  -5],
+    [ -5,   0,   0,   0,   0,   0,   0,  -5],
+    [ -5,   0,   0,   0,   0,   0,   0,  -5],
+    [ -5,   0,   0,   0,   0,   0,   0,  -5],
+    [ -5,   0,   0,   0,   0,   0,   0,  -5],
+    [  5,  10,  10,  10,  10,  10,  10,   5],
+    [  0,   0,   0,   0,   0,   0,   0,   0]
+];
+
+const AI_PST_Q = [
+    [-20, -10, -10,  -5,  -5, -10, -10, -20],
+    [-10,   0,   5,   0,   0,   0,   0, -10],
+    [-10,   5,   5,   5,   5,   5,   0, -10],
+    [  0,   0,   5,   5,   5,   5,   0,  -5],
+    [ -5,   0,   5,   5,   5,   5,   0,  -5],
+    [-10,   0,   5,   5,   5,   5,   0, -10],
+    [-10,   0,   0,   0,   0,   0,   0, -10],
+    [-20, -10, -10,  -5,  -5, -10, -10, -20]
+];
+
+const AI_PST_K = [
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-20, -30, -30, -40, -40, -30, -30, -20],
+    [-10, -20, -20, -20, -20, -20, -20, -10],
+    [ 20,  20,   0,   0,   0,   0,  20,  20],
+    [ 20,  30,  10,   0,   0,  10,  30,  20]
+];
+
+const AI_OPENING_BOOK = [
+    ["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "f8c5"], // Italian Game
+    ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6"], // Ruy Lopez
+    ["e2e4", "c7c5", "g1f3", "d7d6", "d2d4", "c5d4"], // Sicilian Defense
+    ["e2e4", "e7e6", "d2d4", "d7d5", "b1c3", "g8f6"], // French Defense
+    ["e2e4", "c7c6", "d2d4", "d7d5", "b1c3", "d5e4"], // Caro-Kann Defense
+    ["d2d4", "d7d5", "c2c4", "e7e6", "b1c3", "g8f6"], // Queen's Gambit Declined
+    ["d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "d7d5"], // Grünfeld Defense
+    ["d2d4", "g8f6", "c2c4", "e7e6", "g1f3", "b7b6"]  // Queen's Indian Defense
+];
+
+function aiDoMove(m, b) {
+    const fromP = b[m.from.r][m.from.c];
+    const toP = b[m.to.r][m.to.c];
+    const undoData = {
+        from: m.from, to: m.to, fromPiece: fromP, toPiece: toP, hasMoved: fromP.hasMoved, castlingRook: null
+    };
+
+    if (m.to.isCastling === 'kingside') {
+        undoData.castlingRook = { fromC: 7, toC: 5, piece: b[m.from.r][7] };
+        b[m.from.r][5] = { ...b[m.from.r][7], hasMoved: true };
+        b[m.from.r][7] = null;
+    } else if (m.to.isCastling === 'queenside') {
+        undoData.castlingRook = { fromC: 0, toC: 3, piece: b[m.from.r][0] };
+        b[m.from.r][3] = { ...b[m.from.r][0], hasMoved: true };
+        b[m.from.r][0] = null;
+    }
+
+    let promoType = fromP.type;
+    if (fromP.type === 'p' && (m.to.r === 0 || m.to.r === 7)) promoType = 'q';
+
+    b[m.to.r][m.to.c] = { ...fromP, type: promoType, hasMoved: true };
+    b[m.from.r][m.from.c] = null;
+    return undoData;
+}
+
+function aiUndoMove(undoData, b) {
+    const { from, to, fromPiece, toPiece, hasMoved, castlingRook } = undoData;
+    b[from.r][from.c] = { ...fromPiece, hasMoved };
+    b[to.r][to.c] = toPiece;
+    if (castlingRook) {
+        b[from.r][castlingRook.fromC] = castlingRook.piece;
+        b[from.r][castlingRook.toC] = null;
+    }
+}
+
+function aiGetAllLegalMoves(color, b) {
+    const all = [];
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (b[r][c] && b[r][c].color === color) {
+                const pseudo = getPseudoLegalMoves(r, c, b);
+                for (let i = 0; i < pseudo.length; i++) {
+                    const m = pseudo[i];
+                    const undo = aiDoMove({ from: { r, c }, to: m }, b);
+                    const inCheck = isKingInCheck(color, b);
+                    aiUndoMove(undo, b);
+                    if (!inCheck) {
+                        all.push({ from: { r, c }, to: m });
+                    }
+                }
+            }
+        }
+    }
+    return all;
+}
+
+function aiEvaluatePosition(b, colorToMove) {
+    let score = 0;
+    let whiteMaterial = 0, blackMaterial = 0;
+    let whiteBishops = 0, blackBishops = 0;
+    let whiteKing = null, blackKing = null;
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const p = b[r][c];
+            if (!p) continue;
+            const val = AI_VALS[p.type];
+            const pstR = p.color === 'white' ? r : 7 - r;
+            const pstC = c;
+            let pstVal = 0;
+
+            if (p.type === 'p') pstVal = AI_PST_P[pstR][pstC];
+            else if (p.type === 'n') pstVal = AI_PST_N[pstR][pstC];
+            else if (p.type === 'b') {
+                pstVal = AI_PST_B[pstR][pstC];
+                if (p.color === 'white') whiteBishops++; else blackBishops++;
+            }
+            else if (p.type === 'r') pstVal = AI_PST_R[pstR][pstC];
+            else if (p.type === 'q') pstVal = AI_PST_Q[pstR][pstC];
+            else if (p.type === 'k') {
+                pstVal = AI_PST_K[pstR][pstC];
+                if (p.color === 'white') whiteKing = { r, c }; else blackKing = { r, c };
+            }
+
+            if (p.type !== 'k') {
+                if (p.color === 'white') whiteMaterial += val;
+                else blackMaterial += val;
+            }
+
+            score += (p.color === 'white' ? (val + pstVal) : -(val + pstVal));
+        }
+    }
+
+    if (whiteBishops >= 2) score += 35;
+    if (blackBishops >= 2) score -= 35;
+
+    // Cornering endgame logic (ElectroKing conversion power)
+    if (whiteMaterial > blackMaterial + 300 && blackKing && whiteKing) {
+        const edgeDist = Math.abs(3.5 - blackKing.r) + Math.abs(3.5 - blackKing.c);
+        score += edgeDist * 16;
+        const kingDist = Math.abs(whiteKing.r - blackKing.r) + Math.abs(whiteKing.c - blackKing.c);
+        score += (14 - kingDist) * 12;
+    } else if (blackMaterial > whiteMaterial + 300 && whiteKing && blackKing) {
+        const edgeDist = Math.abs(3.5 - whiteKing.r) + Math.abs(3.5 - whiteKing.c);
+        score -= edgeDist * 16;
+        const kingDist = Math.abs(whiteKing.r - blackKing.r) + Math.abs(whiteKing.c - blackKing.c);
+        score += (14 - kingDist) * 12;
+    }
+
+    return colorToMove === 'white' ? score : -score;
+}
+
+function aiOrderMoves(moves, b) {
+    return moves.sort((a, bMove) => {
+        const victimA = b[a.to.r][a.to.c] ? AI_VALS[b[a.to.r][a.to.c].type] : 0;
+        const attackerA = AI_VALS[b[a.from.r][a.from.c].type];
+        const scoreA = victimA > 0 ? (victimA * 10 - attackerA) : 0;
+
+        const victimB = b[bMove.to.r][bMove.to.c] ? AI_VALS[b[bMove.to.r][bMove.to.c].type] : 0;
+        const attackerB = AI_VALS[b[bMove.from.r][bMove.from.c].type];
+        const scoreB = victimB > 0 ? (victimB * 10 - attackerB) : 0;
+
+        return scoreB - scoreA;
+    });
+}
+
+function aiQuiescence(b, alpha, beta, color, maxDepth = 2) {
+    const standPat = aiEvaluatePosition(b, color);
+    if (standPat >= beta) return beta;
+    if (alpha < standPat) alpha = standPat;
+    if (maxDepth <= 0) return alpha;
+
+    const opp = color === 'white' ? 'black' : 'white';
+    const allMoves = aiGetAllLegalMoves(color, b);
+    const captures = aiOrderMoves(allMoves.filter(m => b[m.to.r][m.to.c] !== null), b);
+
+    for (let i = 0; i < captures.length; i++) {
+        const undo = aiDoMove(captures[i], b);
+        const score = -aiQuiescence(b, -beta, -alpha, opp, maxDepth - 1);
+        aiUndoMove(undo, b);
+        if (score >= beta) return beta;
+        if (score > alpha) alpha = score;
+    }
+    return alpha;
+}
+
+function aiNegamax(b, depth, alpha, beta, color, useQSearch = true) {
+    const opp = color === 'white' ? 'black' : 'white';
+    const legals = aiGetAllLegalMoves(color, b);
+
+    if (legals.length === 0) {
+        if (isKingInCheck(color, b)) return -100000 - depth;
+        return 0;
+    }
+
+    if (depth <= 0) {
+        return useQSearch ? aiQuiescence(b, alpha, beta, color, 2) : aiEvaluatePosition(b, color);
+    }
+
+    const ordered = aiOrderMoves(legals, b);
+    let maxScore = -Infinity;
+
+    for (let i = 0; i < ordered.length; i++) {
+        const undo = aiDoMove(ordered[i], b);
+        const score = -aiNegamax(b, depth - 1, -beta, -alpha, opp, useQSearch);
+        aiUndoMove(undo, b);
+        if (score > maxScore) maxScore = score;
+        if (score > alpha) alpha = score;
+        if (alpha >= beta) break;
+    }
+    return maxScore;
+}
+
+function aiRootSearch(b, color, depth, useQSearch = true) {
+    const allMoves = aiGetAllLegalMoves(color, b);
+    if (allMoves.length === 0) return null;
+    const opp = color === 'white' ? 'black' : 'white';
+    const ordered = aiOrderMoves(allMoves, b);
+
+    let scored = [];
+    for (let i = 0; i < ordered.length; i++) {
+        const undo = aiDoMove(ordered[i], b);
+        const score = -aiNegamax(b, depth - 1, -Infinity, Infinity, opp, useQSearch);
+        aiUndoMove(undo, b);
+        scored.push({ m: ordered[i], score });
+    }
+    scored.sort((a, b) => b.score - a.score);
+    return scored;
+}
+
+function aiMoveToString(m) {
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+    return `${files[m.from.c]}${ranks[m.from.r]}${files[m.to.c]}${ranks[m.to.r]}`;
+}
+
+function aiStringToMove(str, color, b) {
+    const files = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5, g: 6, h: 7 };
+    const ranks = { '8': 0, '7': 1, '6': 2, '5': 3, '4': 4, '3': 5, '2': 6, '1': 7 };
+    const fromR = ranks[str[1]], fromC = files[str[0]];
+    const toR = ranks[str[3]], toC = files[str[2]];
+    const legals = aiGetAllLegalMoves(color, b);
+    return legals.find(m => m.from.r === fromR && m.from.c === fromC && m.to.r === toR && m.to.c === toC);
+}
+
+function getCalibratedAIMove(diff, botColor, b, playedMoves = []) {
+    const allMoves = aiGetAllLegalMoves(botColor, b);
+    if (allMoves.length === 0) return null;
+
+    // 1. Opening Book
+    const maxBook = diff === 4 ? 8 : (diff === 3 ? 5 : (diff === 2 ? 3 : 1));
+    if (playedMoves.length < maxBook) {
+        const historyStr = playedMoves.map(m => aiMoveToString(m));
+        const matched = AI_OPENING_BOOK.filter(line => {
+            if (line.length <= historyStr.length) return false;
+            for (let i = 0; i < historyStr.length; i++) {
+                if (line[i] !== historyStr[i]) return false;
+            }
+            return true;
+        });
+        if (matched.length > 0) {
+            const chosenLine = matched[Math.floor(Math.random() * matched.length)];
+            const bookMove = aiStringToMove(chosenLine[historyStr.length], botColor, b);
+            if (bookMove) return bookMove;
+        }
+    }
+
+    // 2. ⚡ Sparky (~600 Elo): Depth 1 + 30% blunder probability
+    if (diff === 1) {
+        if (Math.random() < 0.30) {
+            return allMoves[Math.floor(Math.random() * allMoves.length)];
+        }
+        const scored = aiRootSearch(b, botColor, 1, false);
+        return (scored && scored.length > 0) ? scored[0].m : allMoves[0];
+    }
+
+    // 3. 🛡️ CyberKnight (~1200 Elo): Depth 2 + 12% probability of picking 2nd best move
+    if (diff === 2) {
+        const scored = aiRootSearch(b, botColor, 2, false);
+        if (scored && scored.length > 1 && Math.random() < 0.12) {
+            return scored[1].m;
+        }
+        return (scored && scored.length > 0) ? scored[0].m : allMoves[0];
+    }
+
+    // 4. 👑 VoltQueen (~1700 Elo): Depth 3 + 6% inaccuracy when evaluation is close (<45 cp)
+    if (diff === 3) {
+        const scored = aiRootSearch(b, botColor, 3, false);
+        if (scored && scored.length > 1 && Math.random() < 0.06 && (scored[0].score - scored[1].score < 45)) {
+            return scored[1].m;
+        }
+        return (scored && scored.length > 0) ? scored[0].m : allMoves[0];
+    }
+
+    // 5. ⚔️ ElectroKing (~2200 Elo): Depth 4 + Quiescence Search + MVV-LVA move ordering + Endgame King cornering
+    if (diff === 4) {
+        const scored = aiRootSearch(b, botColor, 4, true);
+        return (scored && scored.length > 0) ? scored[0].m : allMoves[0];
+    }
+
+    return allMoves[0];
+}
+
 function make2PlayerAIMove() {
     if (isGameOver || isGamePaused || turn !== botSide) return;
     const allMoves = getAllLegalMoves(botSide, board);
     if (allMoves.length === 0) return;
     
-    let chosenMove = null;
+    // Extract played move coordinates from history
+    const playedMoves = (history || []).map(h => h.lastMove).filter(Boolean);
+    const chosenMove = getCalibratedAIMove(difficulty, botSide, board, playedMoves);
+    const finalMove = chosenMove || allMoves[Math.floor(Math.random() * allMoves.length)];
     
-    if (difficulty === 1) {
-        // Sparky (~600 Elo): Random with occasional capture
-        chosenMove = allMoves[Math.floor(Math.random() * allMoves.length)];
-    } else if (difficulty === 2) {
-        // CyberKnight (~1200 Elo): Prefer captures, checks, and center control
-        const captureMoves = allMoves.filter(m => board[m.to.r][m.to.c] !== null);
-        chosenMove = captureMoves.length > 0 ? captureMoves[Math.floor(Math.random() * captureMoves.length)] : allMoves[Math.floor(Math.random() * allMoves.length)];
-    } else if (difficulty === 3) {
-        // VoltQueen (~1700 Elo): Material evaluation with center weighting
-        let bestVal = -999999;
-        const vals = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-        
-        allMoves.forEach(m => {
-            const nextB = cloneBoard(board);
-            const target = nextB[m.to.r][m.to.c];
-            nextB[m.to.r][m.to.c] = nextB[m.from.r][m.from.c];
-            nextB[m.from.r][m.from.c] = null;
-            
-            let moveScore = target ? vals[target.type] : 0;
-            if (isKingInCheck(playerSide, nextB)) moveScore += 50;
-            if (m.to.r >= 3 && m.to.r <= 4 && m.to.c >= 3 && m.to.c <= 4) moveScore += 15;
-            
-            if (moveScore > bestVal) {
-                bestVal = moveScore;
-                chosenMove = m;
-            }
-        });
-        if (!chosenMove) chosenMove = allMoves[0];
-    } else {
-        // ElectroKing (~2200 Elo): Deep tactical calculation with king safety
-        let bestVal = -999999;
-        const vals = { p: 100, n: 330, b: 340, r: 520, q: 950, k: 20000 };
-        
-        allMoves.forEach(m => {
-            const nextB = cloneBoard(board);
-            const target = nextB[m.to.r][m.to.c];
-            nextB[m.to.r][m.to.c] = nextB[m.from.r][m.from.c];
-            nextB[m.from.r][m.from.c] = null;
-            
-            let moveScore = target ? vals[target.type] : 0;
-            if (isKingInCheck(playerSide, nextB)) moveScore += 80;
-            if (m.to.r >= 3 && m.to.r <= 4 && m.to.c >= 3 && m.to.c <= 4) moveScore += 25;
-            // Penalize leaving pieces under immediate attack
-            if (isSquareAttacked(m.to.r, m.to.c, playerSide, nextB)) {
-                moveScore -= (vals[nextB[m.to.r][m.to.c].type] * 0.8);
-            }
-            
-            if (moveScore > bestVal) {
-                bestVal = moveScore;
-                chosenMove = m;
-            }
-        });
-        if (!chosenMove) chosenMove = allMoves[0];
-    }
-    
-    execute2PlayerMove(chosenMove.from, chosenMove.to);
+    execute2PlayerMove(finalMove.from, finalMove.to);
 }
 
 function addMoveHistoryNotation(from, to, piece, isCapture) {
