@@ -35,6 +35,8 @@ android/local.properties
 # Signing Keystores & Credentials
 *.jks
 *.keystore
+keystore.properties
+android/keystore.properties
 
 # Android Profiling & Crash Dumps
 captures/
