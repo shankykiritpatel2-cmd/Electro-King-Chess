@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms and Conditions - ELECTRO KING</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/launchericon-48x48.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e17;
+            --card-bg: rgba(13, 21, 39, 0.9);
+            --cyan: #00f3ff;
+            --blue-glow: rgba(0, 243, 255, 0.35);
+            --gold: #ffd700;
+            --text-main: #f0f6fc;
+            --text-muted: #8b9bb4;
+            --border: rgba(0, 243, 255, 0.25);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(ellipse at 50% 0%, rgba(0, 243, 255, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(255, 215, 0, 0.08) 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 24px 16px 40px;
+        }
+        .nav-bar {
+            max-width: 860px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(10, 14, 23, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .nav-brand {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--cyan);
+            text-decoration: none;
+            text-shadow: 0 0 10px var(--blue-glow);
+        }
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--cyan);
+        }
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--blue-glow);
+            backdrop-filter: blur(12px);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+        .logo-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--cyan);
+            text-shadow: 0 0 12px var(--blue-glow);
+            margin-bottom: 8px;
+        }
+        .tagline {
+            color: var(--gold);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(0, 243, 255, 0.12);
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .meta-dates {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            color: var(--cyan);
+            margin: 28px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+            padding-bottom: 6px;
+        }
+        p, li {
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+        strong {
+            color: var(--text-main);
+        }
+        ul {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+        .contact-card {
+            background: rgba(0, 243, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 24px;
+            margin-top: 16px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .footer-links {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .btn-play {
+            display: inline-block;
+            background: linear-gradient(135deg, #00f3ff, #0088ff);
+            color: #0b071e;
+            font-family: 'Orbitron', monospace;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 16px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-play:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 22px rgba(0, 243, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-brand">ELECTRO KING ⚡</a>
+        <div class="nav-links">
+            <a href="index.html">Play Game</a>
+            <a href="about.html">About Us</a>
+            <a href="terms.html" class="active">Terms</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo-title">ELECTRO KING ⚡</div>
+            <div class="tagline">Think Smart. Play Strong. Rule the Board.</div>
+            <div class="badge">Terms and Conditions</div>
+            <div class="meta-dates">Effective Date: 21 November 2026 &bull; Last Updated: 21 November 2026</div>
+        </div>
+
+        <p><strong>Welcome to ELECTRO KING!</strong></p>
+        <p>These Terms and Conditions govern your access to and use of the ELECTRO KING website, chess game, and related services.</p>
+        <p>By accessing or using ELECTRO KING, you agree to these Terms and Conditions. If you do not agree, please discontinue using the platform.</p>
+
+        <h2>1. About the Platform</h2>
+        <p>ELECTRO KING is a chess gaming platform created by <strong>Viaan Patel</strong> and published by <strong>Shanky Patel</strong>.</p>
+        <p>The platform is designed to provide chess gameplay and related features, which may include:</p>
+        <ul>
+            <li>Playing chess against calibrated computer opponents (Sparky, CyberKnight, VoltQueen, ElectroKing).</li>
+            <li>Multiple computer difficulty levels.</li>
+            <li>Chessboards and visual themes (Electro, Obsidian, Gold, Matrix).</li>
+            <li>5 Dynamic Daily Chess Puzzles with verified checkmate sequences.</li>
+            <li>Player profiles, points, achievements, and career statistics.</li>
+            <li>Game history, PGN exports, and player preferences.</li>
+            <li>Other chess-related features introduced in future updates.</li>
+        </ul>
+        <p>Available features may change over time as the platform expands.</p>
+
+        <h2>2. Acceptable Use</h2>
+        <p>You agree to use ELECTRO KING responsibly and lawfully. You must not:</p>
+        <ul>
+            <li>Attempt to damage, disrupt, or interfere with the platform.</li>
+            <li>Attempt unauthorized access to systems or accounts.</li>
+            <li>Exploit bugs or vulnerabilities to gain an unfair advantage.</li>
+            <li>Upload harmful files, viruses, or malicious code.</li>
+            <li>Use the platform for unlawful activities.</li>
+            <li>Attempt to reverse-engineer or misuse protected components, except where permitted by applicable law.</li>
+        </ul>
+
+        <h2>3. Intellectual Property</h2>
+        <p>The ELECTRO KING name, branding, original graphics, website design, original code, and other original materials are protected by applicable intellectual property laws.</p>
+        <p>You may use the platform for personal entertainment. You may not reproduce, redistribute, commercially exploit, or modify protected materials without permission, except where permitted by applicable law or an applicable open-source licence.</p>
+        <p>Third-party components remain subject to their respective licences and ownership rights.</p>
+
+        <h2>4. Chess Gameplay</h2>
+        <p>ELECTRO KING provides chess gameplay for entertainment and recreational purposes.</p>
+        <p>Computer opponents and their displayed ratings are intended to represent approximate playing strengths.</p>
+        <p>Computer ratings are estimates and are not official FIDE ratings or guarantees of a particular playing strength. Game results, statistics, and performance information may not always represent a player's official chess rating.</p>
+
+        <h2>5. Accounts and Player Information</h2>
+        <p>Some features may allow users to maintain player profiles, log in via guest or authenticated accounts, or save preferences.</p>
+        <p>You are responsible for providing appropriate information when using such features. Do not impersonate another person or use another person's information without permission.</p>
+
+        <h2>6. Advertisements</h2>
+        <p>ELECTRO KING may display advertisements in future versions to support the development and maintenance of the platform.</p>
+        <p>Advertisements may be provided by third-party advertising services. Advertising placement and availability may change. Advertisements should not interfere with active chess gameplay.</p>
+
+        <h2>7. Third-Party Services and Links</h2>
+        <p>ELECTRO KING may use or link to third-party services (such as Firebase for authentication, crash diagnostics, or analytics). We are not responsible for the content, availability, security, or privacy practices of independent third-party services. Your use of those services may be governed by their own terms and policies.</p>
+
+        <h2>8. Updates and Availability</h2>
+        <p>We may update, modify, add, or remove features to improve ELECTRO KING. We do not guarantee that the platform will always be available without interruption or errors.</p>
+
+        <h2>9. Disclaimer</h2>
+        <p>ELECTRO KING is provided on an "as available" basis. To the extent permitted by applicable law, we disclaim warranties that are not expressly provided. We do not guarantee uninterrupted service, error-free operation, or uninterrupted availability of every feature.</p>
+
+        <h2>10. Limitation of Liability</h2>
+        <p>To the maximum extent permitted by applicable law, the creator and publisher shall not be liable for indirect or consequential losses arising from the use of ELECTRO KING. Nothing in these Terms excludes liability that cannot legally be excluded under applicable law.</p>
+
+        <h2>11. Privacy</h2>
+        <p>Your use of ELECTRO KING is also governed by our Privacy Policy. You can read it at: <a href="privacy.html">https://shankykiritpatel2-cmd.github.io/Electro-King-Chess/privacy.html</a>.</p>
+
+        <h2>12. Changes to These Terms</h2>
+        <p>We may revise these Terms and Conditions as the platform develops. Updated terms will be published on this page with a revised date.</p>
+
+        <h2>13. Governing Law</h2>
+        <p>These Terms and Conditions are governed by the applicable laws of India, subject to any mandatory consumer protection rights or other legal requirements that apply.</p>
+
+        <h2>14. Contact Information</h2>
+        <p>For questions about these Terms and Conditions, please contact us:</p>
+        <div class="contact-card">
+            <p><strong>Project:</strong> ELECTRO KING</p>
+            <p><strong>Creator:</strong> Viaan Patel</p>
+            <p><strong>Publisher:</strong> Shanky Patel</p>
+            <p><strong>Email:</strong> <a href="mailto:noctwebsitestudio@gmail.com">noctwebsitestudio@gmail.com</a></p>
+            <p><strong>Phone:</strong> +91 98239 55519</p>
+            <p><strong>Website:</strong> <a href="https://shankykiritpatel2-cmd.github.io/Electro-King-Chess/">https://shankykiritpatel2-cmd.github.io/Electro-King-Chess/</a></p>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px;">
+            <a href="index.html" class="btn-play">⚡ RETURN TO ELECTRO KING</a>
+        </div>
+
+        <div class="footer">
+            <div>&copy; 2026 ELECTRO KING &bull; Created by Viaan Patel &bull; Published by Shanky Patel</div>
+            <div class="footer-links">
+                <a href="terms.html">Terms and Conditions</a> &bull;
+                <a href="privacy.html">Privacy Policy</a> &bull;
+                <a href="contact.html">Contact Us</a> &bull;
+                <a href="about.html">About Us</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

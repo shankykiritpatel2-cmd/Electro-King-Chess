@@ -58,6 +58,9 @@ desktop.ini
 $RECYCLE.BIN/
 ehthumbs.db
 
+# Scratch and verification scripts
+scratch/
+
 # Log & Temporary Files
 *.log
 npm-debug.log*

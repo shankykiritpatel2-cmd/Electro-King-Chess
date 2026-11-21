@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Electro King</title>
-    <link rel="icon" type="image/png" href="assets/launchericon-96x96.png">
+    <title>Privacy Policy - ELECTRO KING</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/launchericon-48x48.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #0a0e17;
-            --card-bg: rgba(13, 21, 39, 0.85);
+            --card-bg: rgba(13, 21, 39, 0.9);
             --cyan: #00f3ff;
             --blue-glow: rgba(0, 243, 255, 0.35);
             --gold: #ffd700;
@@ -28,10 +30,45 @@
             font-size: 16px;
             line-height: 1.6;
             min-height: 100vh;
-            padding: 32px 16px;
+            padding: 24px 16px 40px;
+        }
+        .nav-bar {
+            max-width: 860px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(10, 14, 23, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .nav-brand {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--cyan);
+            text-decoration: none;
+            text-shadow: 0 0 10px var(--blue-glow);
+        }
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--cyan);
         }
         .container {
-            max-width: 820px;
+            max-width: 860px;
             margin: 0 auto;
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -55,6 +92,13 @@
             text-shadow: 0 0 12px var(--blue-glow);
             margin-bottom: 8px;
         }
+        .tagline {
+            color: var(--gold);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
         .badge {
             display: inline-block;
             background: rgba(0, 243, 255, 0.12);
@@ -67,14 +111,21 @@
             font-weight: 700;
             text-transform: uppercase;
         }
+        .meta-dates {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
         h2 {
             font-family: 'Orbitron', monospace;
-            font-size: 20px;
+            font-size: 18px;
             color: var(--cyan);
             margin: 28px 0 12px 0;
             display: flex;
             align-items: center;
             gap: 10px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+            padding-bottom: 6px;
         }
         p, li {
             color: var(--text-muted);
@@ -87,83 +138,171 @@
             margin-left: 24px;
             margin-bottom: 16px;
         }
-        .highlight-box {
-            background: rgba(0, 243, 255, 0.05);
-            border-left: 3px solid var(--cyan);
-            padding: 16px;
-            border-radius: 6px;
-            margin: 18px 0;
+        .contact-card {
+            background: rgba(0, 243, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 24px;
+            margin-top: 16px;
         }
         .footer {
             margin-top: 40px;
-            padding-top: 20px;
+            padding-top: 24px;
             border-top: 1px solid var(--border);
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-muted);
         }
-        a {
+        .footer-links {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
             color: var(--cyan);
             text-decoration: none;
         }
-        a:hover {
+        .footer-links a:hover {
             text-decoration: underline;
+        }
+        .btn-play {
+            display: inline-block;
+            background: linear-gradient(135deg, #00f3ff, #0088ff);
+            color: #0b071e;
+            font-family: 'Orbitron', monospace;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 16px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-play:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 22px rgba(0, 243, 255, 0.7);
         }
     </style>
 </head>
 <body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-brand">ELECTRO KING ⚡</a>
+        <div class="nav-links">
+            <a href="index.html">Play Game</a>
+            <a href="about.html">About Us</a>
+            <a href="terms.html">Terms</a>
+            <a href="privacy.html" class="active">Privacy Policy</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+
     <div class="container">
         <div class="header">
             <div class="logo-title">ELECTRO KING ⚡</div>
-            <div class="badge">Official Privacy Policy</div>
-            <p style="margin-top: 12px; font-size: 14px;">Created by <strong>Viaan Patel</strong> &bull; Last updated: November 2026</p>
+            <div class="tagline">Think Smart. Play Strong. Rule the Board.</div>
+            <div class="badge">Privacy Policy</div>
+            <div class="meta-dates">Effective Date: 21 November 2026 &bull; Last Updated: 21 November 2026</div>
         </div>
 
-        <div class="highlight-box">
-            <strong>Summary:</strong> Electro King is built with a privacy-first philosophy. We do <strong>not</strong> collect personal accounts, do <strong>not</strong> track your personal data, and do <strong>not</strong> sell any information. Your chess games, statistics, and avatars remain strictly on your own device.
+        <p><strong>Welcome to ELECTRO KING!</strong></p>
+        <p>Your privacy is important to us. This Privacy Policy explains how ELECTRO KING handles information when you visit or use our chess game and related services.</p>
+        <p>By using ELECTRO KING, you acknowledge this Privacy Policy.</p>
+
+        <h2>1. About ELECTRO KING</h2>
+        <p>ELECTRO KING is a chess gaming platform created by <strong>Viaan Patel</strong> and published by <strong>Shanky Patel</strong>.</p>
+        <p>The platform is designed to provide users with an enjoyable chess-playing experience, including chess gameplay, AI challenges, daily tactical puzzles, and related gaming features.</p>
+
+        <h2>2. Information We May Collect</h2>
+        <p>Depending on the features you use, ELECTRO KING may collect or process the following categories of information:</p>
+        <ul>
+            <li><strong>Player names or display names:</strong> Chosen by you during match setup, guest mode, or account settings.</li>
+            <li><strong>Profile pictures or avatars:</strong> Selected or cropped from your device and stored locally using your browser's IndexedDB/localStorage.</li>
+            <li><strong>Chess game statistics and match history:</strong> Matches played, victories, defeats, draws, win rates, streaks, and computer opponent records.</li>
+            <li><strong>Puzzle progress & streaks:</strong> Daily puzzles completed, accuracy, points earned, and streak data.</li>
+            <li><strong>Game preferences and settings:</strong> Board themes, sound effects, haptic vibrations, coordinates, evaluation bar, and orientation choices.</li>
+            <li><strong>Authentication data:</strong> When using Google or Email Sign-In, basic account identifiers (email, account creation date, unique Player ID) are processed to secure your account.</li>
+            <li><strong>Technical information:</strong> Diagnostic data required to operate, troubleshoot, and maintain platform stability (such as anonymous crash logs via Firebase Crashlytics on Android).</li>
+            <li><strong>Support enquiries:</strong> Information voluntarily provided when contacting support.</li>
+        </ul>
+        <p>The information actually collected depends on the specific features enabled in the version you use.</p>
+
+        <h2>3. How We Use Information</h2>
+        <p>Information may be used to:</p>
+        <ul>
+            <li>Provide and operate interactive chess gameplay and AI opponents.</li>
+            <li>Verify and award points for daily tactical puzzles and achievements.</li>
+            <li>Save and restore game preferences, board themes, and widget styling.</li>
+            <li>Display player profiles, career records, and match history.</li>
+            <li>Enable cross-device cloud synchronization for authenticated players.</li>
+            <li>Improve game performance, responsiveness, and user experience.</li>
+            <li>Identify and resolve technical problems and application crashes.</li>
+            <li>Respond to questions, feedback, and support requests.</li>
+            <li>Maintain platform security and protect against fraudulent activity.</li>
+        </ul>
+
+        <h2>4. Local Storage</h2>
+        <p>Certain settings and game information are stored locally on your device or browser using localStorage and IndexedDB.</p>
+        <p>Clearing browser data, uninstalling the application, or resetting your device will remove locally stored information unless synchronized with a cloud account.</p>
+        <p>When online accounts or cloud-saving features are used, player progress is synchronized securely with supported backend cloud services.</p>
+
+        <h2>5. Third-Party Services</h2>
+        <p>ELECTRO KING may use third-party services to support functionality such as hosting (GitHub Pages), database & authentication (Firebase / Google Play Services), and crash diagnostics (Firebase Crashlytics).</p>
+        <p>These providers process information according to their own privacy policies.</p>
+
+        <h2>6. Advertising</h2>
+        <p>ELECTRO KING is currently free and does not display intrusive advertisements. If Google AdMob or another advertising provider is integrated in future updates, that provider may collect device and app interaction data subject to its policies and applicable consent requirements. We will update this policy accordingly if advertising is introduced.</p>
+
+        <h2>7. Children's Privacy</h2>
+        <p>ELECTRO KING aims to provide a safe, family-friendly, and enjoyable chess experience. We do not intentionally request unnecessary personal information from children under 13.</p>
+        <p>Parents or guardians who have questions about information associated with a child may contact us at any time. If we become aware that personal information has been collected inappropriately, we will take reasonable steps to promptly address and remove the issue.</p>
+
+        <h2>8. Data Security</h2>
+        <p>We take reasonable technical and organizational measures to protect information handled by ELECTRO KING. However, no online service, internet transmission, or electronic storage system can guarantee complete security.</p>
+
+        <h2>9. Data Retention and Deletion</h2>
+        <p>Information is retained only for as long as reasonably necessary for the purposes described in this policy or as required by applicable law.</p>
+        <p>Users may reset their local statistics at any time from the Profile settings. If you have an authenticated account and wish to delete your account and associated cloud data, you can do so directly from Account Settings or by contacting us at the email address below.</p>
+
+        <h2>10. Your Choices</h2>
+        <p>Depending on the features available, you may be able to:</p>
+        <ul>
+            <li>Change your display name at any time.</li>
+            <li>Change or remove your profile picture.</li>
+            <li>Update game sound, haptic, and visual preferences.</li>
+            <li>Clear locally stored game information via the Reset Statistics button.</li>
+            <li>Switch between Guest Mode and authenticated cloud accounts.</li>
+            <li>Contact us with privacy-related requests or questions.</li>
+        </ul>
+
+        <h2>11. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy when ELECTRO KING introduces new features, services, or updates to its data practices. The latest version will always be published on this page with an updated date.</p>
+
+        <h2>12. Contact Us</h2>
+        <p>For questions about this Privacy Policy or your information, please contact:</p>
+        <div class="contact-card">
+            <p><strong>Project:</strong> ELECTRO KING</p>
+            <p><strong>Creator:</strong> Viaan Patel</p>
+            <p><strong>Publisher:</strong> Shanky Patel</p>
+            <p><strong>Email:</strong> <a href="mailto:noctwebsitestudio@gmail.com">noctwebsitestudio@gmail.com</a></p>
+            <p><strong>Phone:</strong> +91 98239 55519</p>
+            <p><strong>Website:</strong> <a href="https://shankykiritpatel2-cmd.github.io/Electro-King-Chess/">https://shankykiritpatel2-cmd.github.io/Electro-King-Chess/</a></p>
         </div>
 
-        <h2>1. Information We Do NOT Collect</h2>
-        <p>Electro King is designed so that players can enjoy chess without sacrificing privacy:</p>
-        <ul>
-            <li><strong>No Personal Identification:</strong> We do not require account registration, email addresses, phone numbers, or real names.</li>
-            <li><strong>No Location Tracking:</strong> We do not track or request your GPS or device location.</li>
-            <li><strong>No Image/Media Uploads:</strong> When you customize your profile picture, the image is cropped and saved locally in your browser's IndexedDB / local storage. It is never uploaded to any remote server.</li>
-            <li><strong>No Financial Data:</strong> Electro King is completely free and contains no paid subscriptions or credit card processing.</li>
-        </ul>
-
-        <h2>2. Data Stored Locally on Your Device</h2>
-        <p>The following data is stored purely locally on your device to enable game features:</p>
-        <ul>
-            <li><strong>Game Progress & Stats:</strong> Win/Loss/Draw record, Elo difficulty achievements, tactical puzzle solved counts, and match move history.</li>
-            <li><strong>Preferences:</strong> Board sound effects, move animations, theme styling, and widget settings.</li>
-            <li><strong>Custom Avatar:</strong> Your selected profile picture stored client-side.</li>
-        </ul>
-        <p>You can completely erase this data at any time by clearing your browser cache / app storage.</p>
-
-        <h2>3. Third-Party Services & Diagnostics</h2>
-        <p>The Android version of Electro King may utilize Google Firebase Crashlytics solely for stability and error monitoring:</p>
-        <ul>
-            <li><strong>Crashlytics:</strong> In the event of an unexpected crash, Crashlytics collects anonymous system diagnostic information (device model, OS version, and stack traces) to help developers patch bugs. No personally identifiable information is collected.</li>
-        </ul>
-
-        <h2>4. Device Permissions</h2>
-        <p>Electro King requests only the minimal permissions required for standard functionality:</p>
-        <ul>
-            <li><strong>INTERNET & ACCESS_NETWORK_STATE:</strong> Required for loading web assets, receiving service worker offline updates, and delivering crash diagnostics.</li>
-            <li><strong>VIBRATE:</strong> Used solely to provide optional haptic feedback when pieces move or are captured.</li>
-        </ul>
-        <p>Electro King does <strong>not</strong> request access to Camera, Contacts, Microphone, Storage, or SMS.</p>
-
-        <h2>5. Children's Privacy</h2>
-        <p>Electro King complies with the Children's Online Privacy Protection Act (COPPA) and international privacy standards. Because we do not collect personal data from any user, we do not collect personal data from children under the age of 13.</p>
-
-        <h2>6. Contact Information</h2>
-        <p>If you have any questions, feedback, or concerns regarding this Privacy Policy or Electro King, please contact the developer via GitHub:</p>
-        <p><a href="https://github.com/shankykiritpatel2-cmd/Electro-King-Chess" target="_blank" rel="noopener">https://github.com/shankykiritpatel2-cmd/Electro-King-Chess</a></p>
+        <div style="text-align: center; margin-top: 24px;">
+            <a href="index.html" class="btn-play">⚡ RETURN TO ELECTRO KING</a>
+        </div>
 
         <div class="footer">
-            &copy; 2026 ELECTRO KING &bull; Created by Viaan Patel &bull; All Rights Reserved.
+            <div>&copy; 2026 ELECTRO KING &bull; Created by Viaan Patel &bull; Published by Shanky Patel</div>
+            <div class="footer-links">
+                <a href="terms.html">Terms and Conditions</a> &bull;
+                <a href="privacy.html">Privacy Policy</a> &bull;
+                <a href="contact.html">Contact Us</a> &bull;
+                <a href="about.html">About Us</a>
+            </div>
         </div>
     </div>
 </body>
