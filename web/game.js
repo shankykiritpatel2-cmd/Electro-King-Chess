@@ -2428,12 +2428,33 @@ function renderSettingsUI() {
     const accEmail = document.getElementById('settings-acc-email');
     const accPhone = document.getElementById('settings-acc-phone');
     const accJoined = document.getElementById('settings-acc-joined');
+    const emailBadge = document.getElementById('settings-acc-email-badge');
+    const phoneBadge = document.getElementById('settings-acc-phone-badge');
+    const syncStatus = document.getElementById('settings-acc-sync-status');
 
-    if (accUserId) accUserId.textContent = `@${playerProfile.userId || 'player'}`;
-    if (accShowName) accShowName.textContent = playerProfile.name || 'Player';
-    if (accEmail) accEmail.textContent = playerProfile.email || 'viaan@electroking.chess';
-    if (accPhone) accPhone.textContent = playerProfile.phone || '+91 98239 55519';
-    if (accJoined) accJoined.textContent = playerProfile.joinedDate || 'November 22, 2026';
+    if (accUserId) accUserId.textContent = playerProfile.userId ? `@${playerProfile.userId}` : 'Guest (Not Linked)';
+    if (accShowName) accShowName.textContent = playerProfile.name || 'Guest';
+    
+    if (accEmail) {
+        accEmail.textContent = playerProfile.email || 'No email linked';
+    }
+    if (emailBadge) {
+        emailBadge.textContent = playerProfile.emailVerified ? '✅ Verified' : '⚠️ Unverified';
+        emailBadge.className = playerProfile.emailVerified ? 'badge-verified' : 'auth-status-badge unverified';
+    }
+
+    if (accPhone) {
+        accPhone.textContent = playerProfile.phone || 'No phone linked';
+    }
+    if (phoneBadge) {
+        phoneBadge.textContent = playerProfile.phoneVerified ? '✅ Verified' : '⚠️ Unverified';
+        phoneBadge.className = playerProfile.phoneVerified ? 'badge-verified' : 'auth-status-badge unverified';
+    }
+
+    if (accJoined) accJoined.textContent = playerProfile.joinedDate || 'Today';
+    if (syncStatus) {
+        syncStatus.textContent = playerProfile.userId ? '🟢 Active • Multi-Device Ready' : '🟡 Local Only • Link Account to Sync';
+    }
 
     syncSettingsCheckboxes();
 }
@@ -2531,6 +2552,17 @@ function bindCheckbox(id, key, onChange) {
         if (onChange) onChange();
         triggerHaptic('move');
     });
+}
+
+function openAuthModal(defaultTab = 'register') {
+    const authModal = document.getElementById('auth-modal');
+    if (!authModal) return;
+    authModal.classList.remove('hidden');
+    const targetTabBtn = document.getElementById(
+        defaultTab === 'login' ? 'tab-btn-login' : 
+        (defaultTab === 'guest' ? 'tab-btn-guest' : 'tab-btn-register')
+    );
+    if (targetTabBtn) targetTabBtn.click();
 }
 
 function setupEventListeners() {
@@ -3154,9 +3186,14 @@ function setupEventListeners() {
     // Email OTP Generation & Verification
     if (regEmailSendOtpBtn) {
         regEmailSendOtpBtn.addEventListener('click', () => {
-            const email = regEmailInput ? regEmailInput.value.trim() : '';
-            if (!email || !email.includes('@') || !email.includes('.')) {
-                showToast('⚠️ Please enter a valid email address.', 'error');
+            const email = regEmailInput ? regEmailInput.value.trim().toLowerCase() : '';
+            if (email.endsWith('.chess') || email.includes('.chess')) {
+                showToast('⚠️ .chess is not a valid email domain! Please enter a real email like @gmail.com', 'error');
+                return;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+            if (!email || !emailRegex.test(email)) {
+                showToast('⚠️ Please enter a valid email address (e.g. name@gmail.com).', 'error');
                 return;
             }
             
@@ -3401,10 +3438,56 @@ function setupEventListeners() {
     const switchAccountBtn = document.getElementById('settings-switch-account-btn');
     if (switchAccountBtn) {
         switchAccountBtn.addEventListener('click', () => {
-            if (authModal) {
-                authModal.classList.remove('hidden');
-                const loginTabBtn = document.getElementById('tab-btn-login');
-                if (loginTabBtn) loginTabBtn.click();
+            openAuthModal('login');
+        });
+    }
+
+    // Logout button in Settings
+    const logoutBtn = document.getElementById('settings-logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to log out of your ELECTRO KING account?')) {
+                localStorage.removeItem('electro_active_user_id');
+                // Reset to clean guest
+                playerProfile.userId = '';
+                playerProfile.name = 'Guest Player';
+                playerProfile.email = '';
+                playerProfile.phone = '';
+                playerProfile.emailVerified = false;
+                playerProfile.phoneVerified = false;
+                playerProfile.joinedDate = 'Today';
+                playerProfile.points = 0;
+                saveProfile();
+                renderMainMenuUI();
+                renderSettingsUI();
+                updateProfileUI();
+                showToast('👋 Logged out. Returning to Login / Sign In menu...', 'info');
+                openAuthModal('login');
+            }
+        });
+    }
+
+    // Switch Account button on Profile Screen
+    const profileSwitchBtn = document.getElementById('profile-switch-account-btn');
+    if (profileSwitchBtn) {
+        profileSwitchBtn.addEventListener('click', () => {
+            openAuthModal('login');
+        });
+    }
+
+    // Edit Name button on Profile Screen
+    const profileAuthBtn = document.getElementById('profile-auth-btn');
+    if (profileAuthBtn) {
+        profileAuthBtn.addEventListener('click', () => {
+            const current = playerProfile.name || 'Player';
+            const newName = prompt('Enter your player display name:', current);
+            if (newName && newName.trim().length > 0) {
+                playerProfile.name = newName.trim().substring(0, 30);
+                saveProfile();
+                updateProfileUI();
+                renderMainMenuUI();
+                renderSettingsUI();
+                showToast(`✅ Display name updated to ${playerProfile.name}!`, 'success');
             }
         });
     }
@@ -4067,24 +4150,24 @@ function getActiveAccount() {
         const found = list.find(a => a.userId && a.userId.toLowerCase() === activeId.toLowerCase());
         if (found) return found;
     }
-    if (list.length > 0) return list[0];
     return null;
 }
 
 function setActiveAccount(acc) {
+    if (!acc) return;
     localStorage.setItem('electro_active_user_id', acc.userId);
     playerProfile.userId = acc.userId;
     playerProfile.name = acc.showName || 'Player';
-    playerProfile.email = acc.email || 'viaan@electroking.chess';
+    playerProfile.email = (acc.email && !acc.email.toLowerCase().includes('.chess')) ? acc.email : '';
     playerProfile.emailVerified = !!acc.emailVerified;
-    playerProfile.phone = acc.phone || '+91 98239 55519';
+    playerProfile.phone = acc.phone || '';
     playerProfile.phoneVerified = !!acc.phoneVerified;
-    playerProfile.joinedDate = acc.joinedDate || 'November 22, 2026';
+    playerProfile.joinedDate = acc.joinedDate || 'Today';
     playerProfile.joinedTimestamp = acc.joinedTimestamp || Date.now();
     playerProfile.avatar = acc.avatar || '👑';
     playerProfile.avatarUrl = acc.avatarUrl || '';
     playerProfile.rating = acc.rating || 1200;
-    playerProfile.points = acc.points || 250;
+    playerProfile.points = acc.points || 0;
     playerProfile.matches = acc.matches || 0;
     playerProfile.wins = acc.wins || 0;
     playerProfile.losses = acc.losses || 0;
@@ -4097,41 +4180,65 @@ function setActiveAccount(acc) {
     saveProfile();
 }
 
+function purgeLegacyData() {
+    try {
+        const activeId = localStorage.getItem('electro_active_user_id');
+        if (activeId === 'viaan_patel' || activeId === 'viaan') {
+            localStorage.removeItem('electro_active_user_id');
+        }
+        let list = getAccountsDB();
+        if (Array.isArray(list)) {
+            // Remove any accounts that had fake .chess email
+            const filtered = list.filter(a => !(a.email && a.email.toLowerCase().includes('.chess')));
+            if (filtered.length !== list.length) {
+                saveAccountsDB(filtered);
+            }
+        }
+        if (playerProfile.email && playerProfile.email.toLowerCase().includes('.chess')) {
+            playerProfile.email = '';
+            playerProfile.emailVerified = false;
+        }
+    } catch (e) {}
+}
+
 function loadProfile() {
+    purgeLegacyData();
     let acc = getActiveAccount();
-    if (!acc) {
-        const existingName = localStorage.getItem('electro_player_name') || 'Viaan Patel';
-        const defaultUid = existingName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'viaan_patel';
-        acc = {
-            userId: defaultUid,
-            showName: existingName,
-            password: 'password123',
-            email: 'viaan@electroking.chess',
-            emailVerified: true,
-            phone: '+91 98239 55519',
-            phoneVerified: true,
-            joinedDate: 'November 22, 2026',
-            joinedTimestamp: Date.now(),
-            avatar: localStorage.getItem('electro_profile_avatar') || '👑',
-            avatarUrl: localStorage.getItem('electro_profile_avatar_url') || '',
-            rating: parseInt(localStorage.getItem('electro_player_rating') || '1200', 10),
-            points: 250,
-            matches: parseInt(localStorage.getItem('electro_stat_matches') || '0', 10),
-            wins: parseInt(localStorage.getItem('electro_stat_wins') || '0', 10),
-            losses: parseInt(localStorage.getItem('electro_stat_losses') || '0', 10),
-            draws: parseInt(localStorage.getItem('electro_stat_draws') || '0', 10),
-            currentStreak: parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10),
-            bestStreak: parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10),
-            puzzles: parseInt(localStorage.getItem('electro_puzzles_solved') || '0', 10),
-            botRecords: { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
-        };
-        const db = getAccountsDB();
-        db.push(acc);
-        saveAccountsDB(db);
-        localStorage.setItem('electro_active_user_id', acc.userId);
+    if (acc) {
+        setActiveAccount(acc);
+    } else {
+        // No active account logged in: clean guest state
+        playerProfile.userId = '';
+        playerProfile.name = 'Guest Player';
+        playerProfile.email = '';
+        playerProfile.emailVerified = false;
+        playerProfile.phone = '';
+        playerProfile.phoneVerified = false;
+        playerProfile.joinedDate = 'Today';
+        playerProfile.joinedTimestamp = Date.now();
+        playerProfile.avatar = localStorage.getItem('electro_profile_avatar') || '👑';
+        playerProfile.avatarUrl = localStorage.getItem('electro_profile_avatar_url') || '';
+        playerProfile.rating = parseInt(localStorage.getItem('electro_player_rating') || '1200', 10);
+        playerProfile.points = 0;
+        playerProfile.matches = parseInt(localStorage.getItem('electro_stat_matches') || '0', 10);
+        playerProfile.wins = parseInt(localStorage.getItem('electro_stat_wins') || '0', 10);
+        playerProfile.losses = parseInt(localStorage.getItem('electro_stat_losses') || '0', 10);
+        playerProfile.draws = parseInt(localStorage.getItem('electro_stat_draws') || '0', 10);
+        playerProfile.currentStreak = parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10);
+        playerProfile.bestStreak = parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10);
+        playerProfile.puzzles = parseInt(localStorage.getItem('electro_puzzles_solved') || '0', 10);
+        if (!playerProfile.botRecords) {
+            playerProfile.botRecords = { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} };
+        }
+        
+        saveProfile();
+
+        // Prompt user with Log In / Sign In Menu immediately on launch!
+        setTimeout(() => {
+            const hasAccounts = getAccountsDB().length > 0;
+            openAuthModal(hasAccounts ? 'login' : 'register');
+        }, 200);
     }
-    
-    setActiveAccount(acc);
 
     const orientSelect = document.getElementById('pref-orientation-select');
     if (orientSelect) {

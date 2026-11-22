@@ -509,6 +509,7 @@
                             <div class="profile-action-links" style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
                                 <button type="button" class="sign-in-link-btn" id="edit-avatar-btn">📷 Edit Picture</button>
                                 <button type="button" class="sign-in-link-btn" id="profile-auth-btn">✏️ Edit Name</button>
+                                <button type="button" class="sign-in-link-btn" id="profile-switch-account-btn">👥 Switch / Log In</button>
                             </div>
                         </div>
                     </div>
@@ -776,33 +777,36 @@
                             <div class="account-row">
                                 <span class="account-row-label">Verified Email</span>
                                 <span class="account-row-val">
-                                    <span id="settings-acc-email">player@electroking.chess</span>
-                                    <span class="badge-verified" id="settings-acc-email-badge">✅ Verified</span>
+                                    <span id="settings-acc-email">No email linked</span>
+                                    <span class="badge-verified" id="settings-acc-email-badge">⚠️ Unverified</span>
                                 </span>
                             </div>
                             <div class="account-row">
                                 <span class="account-row-label">Verified Phone</span>
                                 <span class="account-row-val">
-                                    <span id="settings-acc-phone">+91 ••••• •••••</span>
-                                    <span class="badge-verified" id="settings-acc-phone-badge">✅ Verified</span>
+                                    <span id="settings-acc-phone">No phone linked</span>
+                                    <span class="badge-verified" id="settings-acc-phone-badge">⚠️ Unverified</span>
                                 </span>
                             </div>
                             <div class="account-row">
                                 <span class="account-row-label">Member Since</span>
-                                <span class="account-row-val" style="color:var(--yellow); font-weight:800;" id="settings-acc-joined">November 22, 2026</span>
+                                <span class="account-row-val" style="color:var(--yellow); font-weight:800;" id="settings-acc-joined">Today</span>
                             </div>
                             <div class="account-row">
                                 <span class="account-row-label">Cloud Sync</span>
-                                <span class="account-row-val" style="color:var(--primary); font-size:0.75rem;">🟢 Active • Multi-Device Ready</span>
+                                <span class="account-row-val" style="color:var(--primary); font-size:0.75rem;" id="settings-acc-sync-status">🟢 Active • Multi-Device Ready</span>
                             </div>
                         </div>
 
                         <div class="account-sync-buttons">
-                            <button type="button" class="secondary-btn" id="settings-export-key-btn" style="flex:1; font-size:0.75rem; padding:10px 8px;">
+                            <button type="button" class="secondary-btn" id="settings-export-key-btn" style="flex:1; font-size:0.75rem; padding:10px 6px;">
                                 🔑 Export Sync Key
                             </button>
-                            <button type="button" class="secondary-btn" id="settings-switch-account-btn" style="flex:1; font-size:0.75rem; padding:10px 8px; border-color:var(--primary); color:var(--primary-light);">
+                            <button type="button" class="secondary-btn" id="settings-switch-account-btn" style="flex:1; font-size:0.75rem; padding:10px 6px; border-color:var(--primary); color:var(--primary-light);">
                                 👥 Switch / Login
+                            </button>
+                            <button type="button" class="secondary-btn" id="settings-logout-btn" style="flex:1; font-size:0.75rem; padding:10px 6px; border-color:rgba(239,68,68,0.5); color:#ef4444;">
+                                🚪 Log Out
                             </button>
                         </div>
                     </div>
@@ -1018,7 +1022,7 @@
                         <label class="auth-label" for="reg-userid-input">👤 Unique User ID</label>
                         <span class="auth-status-badge" id="reg-userid-status">Required</span>
                     </div>
-                    <input type="text" id="reg-userid-input" class="setup-input" placeholder="e.g. viaan_chess (3-20 letters/numbers)" autocomplete="off">
+                    <input type="text" id="reg-userid-input" class="setup-input" placeholder="e.g. viaan_king (3-20 letters/numbers)" autocomplete="off">
                     <span style="font-size:0.68rem; color:var(--text-muted); margin-top:2px; display:block;">Cannot be the same as any other player</span>
                 </div>
 
@@ -1046,7 +1050,7 @@
                         <span class="auth-status-badge unverified" id="reg-email-status">⚠️ Unverified</span>
                     </div>
                     <div class="auth-action-row">
-                        <input type="email" id="reg-email-input" class="setup-input" placeholder="e.g. viaan@example.com">
+                        <input type="email" id="reg-email-input" class="setup-input" placeholder="e.g. viaan@gmail.com">
                         <button type="button" class="auth-otp-btn" id="reg-email-send-otp-btn">⚡ Get OTP</button>
                     </div>
                     <!-- Email OTP Verification Box -->
