@@ -32,6 +32,7 @@
             <div class="header-left">
                 <h1 class="logo-title">ELECTRO KING</h1>
                 <span class="logo-by">by Viaan Patel</span>
+                <span id="header-mode-subtitle" class="hidden"></span>
             </div>
             
             <div class="header-right">
@@ -49,12 +50,151 @@
         <!-- MASTER TAB SCREENS VIEWPORT -->
         <div class="tab-screens-viewport">
 
-            <!-- TAB 1: HOME (MAIN GAME CONFIGURATION SCREEN) -->
+            <!-- TAB 1: HOME (MAIN MENU DASHBOARD) -->
             <section class="tab-screen active" id="screen-home">
+                <div class="scrollable-screen-content menu-screen-container">
+                    
+                    <!-- HERO PLAYER OVERVIEW CARD -->
+                    <div class="menu-hero-card">
+                        <div class="menu-hero-top">
+                            <div class="menu-avatar-wrap" id="menu-avatar-ring">
+                                <span id="menu-player-avatar">👑</span>
+                            </div>
+                            <div class="menu-player-meta">
+                                <div class="menu-player-name" id="menu-player-name">Player</div>
+                                <div class="menu-player-sub-row">
+                                    <span class="menu-userid-badge" id="menu-user-id">@player</span>
+                                    <span class="menu-joined-badge" id="menu-joined-date">Joined Today</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QUICK STATS ROW -->
+                        <div class="menu-stats-row">
+                            <div class="menu-stat-item">
+                                <span class="stat-num highlight" id="menu-stat-rating">1200</span>
+                                <span class="stat-lbl">Rating</span>
+                            </div>
+                            <div class="menu-stat-item">
+                                <span class="stat-num" id="menu-stat-points">250</span>
+                                <span class="stat-lbl">Points</span>
+                            </div>
+                            <div class="menu-stat-item">
+                                <span class="stat-num" id="menu-stat-streak">🔥 0</span>
+                                <span class="stat-lbl">Streak</span>
+                            </div>
+                            <div class="menu-stat-item">
+                                <span class="stat-num" id="menu-stat-winrate">0%</span>
+                                <span class="stat-lbl">Win Rate</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MAIN MENU NAVIGATION ACTION CARDS -->
+                    <div class="menu-action-grid">
+                        
+                        <!-- HERO: PLAY CHESS -->
+                        <div class="menu-action-card hero-play-card" id="menu-card-play">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <div class="menu-card-icon-box">⚔️</div>
+                                    <div class="menu-card-title">PLAY CHESS <span class="menu-card-arrow">➔</span></div>
+                                    <div class="menu-card-sub">Start battle against AI bots or Pass & Play locally</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5 DAILY PUZZLES -->
+                        <div class="menu-action-card" id="menu-card-puzzles">
+                            <div class="menu-card-icon-box" style="background:rgba(139, 92, 246, 0.2); color:#a78bfa;">🧩</div>
+                            <div>
+                                <div class="menu-card-title">DAILY PUZZLES <span class="menu-card-arrow">➔</span></div>
+                                <div class="menu-card-sub">5 Brand-new tactical puzzles every day</div>
+                            </div>
+                        </div>
+
+                        <!-- PLAYER PROFILE & STATS -->
+                        <div class="menu-action-card" id="menu-card-profile">
+                            <div class="menu-card-icon-box" style="background:rgba(234, 179, 8, 0.2); color:#facc15;">👑</div>
+                            <div>
+                                <div class="menu-card-title">MY PROFILE <span class="menu-card-arrow">➔</span></div>
+                                <div class="menu-card-sub">Career stats, bot records & achievements</div>
+                            </div>
+                        </div>
+
+                        <!-- SETTINGS & ABOUT -->
+                        <div class="menu-action-card" id="menu-card-settings" style="grid-column: span 2;">
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <div class="menu-card-icon-box" style="margin-bottom:0; background:rgba(59, 130, 246, 0.2); color:#60a5fa;">⚙️</div>
+                                <div style="flex:1;">
+                                    <div class="menu-card-title">SETTINGS & ABOUT <span class="menu-card-arrow">➔</span></div>
+                                    <div class="menu-card-sub">Member info, account sync, themes, audio & legal pages</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUICK PLAY DIRECT LAUNCHER (VS 4 BOTS) -->
+                    <div class="quick-play-section">
+                        <div class="quick-play-header">
+                            <span class="quick-play-title">⚡ Instant Quick Play</span>
+                            <span style="font-size:0.7rem; color:var(--text-muted);">Tap to battle</span>
+                        </div>
+                        <div class="quick-bots-grid">
+                            <button type="button" class="quick-bot-btn" id="quick-play-sparky" data-diff="1">
+                                <span class="quick-bot-icon">⚡</span>
+                                <span class="quick-bot-name">Sparky</span>
+                                <span class="quick-bot-elo">600</span>
+                            </button>
+                            <button type="button" class="quick-bot-btn" id="quick-play-cyberknight" data-diff="2">
+                                <span class="quick-bot-icon">🛡️</span>
+                                <span class="quick-bot-name">CyberKnight</span>
+                                <span class="quick-bot-elo">1200</span>
+                            </button>
+                            <button type="button" class="quick-bot-btn" id="quick-play-voltqueen" data-diff="3">
+                                <span class="quick-bot-icon">👑</span>
+                                <span class="quick-bot-name">VoltQueen</span>
+                                <span class="quick-bot-elo">1700</span>
+                            </button>
+                            <button type="button" class="quick-bot-btn" id="quick-play-electroking" data-diff="4">
+                                <span class="quick-bot-icon">🌌</span>
+                                <span class="quick-bot-name">ElectroKing</span>
+                                <span class="quick-bot-elo">2200</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TODAY'S TACTICS PREVIEW BAR -->
+                    <div class="daily-preview-banner">
+                        <div class="daily-preview-left">
+                            <div class="daily-preview-date" id="menu-daily-date-label">Today's Puzzles</div>
+                            <div class="daily-preview-heading">5 Daily Checkmate Challenges</div>
+                            <div class="daily-pills-row" id="menu-daily-pills">
+                                <span class="daily-mini-dot">1</span>
+                                <span class="daily-mini-dot">2</span>
+                                <span class="daily-mini-dot">3</span>
+                                <span class="daily-mini-dot">4</span>
+                                <span class="daily-mini-dot">5</span>
+                            </div>
+                        </div>
+                        <button type="button" class="daily-solve-btn" id="menu-daily-solve-btn">SOLVE 🧩</button>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB: MATCH SETUP (ACCESSED VIA PLAY CHESS) -->
+            <section class="tab-screen" id="screen-setup">
                 <div class="scrollable-screen-content home-screen-container">
-                    <div class="home-header-banner">
-                        <h2 class="glow-text">MATCH SETUP</h2>
-                        <p class="home-subtext">Configure your battle rules and engage</p>
+                    
+                    <div class="setup-top-bar">
+                        <button type="button" class="setup-back-btn" id="setup-back-btn">← Back to Menu</button>
+                        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Battle Setup</span>
+                    </div>
+
+                    <div class="home-header-banner" style="margin-top:0;">
+                        <h2 class="glow-text">MATCH SETUP ⚔️</h2>
+                        <p class="home-subtext">Configure your battlefield rules and engage</p>
                     </div>
 
                     <!-- 2-PLAYER SETTINGS CONTAINER -->
@@ -271,9 +411,24 @@
                         <span class="action-txt">Hint<kbd class="pc-kbd">H</kbd></span>
                     </button>
 
-                    <button id="menu-btn" class="clean-action-btn" title="Return to Home [Esc]">
+                    <button id="draw-btn" class="clean-action-btn" title="Offer Draw">
+                        <span class="action-icon">🤝</span>
+                        <span class="action-txt">Draw</span>
+                    </button>
+
+                    <button id="resign-btn" class="clean-action-btn" title="Resign Match">
+                        <span class="action-icon">🏳️</span>
+                        <span class="action-txt">Resign</span>
+                    </button>
+
+                    <button id="match-options-btn" class="clean-action-btn" title="Match Settings">
+                        <span class="action-icon">⚙️</span>
+                        <span class="action-txt">Options</span>
+                    </button>
+
+                    <button id="menu-btn" class="clean-action-btn" title="Return to Menu [Esc]">
                         <span class="action-icon">🏠</span>
-                        <span class="action-txt">Home<kbd class="pc-kbd">Esc</kbd></span>
+                        <span class="action-txt">Menu<kbd class="pc-kbd">Esc</kbd></span>
                     </button>
                 </div>
             </section>
@@ -596,21 +751,195 @@
                     </div>
                 </div>
             </section>
+
+            <!-- TAB 5: SETTINGS & ABOUT SECTION -->
+            <section class="tab-screen" id="screen-settings">
+                <div class="scrollable-screen-content home-screen-container">
+                    
+                    <div class="home-header-banner">
+                        <h2 class="glow-text">SETTINGS & ABOUT ⚙️</h2>
+                        <p class="home-subtext">Manage your verified account, joined info & game preferences</p>
+                    </div>
+
+                    <!-- ABOUT ACCOUNT & PLAYER INFO CARD -->
+                    <div class="about-account-card">
+                        <h4 class="settings-heading" style="margin-bottom:6px;">👤 Verified Account Info</h4>
+                        <div class="account-info-grid">
+                            <div class="account-row">
+                                <span class="account-row-label">Player User ID</span>
+                                <span class="account-row-val" id="settings-acc-userid">@player</span>
+                            </div>
+                            <div class="account-row">
+                                <span class="account-row-label">Show Name</span>
+                                <span class="account-row-val" id="settings-acc-showname">Player</span>
+                            </div>
+                            <div class="account-row">
+                                <span class="account-row-label">Verified Email</span>
+                                <span class="account-row-val">
+                                    <span id="settings-acc-email">player@electroking.chess</span>
+                                    <span class="badge-verified" id="settings-acc-email-badge">✅ Verified</span>
+                                </span>
+                            </div>
+                            <div class="account-row">
+                                <span class="account-row-label">Verified Phone</span>
+                                <span class="account-row-val">
+                                    <span id="settings-acc-phone">+91 ••••• •••••</span>
+                                    <span class="badge-verified" id="settings-acc-phone-badge">✅ Verified</span>
+                                </span>
+                            </div>
+                            <div class="account-row">
+                                <span class="account-row-label">Member Since</span>
+                                <span class="account-row-val" style="color:var(--yellow); font-weight:800;" id="settings-acc-joined">November 22, 2026</span>
+                            </div>
+                            <div class="account-row">
+                                <span class="account-row-label">Cloud Sync</span>
+                                <span class="account-row-val" style="color:var(--primary); font-size:0.75rem;">🟢 Active • Multi-Device Ready</span>
+                            </div>
+                        </div>
+
+                        <div class="account-sync-buttons">
+                            <button type="button" class="secondary-btn" id="settings-export-key-btn" style="flex:1; font-size:0.75rem; padding:10px 8px;">
+                                🔑 Export Sync Key
+                            </button>
+                            <button type="button" class="secondary-btn" id="settings-switch-account-btn" style="flex:1; font-size:0.75rem; padding:10px 8px; border-color:var(--primary); color:var(--primary-light);">
+                                👥 Switch / Login
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ABOUT ELECTRO KING BRAND & CREATOR -->
+                    <div class="about-app-card">
+                        <div class="about-brand-title">ELECTRO KING 👑⚡</div>
+                        <div class="about-brand-tagline">Think Smart. Play Strong. Rule the Board.</div>
+                        
+                        <div class="about-details-list">
+                            <div class="about-detail-item">
+                                <span>Platform Version</span>
+                                <strong>v1.1.0 (Cyber Master Edition)</strong>
+                            </div>
+                            <div class="about-detail-item">
+                                <span>Creator</span>
+                                <strong>Viaan Patel</strong>
+                            </div>
+                            <div class="about-detail-item">
+                                <span>Publisher</span>
+                                <strong>Shanky Patel</strong>
+                            </div>
+                            <div class="about-detail-item">
+                                <span>Official Support Email</span>
+                                <strong style="color:var(--primary-light);">noctwebsitestudio@gmail.com</strong>
+                            </div>
+                            <div class="about-detail-item">
+                                <span>Official Support Phone</span>
+                                <strong>+91 98239 55519</strong>
+                            </div>
+                            <div class="about-detail-item">
+                                <span>Chess Engine</span>
+                                <strong>Calibrated Negamax + PeSTO Tables</strong>
+                            </div>
+                        </div>
+
+                        <!-- LEGAL & INFORMATION DIRECTORY -->
+                        <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-top:10px; font-weight:700;">
+                            Official Legal & Support Pages
+                        </div>
+                        <div class="legal-links-grid">
+                            <a href="terms.html" class="legal-btn-link" target="_blank">📜 Terms & Conditions</a>
+                            <a href="privacy.html" class="legal-btn-link" target="_blank">🛡️ Privacy Policy</a>
+                            <a href="contact.html" class="legal-btn-link" target="_blank">📞 Contact Us</a>
+                            <a href="about.html" class="legal-btn-link" target="_blank">ℹ️ About Electro King</a>
+                        </div>
+                    </div>
+
+                    <!-- PREFERENCES SETTINGS -->
+                    <div class="settings-card">
+                        <h4 class="settings-heading">⚙️ Game Preferences</h4>
+                        <div class="pref-row">
+                            <span>🔊 Sound Effects</span>
+                            <input type="checkbox" id="settings-sound-toggle" checked>
+                        </div>
+                        <div class="pref-row">
+                            <span>📳 Haptic Vibration</span>
+                            <input type="checkbox" id="settings-vibrate-toggle" checked>
+                        </div>
+                        <div class="pref-row">
+                            <span>📐 Chessboard Coordinates</span>
+                            <input type="checkbox" id="settings-coords-toggle" checked>
+                        </div>
+                        <div class="pref-row">
+                            <span>📊 Position Advantage Eval Bar</span>
+                            <input type="checkbox" id="settings-eval-toggle" checked>
+                        </div>
+                        <div class="pref-row">
+                            <span>🔄 Flip Board Orientation</span>
+                            <select id="settings-orientation-select" class="setup-select" style="padding:4px 8px; font-size:0.75rem; background:#111827; border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px;">
+                                <option value="white">White (Standard)</option>
+                                <option value="black">Black (Flipped)</option>
+                            </select>
+                        </div>
+                        <div class="pref-row">
+                            <span>⚠️ Confirm Before Abandoning Match</span>
+                            <input type="checkbox" id="settings-confirm-abandon" checked>
+                        </div>
+                        
+                        <div style="margin-top: 12px;">
+                            <label class="setup-label">🎨 Chessboard Theme</label>
+                            <div class="theme-toggle-grid">
+                                <button type="button" class="theme-card-btn active" data-theme="cyber">
+                                    <span class="theme-swatch cyber"></span>
+                                    <span class="theme-name">⚡ Electro</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="obsidian">
+                                    <span class="theme-swatch obsidian"></span>
+                                    <span class="theme-name">🌌 Obsidian</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="gold">
+                                    <span class="theme-swatch gold"></span>
+                                    <span class="theme-name">👑 Gold</span>
+                                </button>
+                                <button type="button" class="theme-card-btn" data-theme="matrix">
+                                    <span class="theme-swatch matrix"></span>
+                                    <span class="theme-name">🌲 Matrix</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Reset & Restore Defaults Row -->
+                        <div style="display:flex; gap:8px; margin-top:14px;">
+                            <button type="button" class="secondary-btn" id="settings-restore-defaults-btn" style="flex:1; font-size:0.74rem; padding:8px 6px;">
+                                🎨 Default Appearance
+                            </button>
+                            <button type="button" class="secondary-btn" id="settings-reset-stats-btn" style="flex:1; font-size:0.74rem; padding:8px 6px; border-color:rgba(239,68,68,0.5); color:#ef4444;">
+                                🗑️ Reset Statistics
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
         </div>
 
-        <!-- PERSISTENT STREAMLINED BOTTOM NAVIGATION DOCK -->
+        <!-- PERSISTENT STREAMLINED BOTTOM NAVIGATION DOCK (5 TABS) -->
         <nav class="bottom-nav-dock">
-            <button class="nav-tab active" id="nav-btn-home" data-tab="home">
-                <span class="nav-icon">⚡</span>
-                <span class="nav-label">Home</span>
+            <button class="nav-tab active" id="nav-btn-home" data-tab="home" title="Main Menu">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Menu</span>
             </button>
-            <button class="nav-tab" id="nav-btn-puzzles" data-tab="puzzles">
+            <button class="nav-tab" id="nav-btn-setup" data-tab="setup" title="Play Chess">
+                <span class="nav-icon">⚔️</span>
+                <span class="nav-label">Play</span>
+            </button>
+            <button class="nav-tab" id="nav-btn-puzzles" data-tab="puzzles" title="5 Daily Puzzles">
                 <span class="nav-icon">🧩</span>
                 <span class="nav-label">Tactics</span>
             </button>
-            <button class="nav-tab" id="nav-btn-profile" data-tab="profile">
+            <button class="nav-tab" id="nav-btn-profile" data-tab="profile" title="Player Profile">
                 <span class="nav-icon">👑</span>
                 <span class="nav-label">Profile</span>
+            </button>
+            <button class="nav-tab" id="nav-btn-settings" data-tab="settings" title="Settings & About">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
             </button>
         </nav>
     </div>
@@ -652,21 +981,146 @@
         </div>
     </div>
 
-    <!-- PROFILE & NAME EDIT MODAL -->
+    <!-- MASTER ONBOARDING & MULTI-DEVICE AUTHENTICATION MODAL -->
     <div class="modal-overlay hidden" id="auth-modal">
-        <div class="modal-card">
+        <div class="modal-card auth-modal-card">
             <button type="button" class="modal-close-btn" id="auth-close-btn">&times;</button>
-            <h2 class="glow-text">EDIT PLAYER NAME ⚡</h2>
-            <p class="modal-sub">Set your player name across matches</p>
             
-            <div class="setup-form">
-                <div>
-                    <label class="setup-label" for="auth-username-input">👤 Player Name</label>
-                    <input type="text" id="auth-username-input" class="setup-input" placeholder="Enter your name">
+            <div style="text-align:center; margin-bottom:12px;">
+                <h2 class="glow-text" style="font-size:1.35rem; margin-bottom:4px;">ELECTRO KING ACCOUNT 👑⚡</h2>
+                <p class="modal-sub" style="margin-bottom:0;">Register or login to sync your chess profile across devices</p>
+            </div>
+
+            <!-- AUTH NAVIGATION TABS -->
+            <div class="auth-tabs-row">
+                <button type="button" class="auth-tab-btn active" id="tab-btn-register" data-auth-tab="register">
+                    ✨ Create Account
+                </button>
+                <button type="button" class="auth-tab-btn" id="tab-btn-login" data-auth-tab="login">
+                    🔑 Switch Device / Login
+                </button>
+                <button type="button" class="auth-tab-btn" id="tab-btn-guest" data-auth-tab="guest">
+                    ⚡ Guest
+                </button>
+            </div>
+
+            <!-- SIMULATED OTP ALERT BANNER -->
+            <div class="otp-sim-alert hidden" id="auth-otp-alert">
+                <span>⚡</span>
+                <span id="auth-otp-alert-text">Code: <code>000000</code></span>
+            </div>
+
+            <!-- 1. CREATE ACCOUNT FORM -->
+            <div id="auth-register-form">
+                <!-- User ID (Must be unique) -->
+                <div class="auth-input-group">
+                    <div class="auth-label-row">
+                        <label class="auth-label" for="reg-userid-input">👤 Unique User ID</label>
+                        <span class="auth-status-badge" id="reg-userid-status">Required</span>
+                    </div>
+                    <input type="text" id="reg-userid-input" class="setup-input" placeholder="e.g. viaan_chess (3-20 letters/numbers)" autocomplete="off">
+                    <span style="font-size:0.68rem; color:var(--text-muted); margin-top:2px; display:block;">Cannot be the same as any other player</span>
                 </div>
 
-                <button type="button" class="start-btn" id="auth-submit-btn">SAVE NAME ⚡</button>
+                <!-- Show Name (Display Name) -->
+                <div class="auth-input-group">
+                    <div class="auth-label-row">
+                        <label class="auth-label" for="reg-showname-input">👑 Show Name (Display Name)</label>
+                    </div>
+                    <input type="text" id="reg-showname-input" class="setup-input" placeholder="e.g. Viaan Patel" maxlength="30">
+                </div>
+
+                <!-- Password -->
+                <div class="auth-input-group">
+                    <div class="auth-label-row">
+                        <label class="auth-label" for="reg-password-input">🔒 Password</label>
+                        <span style="font-size:0.68rem; color:var(--text-muted);">Min. 6 chars</span>
+                    </div>
+                    <input type="password" id="reg-password-input" class="setup-input" placeholder="Enter secure password">
+                </div>
+
+                <!-- Email Slot with OTP Verification -->
+                <div class="auth-input-group">
+                    <div class="auth-label-row">
+                        <label class="auth-label" for="reg-email-input">📧 Email Address</label>
+                        <span class="auth-status-badge unverified" id="reg-email-status">⚠️ Unverified</span>
+                    </div>
+                    <div class="auth-action-row">
+                        <input type="email" id="reg-email-input" class="setup-input" placeholder="e.g. viaan@example.com">
+                        <button type="button" class="auth-otp-btn" id="reg-email-send-otp-btn">⚡ Get OTP</button>
+                    </div>
+                    <!-- Email OTP Verification Box -->
+                    <div class="auth-otp-verify-box hidden" id="reg-email-otp-box">
+                        <input type="text" id="reg-email-otp-input" class="setup-input" placeholder="Enter 6-digit OTP" maxlength="6" style="padding:6px 10px; font-size:0.85rem; letter-spacing:2px; text-align:center;">
+                        <button type="button" class="auth-otp-btn" id="reg-email-verify-btn">Verify</button>
+                    </div>
+                </div>
+
+                <!-- Phone Number Slot with OTP Verification -->
+                <div class="auth-input-group">
+                    <div class="auth-label-row">
+                        <label class="auth-label" for="reg-phone-input">📱 Phone Number</label>
+                        <span class="auth-status-badge unverified" id="reg-phone-status">⚠️ Unverified</span>
+                    </div>
+                    <div class="auth-action-row">
+                        <input type="tel" id="reg-phone-input" class="setup-input" placeholder="e.g. +91 98239 55519">
+                        <button type="button" class="auth-otp-btn" id="reg-phone-send-otp-btn">📲 Get SMS OTP</button>
+                    </div>
+                    <!-- Phone OTP Verification Box -->
+                    <div class="auth-otp-verify-box hidden" id="reg-phone-otp-box">
+                        <input type="text" id="reg-phone-otp-input" class="setup-input" placeholder="Enter 6-digit SMS OTP" maxlength="6" style="padding:6px 10px; font-size:0.85rem; letter-spacing:2px; text-align:center;">
+                        <button type="button" class="auth-otp-btn" id="reg-phone-verify-btn">Verify</button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="button" class="start-btn" id="reg-submit-btn" style="width:100%; margin-top:8px;">
+                    CREATE ACCOUNT & ENTER ⚡
+                </button>
             </div>
+
+            <!-- 2. LOGIN FORM (SWITCH DEVICE) -->
+            <div id="auth-login-form" class="hidden">
+                <div style="background:rgba(0, 245, 212, 0.08); border:1px solid rgba(0,245,212,0.2); border-radius:8px; padding:10px; margin-bottom:14px; font-size:0.78rem; color:var(--text-muted);">
+                    📲 <strong>Play on Any Device:</strong> Sign in with your registered Email, Phone Number, or User ID to sync your rating, streak & history!
+                </div>
+
+                <div class="auth-input-group">
+                    <label class="auth-label" for="login-id-input">👤 Email, Phone Number, or User ID</label>
+                    <input type="text" id="login-id-input" class="setup-input" placeholder="Enter email, phone, or User ID">
+                </div>
+
+                <div class="auth-input-group">
+                    <label class="auth-label" for="login-password-input">🔒 Password</label>
+                    <input type="password" id="login-password-input" class="setup-input" placeholder="Enter your password">
+                </div>
+
+                <button type="button" class="start-btn" id="login-submit-btn" style="width:100%; margin-top:8px;">
+                    LOG IN & SYNC ACCOUNT ⚡
+                </button>
+
+                <div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+                    <div class="auth-label" style="margin-bottom:6px;">☁️ Or Transfer Cloud Data Key</div>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="secondary-btn" id="login-import-key-btn" style="flex:1; font-size:0.75rem; padding:8px;">
+                            📥 Import Sync Key
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. GUEST MODE FORM -->
+            <div id="auth-guest-form" class="hidden text-center" style="padding:10px 0;">
+                <div style="font-size:2.2rem; margin-bottom:8px;">⚡</div>
+                <h3 style="font-size:1.1rem; color:#fff; margin-bottom:6px;">Quick Play as Guest</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4; margin-bottom:16px;">
+                    Play immediately without an account. Your match history and daily puzzles will be saved on this device. You can register your Email and Phone Number anytime in Settings to sync across devices!
+                </p>
+                <button type="button" class="start-btn" id="guest-continue-btn" style="width:100%;">
+                    CONTINUE AS GUEST ⚡
+                </button>
+            </div>
+
         </div>
     </div>
 

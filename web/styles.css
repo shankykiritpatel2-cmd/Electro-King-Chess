@@ -2641,3 +2641,684 @@ body.is-android .android-only-widget {
     }
 }
 
+/* =========================================================
+   9. MAIN MENU, ONBOARDING AUTH & EXPANDED SETTINGS (CYBER THEME)
+   ========================================================= */
+
+/* Main Menu Container */
+.menu-screen-container {
+    padding: 14px 16px 80px;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Hero Player Card */
+.menu-hero-card {
+    background: linear-gradient(135deg, rgba(20, 29, 47, 0.95) 0%, rgba(11, 17, 28, 0.98) 100%);
+    border: 1px solid rgba(0, 245, 212, 0.3);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 245, 212, 0.12);
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-hero-card::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(0, 245, 212, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.menu-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.menu-avatar-wrap {
+    position: relative;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 0 16px rgba(0, 245, 212, 0.4);
+    flex-shrink: 0;
+}
+
+.menu-player-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.menu-player-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-player-sub-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.menu-userid-badge {
+    font-family: monospace;
+    font-size: 0.76rem;
+    color: var(--primary-light);
+    background: rgba(0, 245, 212, 0.12);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 245, 212, 0.25);
+}
+
+.menu-joined-badge {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Quick Stats Bar */
+.menu-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+}
+
+.menu-stat-item .stat-num {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+    display: block;
+}
+
+.menu-stat-item .stat-num.highlight {
+    color: var(--primary);
+    text-shadow: 0 0 8px rgba(0, 245, 212, 0.4);
+}
+
+.menu-stat-item .stat-lbl {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Main Action Cards Grid */
+.menu-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.menu-action-card {
+    background: linear-gradient(145deg, rgba(24, 34, 53, 0.9) 0%, rgba(13, 20, 32, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 120px;
+}
+
+.menu-action-card.hero-play-card {
+    grid-column: span 2;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(20, 29, 47, 0.95) 50%, rgba(14, 165, 233, 0.2) 100%);
+    border: 1.5px solid rgba(0, 245, 212, 0.45);
+    box-shadow: 0 6px 20px rgba(0, 245, 212, 0.15);
+    padding: 18px 20px;
+    min-height: 100px;
+}
+
+.menu-action-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(0, 245, 212, 0.25);
+}
+
+.menu-card-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(0, 245, 212, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.hero-play-card .menu-card-icon-box {
+    width: 48px;
+    height: 48px;
+    font-size: 1.6rem;
+    background: rgba(0, 245, 212, 0.2);
+}
+
+.menu-card-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.menu-card-sub {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.menu-card-arrow {
+    color: var(--primary);
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.menu-action-card:hover .menu-card-arrow {
+    transform: translateX(4px);
+}
+
+/* Quick Play Bots Row */
+.quick-play-section {
+    background: rgba(17, 24, 39, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+
+.quick-play-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.quick-play-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.quick-bots-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.quick-bot-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.quick-bot-btn:hover {
+    border-color: var(--primary);
+    background: rgba(0, 245, 212, 0.1);
+    transform: translateY(-2px);
+}
+
+.quick-bot-icon {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+}
+
+.quick-bot-name {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.quick-bot-elo {
+    font-size: 0.65rem;
+    color: var(--primary-light);
+    font-family: monospace;
+}
+
+/* Today's Daily Tactics Banner */
+.daily-preview-banner {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(17, 24, 39, 0.85) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.daily-preview-left {
+    flex: 1;
+}
+
+.daily-preview-date {
+    font-size: 0.72rem;
+    color: var(--yellow);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.daily-preview-heading {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 2px;
+}
+
+.daily-pills-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.daily-mini-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.daily-mini-dot.solved {
+    background: rgba(0, 245, 212, 0.2);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.daily-solve-btn {
+    padding: 8px 14px;
+    background: var(--primary);
+    color: #000;
+    font-size: 0.78rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.2s;
+}
+
+.daily-solve-btn:hover {
+    filter: brightness(1.15);
+}
+
+/* Match Setup Back Button */
+.setup-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.setup-back-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.setup-back-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(0, 245, 212, 0.1);
+}
+
+/* =========================================================
+   ONBOARDING & MULTI-DEVICE AUTHENTICATION MODAL
+   ========================================================= */
+
+.auth-modal-card {
+    max-width: 480px !important;
+    width: 92% !important;
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding: 22px 20px !important;
+}
+
+.auth-tabs-row {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 18px;
+    gap: 4px;
+}
+
+.auth-tab-btn {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.auth-tab-btn.active {
+    background: rgba(0, 245, 212, 0.18);
+    color: var(--primary-light);
+    border: 1px solid rgba(0, 245, 212, 0.35);
+}
+
+.auth-input-group {
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+.auth-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.auth-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.auth-status-badge.verified {
+    color: #10b981;
+}
+
+.auth-status-badge.unverified {
+    color: #ef4444;
+}
+
+.auth-status-badge.available {
+    color: #10b981;
+}
+
+.auth-status-badge.taken {
+    color: #ef4444;
+}
+
+.auth-action-row {
+    display: flex;
+    gap: 8px;
+}
+
+.auth-action-row .setup-input {
+    flex: 1;
+}
+
+.auth-otp-btn {
+    background: rgba(0, 245, 212, 0.15);
+    border: 1px solid rgba(0, 245, 212, 0.4);
+    color: var(--primary-light);
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.auth-otp-btn:hover {
+    background: var(--primary);
+    color: #000;
+}
+
+.auth-otp-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.auth-otp-verify-box {
+    margin-top: 8px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(0, 245, 212, 0.3);
+    border-radius: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.auth-otp-verify-box.hidden {
+    display: none !important;
+}
+
+.otp-sim-alert {
+    background: rgba(0, 245, 212, 0.12);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 0.8rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s;
+}
+
+.otp-sim-alert code {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--yellow);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 2px;
+}
+
+/* =========================================================
+   ABOUT ACCOUNT & LEGAL DIRECTORY (SETTINGS SCREEN)
+   ========================================================= */
+
+.about-account-card {
+    background: linear-gradient(135deg, rgba(20, 29, 47, 0.9) 0%, rgba(13, 20, 32, 0.95) 100%);
+    border: 1px solid rgba(0, 245, 212, 0.25);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.account-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.account-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.82rem;
+}
+
+.account-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.account-row-label {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.account-row-val {
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge-verified {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+.account-sync-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+/* About ELECTRO KING App Card */
+.about-app-card {
+    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.about-brand-title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: 1px;
+    text-shadow: 0 0 12px rgba(0, 245, 212, 0.35);
+}
+
+.about-brand-tagline {
+    font-size: 0.78rem;
+    color: var(--yellow);
+    font-weight: 700;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+}
+
+.about-details-list {
+    margin: 14px 0;
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.about-detail-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+.about-detail-item strong {
+    color: #fff;
+}
+
+/* Legal Links Directory Grid */
+.legal-links-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.legal-btn-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 10px 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.76rem;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+
+.legal-btn-link:hover {
+    border-color: var(--primary);
+    color: var(--primary-light);
+    background: rgba(0, 245, 212, 0.1);
+}
+
+

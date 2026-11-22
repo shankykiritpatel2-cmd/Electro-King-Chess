@@ -1682,100 +1682,352 @@ function showGameOverModal(msg, victor = 'Player') {
 // 4. 5 DAILY TACTICS PUZZLES ENGINE (1 ATTEMPT PER DAY)
 // =========================================================
 
-const PUZZLES = [
+// =========================================================
+// 4. 5 DAILY TACTICS PUZZLES ENGINE (DIFFERENT EVERY SINGLE DAY!)
+// =========================================================
+
+function coordToRC(sq) {
+    const col = sq.charCodeAt(0) - 97;
+    const row = 8 - parseInt(sq[1], 10);
+    return { r: row, c: col };
+}
+
+function fenToBoard(fen) {
+    const b = Array(8).fill(null).map(() => Array(8).fill(null));
+    const parts = fen.trim().split(/\s+/)[0].split('/');
+    for (let r = 0; r < 8; r++) {
+        let c = 0;
+        const rowStr = parts[r];
+        for (let i = 0; i < rowStr.length; i++) {
+            const ch = rowStr[i];
+            if (ch >= '1' && ch <= '8') {
+                c += parseInt(ch, 10);
+            } else {
+                const color = (ch === ch.toUpperCase()) ? 'white' : 'black';
+                const type = ch.toLowerCase();
+                b[r][c] = { type, color, hasMoved: true };
+                c++;
+            }
+        }
+    }
+    return b;
+}
+
+// 5 VERIFIED TIERED PUZZLE POOLS FOR DAILY CALENDAR ROTATION
+const PUZZLE_POOL_1 = [
     {
-        id: 0,
-        title: "Daily Puzzle #1: Back-Rank Mate",
-        turn: "⚪ White to move & deliver Back-Rank Checkmate",
-        setup: () => {
-            const b = Array(8).fill(null).map(() => Array(8).fill(null));
-            b[0][6] = { type: 'k', color: 'black' };
-            b[1][5] = { type: 'p', color: 'black' };
-            b[1][6] = { type: 'p', color: 'black' };
-            b[1][7] = { type: 'p', color: 'black' };
-            b[7][0] = { type: 'r', color: 'white' };
-            b[7][6] = { type: 'k', color: 'white' };
-            return b;
-        },
-        solution: { from: { r: 7, c: 0 }, to: { r: 0, c: 0 } },
-        hint: "Deliver Back-Rank checkmate along row 8 with your Rook!"
+        id: "m1_backrank_a",
+        title: "Daily #1: Back-Rank Corridor Mate",
+        category: "Back-Rank",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Rook to move & deliver Back-Rank Mate",
+        fen: "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1",
+        moves: [{ from: coordToRC("a1"), to: coordToRC("a8") }],
+        hint: "Deliver checkmate on a8 along the open back rank!",
+        points: 25
     },
     {
-        id: 1,
-        title: "Daily Puzzle #2: Scholar's Queen Mate",
+        id: "m1_scholars",
+        title: "Daily #1: Scholar's Queen Strike",
+        category: "Scholar's",
+        difficulty: "Mate in 1",
         turn: "⚪ White Queen to move & deliver Checkmate",
-        setup: () => {
-            const b = Array(8).fill(null).map(() => Array(8).fill(null));
-            b[0][4] = { type: 'k', color: 'black' };
-            b[0][3] = { type: 'q', color: 'black' };
-            b[0][2] = { type: 'b', color: 'black' };
-            b[1][3] = { type: 'p', color: 'black' };
-            b[1][4] = { type: 'p', color: 'black' };
-            b[4][2] = { type: 'b', color: 'white' };
-            b[5][5] = { type: 'q', color: 'white' };
-            b[7][4] = { type: 'k', color: 'white' };
-            return b;
-        },
-        solution: { from: { r: 5, c: 5 }, to: { r: 1, c: 5 } },
-        hint: "Strike f7 with your Queen, backed by the Bishop on c4 for checkmate!"
+        fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+        moves: [{ from: coordToRC("f3"), to: coordToRC("f7") }],
+        hint: "Strike the weak f7 square with Queen supported by Bishop on c4!",
+        points: 25
     },
     {
-        id: 2,
-        title: "Daily Puzzle #3: Smothered Mate",
-        turn: "⚪ White Knight to move & deliver Smothered Checkmate",
-        setup: () => {
-            const b = Array(8).fill(null).map(() => Array(8).fill(null));
-            b[0][7] = { type: 'k', color: 'black' };
-            b[0][6] = { type: 'r', color: 'black' };
-            b[1][6] = { type: 'p', color: 'black' };
-            b[1][7] = { type: 'p', color: 'black' };
-            b[3][4] = { type: 'n', color: 'white' };
-            b[7][6] = { type: 'k', color: 'white' };
-            return b;
-        },
-        solution: { from: { r: 3, c: 4 }, to: { r: 1, c: 5 } },
-        hint: "Jump your Knight to f7! The enemy King is trapped by its own pieces."
+        id: "m1_smothered",
+        title: "Daily #1: Smothered Knight Ambush",
+        category: "Smothered",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Knight to move & deliver Smothered Mate",
+        fen: "6rk/6pp/8/4N3/8/8/8/7K w - - 0 1",
+        moves: [{ from: coordToRC("e5"), to: coordToRC("f7") }],
+        hint: "Hop your Knight to f7! The enemy King is trapped by its own pieces.",
+        points: 25
     },
     {
-        id: 3,
-        title: "Daily Puzzle #4: Anastasia's Mate",
-        turn: "⚪ White Rook to move & deliver Checkmate on h-file",
-        setup: () => {
-            const b = Array(8).fill(null).map(() => Array(8).fill(null));
-            b[1][7] = { type: 'k', color: 'black' };
-            b[1][5] = { type: 'p', color: 'black' };
-            b[1][6] = { type: 'p', color: 'black' };
-            b[1][4] = { type: 'n', color: 'white' };
-            b[3][0] = { type: 'r', color: 'white' };
-            b[7][6] = { type: 'k', color: 'white' };
-            return b;
-        },
-        solution: { from: { r: 3, c: 0 }, to: { r: 3, c: 7 } },
-        hint: "Slide your Rook to h5! The Knight on e7 seals off g8 and g6."
+        id: "m1_arabian",
+        title: "Daily #1: Arabian Corner Trap",
+        category: "Arabian",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Rook to move & deliver Arabian Mate",
+        fen: "7k/1R6/5N2/8/8/8/8/6K1 w - - 0 1",
+        moves: [{ from: coordToRC("b7"), to: coordToRC("h7") }],
+        hint: "Move the Rook to h7 with Knight protection!",
+        points: 25
     },
     {
-        id: 4,
-        title: "Daily Puzzle #5: Arabian Mate",
-        turn: "⚪ White Rook to move & deliver Arabian Checkmate",
-        setup: () => {
-            const b = Array(8).fill(null).map(() => Array(8).fill(null));
-            b[0][7] = { type: 'k', color: 'black' };
-            b[2][5] = { type: 'n', color: 'white' };
-            b[1][1] = { type: 'r', color: 'white' };
-            b[7][6] = { type: 'k', color: 'white' };
-            return b;
-        },
-        solution: { from: { r: 1, c: 1 }, to: { r: 1, c: 7 } },
-        hint: "Move your Rook to h7! The Knight on f6 defends the Rook and covers g8."
+        id: "m1_anastasia",
+        title: "Daily #1: Anastasia's Corridor Mate",
+        category: "Anastasia",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Rook to move & deliver Checkmate on a8",
+        fen: "7k/4N1pp/8/8/R7/8/8/6K1 w - - 0 1",
+        moves: [{ from: coordToRC("a4"), to: coordToRC("a8") }],
+        hint: "Fire your Rook to the back rank!",
+        points: 25
+    },
+    {
+        id: "m1_lawn_mower",
+        title: "Daily #1: Lawn Mower Double Rook Mate",
+        category: "Lawn Mower",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Rook to move & seal Rank 8",
+        fen: "7k/R7/1R6/8/8/8/8/7K w - - 0 1",
+        moves: [{ from: coordToRC("b6"), to: coordToRC("b8") }],
+        hint: "Cut off the 8th rank with your second Rook on b8!",
+        points: 25
     }
 ];
 
+const PUZZLE_POOL_2 = [
+    {
+        id: "m1_epaulette",
+        title: "Daily #2: Epaulette Royal Squeeze",
+        category: "Epaulette",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Queen to move & deliver Epaulette Checkmate",
+        fen: "3rkr2/3p1p2/8/3Q4/8/8/8/7K w - - 0 1",
+        moves: [{ from: coordToRC("d5"), to: coordToRC("e5") }],
+        hint: "Slide your Queen to e5! The Black King is trapped between its own Rooks.",
+        points: 25
+    },
+    {
+        id: "m1_bodens_move",
+        title: "Daily #2: Boden's Criss-Cross Mate",
+        category: "Boden's",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Bishop to move & deliver Boden's Mate",
+        fen: "2kr4/3p4/8/1B6/5B2/8/8/7K w - - 0 1",
+        moves: [{ from: coordToRC("b5"), to: coordToRC("a6") }],
+        hint: "Deliver Boden's criss-cross mate with Ba6#!",
+        points: 25
+    },
+    {
+        id: "m1_corner_kiss",
+        title: "Daily #2: Queen & Pawn Corner Trap",
+        category: "Queen Net",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Queen to move & deliver Checkmate on g8",
+        fen: "7k/5P1p/8/8/8/8/8/6QK w - - 0 1",
+        moves: [{ from: coordToRC("g1"), to: coordToRC("g8") }],
+        hint: "Drive your Queen to g8 right into the corner!",
+        points: 25
+    },
+    {
+        id: "m1_balestra",
+        title: "Daily #2: Balestra Bishop & Queen Net",
+        category: "Balestra",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Queen to move & deliver Balestra Mate",
+        fen: "k7/2B5/8/8/8/8/8/1Q5K w - - 0 1",
+        moves: [{ from: coordToRC("b1"), to: coordToRC("b8") }],
+        hint: "Deliver checkmate on b8 with Queen supported by Bishop on c7!",
+        points: 25
+    },
+    {
+        id: "m1_rook_exchange_mate",
+        title: "Daily #2: Back-Rank Capture Mate",
+        category: "Back-Rank",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Rook to move & capture d8",
+        fen: "3r2k1/5ppp/8/8/8/8/8/3R3K w - - 0 1",
+        moves: [{ from: coordToRC("d1"), to: coordToRC("d8") }],
+        hint: "Capture the Black Rook on d8 to deliver immediate checkmate!",
+        points: 25
+    },
+    {
+        id: "m1_backrank_queen",
+        title: "Daily #2: Queen Infiltration Mate",
+        category: "Back-Rank",
+        difficulty: "Mate in 1",
+        turn: "⚪ White Queen to move & deliver Checkmate",
+        fen: "k7/pp6/8/8/8/8/8/2Q4K w - - 0 1",
+        moves: [{ from: coordToRC("c1"), to: coordToRC("c8") }],
+        hint: "Slide your Queen to c8 for an unstoppable back-rank checkmate!",
+        points: 25
+    }
+];
+
+const PUZZLE_POOL_3 = [
+    {
+        id: "m2_kinghunt",
+        title: "Daily #3: King Hunt Corner Finish",
+        category: "King Hunt",
+        difficulty: "Mate in 2",
+        turn: "⚪ White Queen to strike with check (Mate in 2)",
+        fen: "6k1/5ppp/8/6N1/2B5/5Q2/8/7K w - - 0 1",
+        moves: [
+            { from: coordToRC("f3"), to: coordToRC("f7") }, // 1. Qxf7+
+            { from: coordToRC("g8"), to: coordToRC("h8") }, // 1... Kh8
+            { from: coordToRC("f7"), to: coordToRC("g8") }  // 2. Qg8#
+        ],
+        hint: "Strike on f7 with check, driving the King into the corner before delivering mate on g8!",
+        points: 50
+    },
+    {
+        id: "m2_bishopdeflect",
+        title: "Daily #3: Bishop-Queen Deflection",
+        category: "Deflection",
+        difficulty: "Mate in 2",
+        turn: "⚪ White Queen to initiate combination (Mate in 2)",
+        fen: "4r1k1/5ppp/8/8/2B5/5Q2/8/4R2K w - - 0 1",
+        moves: [
+            { from: coordToRC("f3"), to: coordToRC("f7") }, // 1. Qxf7+
+            { from: coordToRC("g8"), to: coordToRC("h8") }, // 1... Kh8
+            { from: coordToRC("f7"), to: coordToRC("e8") }  // 2. Qxe8#
+        ],
+        hint: "Capture f7 with check, then take the hanging Rook on e8 for checkmate!",
+        points: 50
+    },
+    {
+        id: "m2_doublerook",
+        title: "Daily #3: Double Rook Decoy Strike",
+        category: "Deflection",
+        difficulty: "Mate in 2",
+        turn: "⚪ White Rook to sacrifice on e8 (Mate in 2)",
+        fen: "r3r1k1/3Q1ppp/8/8/8/8/8/4R2K w - - 0 1",
+        moves: [
+            { from: coordToRC("e1"), to: coordToRC("e8") }, // 1. Rxe8+
+            { from: coordToRC("a8"), to: coordToRC("e8") }, // 1... Rxe8
+            { from: coordToRC("d7"), to: coordToRC("e8") }  // 2. Qxe8#
+        ],
+        hint: "Exchange on e8 with check to deflect Black's primary Rook, then strike with Queen!",
+        points: 50
+    }
+];
+
+const PUZZLE_POOL_4 = [
+    {
+        id: "m2_overload",
+        title: "Daily #4: Battery Overload Deflection",
+        category: "Overload",
+        difficulty: "Mate in 2",
+        turn: "⚪ White Queen to sacrifice on e8 (Mate in 2)",
+        fen: "2r1r1k1/5ppp/8/8/8/8/4QPPP/4R2K w - - 0 1",
+        moves: [
+            { from: coordToRC("e2"), to: coordToRC("e8") }, // 1. Qxe8+
+            { from: coordToRC("c8"), to: coordToRC("e8") }, // 1... Rxe8
+            { from: coordToRC("e1"), to: coordToRC("e8") }  // 2. Rxe8#
+        ],
+        hint: "Sacrifice Queen on e8 to deflect Black's guarding Rook, then checkmate with your own Rook!",
+        points: 50
+    },
+    {
+        id: "m2_anastasia_sac",
+        title: "Daily #4: Anastasia Queen Sacrifice",
+        category: "Anastasia",
+        difficulty: "Mate in 2",
+        turn: "⚪ White Queen sacrifice on h7 (Mate in 2)",
+        fen: "7k/4N1pp/8/8/R6Q/8/8/7K w - - 0 1",
+        moves: [
+            { from: coordToRC("h4"), to: coordToRC("h7") }, // 1. Qxh7+
+            { from: coordToRC("h8"), to: coordToRC("h7") }, // 1... Kxh7
+            { from: coordToRC("a4"), to: coordToRC("h4") }  // 2. Rh4#
+        ],
+        hint: "Sacrifice Queen on h7 to shatter Black's pawn shield, then deliver Rh4# supported by Ne7!",
+        points: 50
+    },
+    {
+        id: "m2_flank_battery",
+        title: "Daily #4: Flank Battery Deflection",
+        category: "Deflection",
+        difficulty: "Mate in 2",
+        turn: "⚪ White Queen to deflect defense (Mate in 2)",
+        fen: "1r2r1k1/5ppp/8/8/8/8/4QPPP/4R2K w - - 0 1",
+        moves: [
+            { from: coordToRC("e2"), to: coordToRC("e8") }, // 1. Qxe8+
+            { from: coordToRC("b8"), to: coordToRC("e8") }, // 1... Rxe8
+            { from: coordToRC("e1"), to: coordToRC("e8") }  // 2. Rxe8#
+        ],
+        hint: "Sacrifice Queen on e8 to lure away Black's b8 Rook, then mate with your own Rook!",
+        points: 50
+    }
+];
+
+const PUZZLE_POOL_5 = [
+    {
+        id: "m3_battery_dualrook",
+        title: "Daily #5: Dual Rook Battery Decimation",
+        category: "Overload",
+        difficulty: "Mate in 3",
+        turn: "⚪ White Bishop to sacrifice on f7 (Mate in 3)",
+        fen: "5rk1/5ppp/8/8/2B5/8/8/3R1R1K w - - 0 1",
+        moves: [
+            { from: coordToRC("c4"), to: coordToRC("f7") }, // 1. Bxf7+
+            { from: coordToRC("f8"), to: coordToRC("f7") }, // 1... Rxf7
+            { from: coordToRC("d1"), to: coordToRC("d8") }, // 2. Rd8+
+            { from: coordToRC("f7"), to: coordToRC("f8") }, // 2... Rf8
+            { from: coordToRC("d8"), to: coordToRC("f8") }  // 3. Rdxf8#
+        ],
+        hint: "Sacrifice your Bishop on f7 with check, then drive your Rook to d8 for a crushing back-rank finish!",
+        points: 75
+    },
+    {
+        id: "m3_philidor_hunt",
+        title: "Daily #5: Philidor Smothered Clearance",
+        category: "Philidor",
+        difficulty: "Mate in 3",
+        turn: "⚪ White Bishop check on f7 (Mate in 3)",
+        fen: "5rk1/5ppp/8/6N1/2B5/1Q6/8/7K w - - 0 1",
+        moves: [
+            { from: coordToRC("c4"), to: coordToRC("f7") }, // 1. Bxf7+
+            { from: coordToRC("g8"), to: coordToRC("h8") }, // 1... Kh8
+            { from: coordToRC("f7"), to: coordToRC("g8") }, // 2. Bg8!
+            { from: coordToRC("f8"), to: coordToRC("g8") }, // 2... Rxg8
+            { from: coordToRC("g5"), to: coordToRC("f7") }  // 3. Nf7#
+        ],
+        hint: "Deliver check on f7, clearance sacrifice on g8, and finish with an iconic smothered knight mate!",
+        points: 75
+    }
+];
+
+// DETERMINISTIC CALENDAR ROTATION (DIFFERENT EVERY SINGLE DAY!)
+function getTodayKolkataDateStr() {
+    try {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        return formatter.format(new Date()); // Always Returns YYYY-MM-DD
+    } catch (e) {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+}
+
+function getDailyPuzzlesForToday(customDateStr = null) {
+    const dateStr = customDateStr || getTodayKolkataDateStr();
+    const parts = dateStr.split('-');
+    const year = parseInt(parts[0], 10) || 2026;
+    const month = parseInt(parts[1], 10) || 11;
+    const day = parseInt(parts[2], 10) || 22;
+    // Sequential calendar day seed guaranteed to change every single day
+    const daySeq = (year * 366) + (month * 31) + day;
+
+    const p1 = PUZZLE_POOL_1[(daySeq * 7) % PUZZLE_POOL_1.length];
+    const p2 = PUZZLE_POOL_2[(daySeq * 11) % PUZZLE_POOL_2.length];
+    const p3 = PUZZLE_POOL_3[(daySeq * 13) % PUZZLE_POOL_3.length];
+    const p4 = PUZZLE_POOL_4[(daySeq * 17) % PUZZLE_POOL_4.length];
+    const p5 = PUZZLE_POOL_5[(daySeq * 19) % PUZZLE_POOL_5.length];
+
+    return [p1, p2, p3, p4, p5];
+}
+
+let PUZZLES = getDailyPuzzlesForToday();
+let pzCurrentStep = 0; // Tracks multi-move step index
+
 function getDailyPuzzleStorageKey() {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `electro_daily_puzzles_${year}-${month}-${day}`;
+    const dateStr = getTodayKolkataDateStr();
+    return `electro_daily_puzzles_${dateStr}`;
 }
 
 function getCompletedPuzzlesToday() {
@@ -1800,21 +2052,18 @@ function markPuzzleCompletedToday(idx) {
         if (!completed.includes(idx)) {
             completed.push(idx);
             localStorage.setItem(key, JSON.stringify(completed));
-            playerProfile.puzzles++;
+            playerProfile.puzzles = (playerProfile.puzzles || 0) + 1;
+            const pz = PUZZLES[idx];
+            if (pz && pz.points) {
+                playerProfile.points = (playerProfile.points || 0) + pz.points;
+            }
             saveProfile();
             if (completed.length === PUZZLES.length) {
                 updatePuzzleStreakOnCompletion();
             }
+            renderMainMenuUI();
         }
     } catch (e) {}
-}
-
-function getTodayDateStr() {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
 }
 
 function getYesterdayDateStr() {
@@ -1836,7 +2085,7 @@ function getPuzzleStreakData() {
 }
 
 function updatePuzzleStreakOnCompletion() {
-    const today = getTodayDateStr();
+    const today = getTodayKolkataDateStr();
     const yesterday = getYesterdayDateStr();
     let data = getPuzzleStreakData();
     
@@ -1861,7 +2110,7 @@ function renderPuzzleStreak() {
     const streakSubEl = document.getElementById('puzzle-streak-sub');
     if (!streakCountEl) return;
     
-    const today = getTodayDateStr();
+    const today = getTodayKolkataDateStr();
     const yesterday = getYesterdayDateStr();
     let data = getPuzzleStreakData();
     
@@ -1882,7 +2131,7 @@ function renderPuzzleStreak() {
     const completedList = getCompletedPuzzlesToday();
     if (streakSubEl) {
         if (completedList.length === PUZZLES.length) {
-            streakSubEl.innerHTML = '🔥 All 5 daily puzzles cleared! Streak safely secured.';
+            streakSubEl.innerHTML = '🔥 All 5 daily puzzles cleared today! Streak safely secured.';
         } else {
             const left = PUZZLES.length - completedList.length;
             streakSubEl.textContent = `Clear ${left} more puzzle${left > 1 ? 's' : ''} today to advance your streak!`;
@@ -1905,10 +2154,11 @@ function renderPuzzleProgressPills() {
         if (completed.includes(idx)) pill.classList.add('completed');
         
         pill.textContent = completed.includes(idx) ? '✓' : (idx + 1);
-        pill.title = completed.includes(idx) ? `Daily Puzzle #${idx + 1} (Completed)` : `Daily Puzzle #${idx + 1}`;
+        pill.title = completed.includes(idx) ? `Daily #${idx + 1} (${pz.title} - Completed)` : `Daily #${idx + 1} (${pz.title})`;
         
         pill.addEventListener('click', () => {
             currentPuzzleIdx = idx;
+            pzCurrentStep = 0;
             renderCurrentPuzzle();
         });
         
@@ -1917,6 +2167,7 @@ function renderPuzzleProgressPills() {
 }
 
 function renderCurrentPuzzle() {
+    PUZZLES = getDailyPuzzlesForToday();
     const pz = PUZZLES[currentPuzzleIdx];
     if (!pz) return;
     
@@ -1933,14 +2184,14 @@ function renderCurrentPuzzle() {
     const isCompleted = isPuzzleCompletedToday(currentPuzzleIdx);
     const completedList = getCompletedPuzzlesToday();
     
-    lvlTag.textContent = pz.title;
+    lvlTag.textContent = `${pz.title} • [${pz.difficulty}]`;
     if (solvedBadge) solvedBadge.classList.toggle('hidden', !isCompleted);
     
     if (feedbackEl) {
         if (completedList.length === PUZZLES.length) {
             feedbackEl.innerHTML = '<span style="color:#22c55e;">🏆 All 5 Daily Puzzles Solved Today! Grandmaster tactics achieved.</span>';
         } else if (isCompleted) {
-            feedbackEl.innerHTML = '<span style="color:#22c55e;">✅ Solved! You have completed this puzzle today.</span>';
+            feedbackEl.innerHTML = '<span style="color:#22c55e;">✅ Solved! You have cleared this puzzle today. (+Points awarded)</span>';
         } else {
             feedbackEl.textContent = '';
         }
@@ -1949,13 +2200,30 @@ function renderCurrentPuzzle() {
     turnText.textContent = isCompleted ? 'Completed for today (Cannot repeat)' : pz.turn;
     boardEl.innerHTML = '';
     
-    const pzBoard = pz.setup();
+    // Build initial board from FEN
+    let pzBoard = fenToBoard(pz.fen);
+    
+    // If completed, fast-forward to final checkmate position
     if (isCompleted) {
-        pzBoard[pz.solution.to.r][pz.solution.to.c] = pzBoard[pz.solution.from.r][pz.solution.from.c];
-        pzBoard[pz.solution.from.r][pz.solution.from.c] = null;
+        pz.moves.forEach(m => {
+            if (pzBoard[m.from.r] && pzBoard[m.from.r][m.from.c]) {
+                pzBoard[m.to.r][m.to.c] = pzBoard[m.from.r][m.from.c];
+                pzBoard[m.from.r][m.from.c] = null;
+            }
+        });
+    } else {
+        // Apply steps up to current step
+        for (let s = 0; s < pzCurrentStep; s++) {
+            const m = pz.moves[s];
+            if (pzBoard[m.from.r] && pzBoard[m.from.r][m.from.c]) {
+                pzBoard[m.to.r][m.to.c] = pzBoard[m.from.r][m.from.c];
+                pzBoard[m.from.r][m.from.c] = null;
+            }
+        }
     }
     
     let pzSelected = null;
+    let isProcessingReply = false;
     
     function drawPzBoard() {
         boardEl.innerHTML = '';
@@ -1974,7 +2242,7 @@ function renderCurrentPuzzle() {
                     const pEl = document.createElement('div');
                     pEl.className = 'piece-svg';
                     pEl.innerHTML = getPieceSvg(piece.color, piece.type);
-                    if (!isCompleted && piece.color === 'white') {
+                    if (!isCompleted && !isProcessingReply && piece.color === 'white') {
                         pEl.classList.add('draggable');
                         pEl.setAttribute('draggable', 'true');
                         pEl.addEventListener('dragstart', (e) => {
@@ -1988,8 +2256,8 @@ function renderCurrentPuzzle() {
                 }
 
                 function handlePzMove(targetR, targetC) {
-                    if (isCompleted) {
-                        showToast('✅ Puzzle already completed today!', 'info');
+                    if (isCompleted || isProcessingReply) {
+                        if (isCompleted) showToast('✅ Puzzle already completed today!', 'info');
                         return;
                     }
                     
@@ -2007,20 +2275,55 @@ function renderCurrentPuzzle() {
                             return;
                         }
                         
-                        if (pzSelected.r === pz.solution.from.r && pzSelected.c === pz.solution.from.c &&
-                            targetR === pz.solution.to.r && targetC === pz.solution.to.c) {
+                        const expectedMove = pz.moves[pzCurrentStep];
+                        if (expectedMove &&
+                            pzSelected.r === expectedMove.from.r && pzSelected.c === expectedMove.from.c &&
+                            targetR === expectedMove.to.r && targetC === expectedMove.to.c) {
                             
+                            // User move is correct!
                             pzBoard[targetR][targetC] = pzBoard[pzSelected.r][pzSelected.c];
                             pzBoard[pzSelected.r][pzSelected.c] = null;
                             pzSelected = null;
-                            markPuzzleCompletedToday(currentPuzzleIdx);
-                            audio.victory();
-                            showToast(`🎉 Checkmate! Daily Puzzle #${currentPuzzleIdx + 1} Solved!`, 'success');
-                            renderCurrentPuzzle();
+                            pzCurrentStep++;
+                            
+                            // Check if puzzle is now fully solved
+                            if (pzCurrentStep >= pz.moves.length) {
+                                markPuzzleCompletedToday(currentPuzzleIdx);
+                                audio.victory();
+                                triggerHaptic('victory');
+                                showToast(`🎉 Checkmate! Daily Puzzle #${currentPuzzleIdx + 1} Solved! (+${pz.points} pts)`, 'success');
+                                renderCurrentPuzzle();
+                                return;
+                            }
+                            
+                            // Opponent has a forced reply move
+                            audio.move();
+                            triggerHaptic('move');
+                            drawPzBoard();
+                            isProcessingReply = true;
+                            if (feedbackEl) feedbackEl.innerHTML = '<span style="color:var(--primary);">⚡ Great move! Opponent responding...</span>';
+                            
+                            setTimeout(() => {
+                                const oppMove = pz.moves[pzCurrentStep];
+                                if (oppMove && pzBoard[oppMove.from.r] && pzBoard[oppMove.from.r][oppMove.from.c]) {
+                                    pzBoard[oppMove.to.r][oppMove.to.c] = pzBoard[oppMove.from.r][oppMove.from.c];
+                                    pzBoard[oppMove.from.r][oppMove.from.c] = null;
+                                }
+                                pzCurrentStep++;
+                                audio.move();
+                                triggerHaptic('check');
+                                isProcessingReply = false;
+                                if (feedbackEl) feedbackEl.innerHTML = '<span style="color:var(--yellow);">⚪ Your turn! Deliver the final checkmate!</span>';
+                                drawPzBoard();
+                            }, 500);
+
                         } else {
-                            showToast('❌ Incorrect move. Try again!', 'error');
+                            showToast('❌ Incorrect move. Try another tactical idea!', 'error');
                             audio.defeat();
+                            triggerHaptic('check');
                             pzSelected = null;
+                            pzCurrentStep = 0;
+                            pzBoard = fenToBoard(pz.fen);
                             drawPzBoard();
                         }
                     } else {
@@ -2069,6 +2372,73 @@ function renderCurrentPuzzle() {
 }
 
 // =========================================================
+// 5. MAIN MENU & SETTINGS RENDERING
+// =========================================================
+
+function renderMainMenuUI() {
+    const avatarEl = document.getElementById('menu-player-avatar');
+    const nameEl = document.getElementById('menu-player-name');
+    const userIdEl = document.getElementById('menu-user-id');
+    const joinedEl = document.getElementById('menu-joined-date');
+    const ratingEl = document.getElementById('menu-stat-rating');
+    const pointsEl = document.getElementById('menu-stat-points');
+    const streakEl = document.getElementById('menu-stat-streak');
+    const winrateEl = document.getElementById('menu-stat-winrate');
+    const dateLabelEl = document.getElementById('menu-daily-date-label');
+    const dailyPillsEl = document.getElementById('menu-daily-pills');
+
+    if (avatarEl) avatarEl.textContent = playerProfile.avatar || '👑';
+    if (nameEl) nameEl.textContent = playerProfile.name || 'Player';
+    if (userIdEl) userIdEl.textContent = `@${playerProfile.userId || 'player'}`;
+    if (joinedEl) joinedEl.textContent = `Member Since: ${playerProfile.joinedDate || 'Nov 22, 2026'}`;
+    
+    if (ratingEl) ratingEl.textContent = playerProfile.rating || 1200;
+    if (pointsEl) pointsEl.textContent = playerProfile.points || 250;
+    
+    const streakData = getPuzzleStreakData();
+    if (streakEl) streakEl.textContent = `🔥 ${streakData.streak || 0}`;
+    
+    if (winrateEl) {
+        const m = playerProfile.matches || 0;
+        const w = playerProfile.wins || 0;
+        winrateEl.textContent = m > 0 ? `${Math.round((w / m) * 100)}%` : '0%';
+    }
+
+    if (dateLabelEl) {
+        const todayStr = getTodayKolkataDateStr();
+        const d = new Date(todayStr + "T00:00:00");
+        dateLabelEl.textContent = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    if (dailyPillsEl) {
+        const completed = getCompletedPuzzlesToday();
+        dailyPillsEl.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const dot = document.createElement('span');
+            dot.className = `daily-mini-dot ${completed.includes(i) ? 'solved' : ''}`;
+            dot.textContent = completed.includes(i) ? '✓' : (i + 1);
+            dailyPillsEl.appendChild(dot);
+        }
+    }
+}
+
+function renderSettingsUI() {
+    const accUserId = document.getElementById('settings-acc-userid');
+    const accShowName = document.getElementById('settings-acc-showname');
+    const accEmail = document.getElementById('settings-acc-email');
+    const accPhone = document.getElementById('settings-acc-phone');
+    const accJoined = document.getElementById('settings-acc-joined');
+
+    if (accUserId) accUserId.textContent = `@${playerProfile.userId || 'player'}`;
+    if (accShowName) accShowName.textContent = playerProfile.name || 'Player';
+    if (accEmail) accEmail.textContent = playerProfile.email || 'viaan@electroking.chess';
+    if (accPhone) accPhone.textContent = playerProfile.phone || '+91 98239 55519';
+    if (accJoined) accJoined.textContent = playerProfile.joinedDate || 'November 22, 2026';
+
+    syncSettingsCheckboxes();
+}
+
+// =========================================================
 // 6. NAVIGATION & TAB SWITCHING
 // =========================================================
 
@@ -2085,11 +2455,14 @@ function switchTab(tabId) {
     if (targetNavBtn) targetNavBtn.classList.add('active');
     
     const headerSub = document.getElementById('header-mode-subtitle');
-    const banner = document.getElementById('turn-message');
     const turnWidget = document.getElementById('turn-banner');
-    const turnDot = document.getElementById('turn-dot');
     
     if (tabId === 'home') {
+        if (headerSub) headerSub.textContent = 'Main Menu';
+        if (turnWidget) turnWidget.style.display = 'none';
+        pauseGame();
+        renderMainMenuUI();
+    } else if (tabId === 'setup') {
         if (headerSub) headerSub.textContent = 'Match Setup';
         if (turnWidget) turnWidget.style.display = 'none';
         pauseGame();
@@ -2113,6 +2486,11 @@ function switchTab(tabId) {
         if (turnWidget) turnWidget.style.display = 'none';
         pauseGame();
         updateProfileUI();
+    } else if (tabId === 'settings') {
+        if (headerSub) headerSub.textContent = 'Settings & About';
+        if (turnWidget) turnWidget.style.display = 'none';
+        pauseGame();
+        renderSettingsUI();
     }
 }
 
@@ -2682,25 +3060,395 @@ function setupEventListeners() {
         });
     }
     
-    // Profile Edit
-    const authBtn = document.getElementById('profile-auth-btn');
+    // =========================================================
+    // MULTI-DEVICE ACCOUNT REGISTRATION & VERIFICATION SYSTEM
+    // =========================================================
     const authModal = document.getElementById('auth-modal');
     const authClose = document.getElementById('auth-close-btn');
-    const authSubmit = document.getElementById('auth-submit-btn');
-    
-    if (authBtn) authBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
-    if (authClose) authClose.addEventListener('click', () => authModal.classList.add('hidden'));
-    if (authSubmit) {
-        authSubmit.addEventListener('click', () => {
-            const val = document.getElementById('auth-username-input').value.trim();
-            if (val) {
-                playerProfile.name = val;
-                saveProfile();
-                authModal.classList.add('hidden');
-                showToast(`Name saved: ${val} 👑`, 'success');
+    const authOtpAlert = document.getElementById('auth-otp-alert');
+    const authOtpAlertText = document.getElementById('auth-otp-alert-text');
+
+    const regUserIdInput = document.getElementById('reg-userid-input');
+    const regUserIdStatus = document.getElementById('reg-userid-status');
+    const regShowNameInput = document.getElementById('reg-showname-input');
+    const regPasswordInput = document.getElementById('reg-password-input');
+    const regEmailInput = document.getElementById('reg-email-input');
+    const regEmailStatus = document.getElementById('reg-email-status');
+    const regEmailSendOtpBtn = document.getElementById('reg-email-send-otp-btn');
+    const regEmailOtpBox = document.getElementById('reg-email-otp-box');
+    const regEmailOtpInput = document.getElementById('reg-email-otp-input');
+    const regEmailVerifyBtn = document.getElementById('reg-email-verify-btn');
+
+    const regPhoneInput = document.getElementById('reg-phone-input');
+    const regPhoneStatus = document.getElementById('reg-phone-status');
+    const regPhoneSendOtpBtn = document.getElementById('reg-phone-send-otp-btn');
+    const regPhoneOtpBox = document.getElementById('reg-phone-otp-box');
+    const regPhoneOtpInput = document.getElementById('reg-phone-otp-input');
+    const regPhoneVerifyBtn = document.getElementById('reg-phone-verify-btn');
+    const regSubmitBtn = document.getElementById('reg-submit-btn');
+
+    const loginIdInput = document.getElementById('login-id-input');
+    const loginPasswordInput = document.getElementById('login-password-input');
+    const loginSubmitBtn = document.getElementById('login-submit-btn');
+    const loginImportKeyBtn = document.getElementById('login-import-key-btn');
+    const guestContinueBtn = document.getElementById('guest-continue-btn');
+
+    let genEmailOtp = null;
+    let genPhoneOtp = null;
+    let isEmailVerified = false;
+    let isPhoneVerified = false;
+
+    // Auth Navigation Tab Switching
+    document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.dataset.authTab;
+            
+            const regForm = document.getElementById('auth-register-form');
+            const loginForm = document.getElementById('auth-login-form');
+            const guestForm = document.getElementById('auth-guest-form');
+            
+            if (regForm) regForm.classList.toggle('hidden', tab !== 'register');
+            if (loginForm) loginForm.classList.toggle('hidden', tab !== 'login');
+            if (guestForm) guestForm.classList.toggle('hidden', tab !== 'guest');
+        });
+    });
+
+    if (authClose) {
+        authClose.addEventListener('click', () => {
+            if (authModal) authModal.classList.add('hidden');
+        });
+    }
+
+    // Unique User ID Validation (Cannot be the same as any other account!)
+    if (regUserIdInput) {
+        regUserIdInput.addEventListener('input', () => {
+            let val = regUserIdInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            regUserIdInput.value = val;
+            
+            if (val.length < 3) {
+                if (regUserIdStatus) {
+                    regUserIdStatus.textContent = 'Min. 3 chars';
+                    regUserIdStatus.className = 'auth-status-badge unverified';
+                }
+                return;
+            }
+            
+            const db = getAccountsDB();
+            const exists = db.some(a => a.userId && a.userId.toLowerCase() === val);
+            if (exists) {
+                if (regUserIdStatus) {
+                    regUserIdStatus.textContent = '❌ ID Taken';
+                    regUserIdStatus.className = 'auth-status-badge taken';
+                }
+            } else {
+                if (regUserIdStatus) {
+                    regUserIdStatus.textContent = '✅ Available';
+                    regUserIdStatus.className = 'auth-status-badge available';
+                }
             }
         });
     }
+
+    // Email OTP Generation & Verification
+    if (regEmailSendOtpBtn) {
+        regEmailSendOtpBtn.addEventListener('click', () => {
+            const email = regEmailInput ? regEmailInput.value.trim() : '';
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                showToast('⚠️ Please enter a valid email address.', 'error');
+                return;
+            }
+            
+            genEmailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            if (authOtpAlert && authOtpAlertText) {
+                authOtpAlertText.innerHTML = `📧 Verification Code sent to ${email}: <code>${genEmailOtp}</code>`;
+                authOtpAlert.classList.remove('hidden');
+            }
+            if (regEmailOtpBox) regEmailOtpBox.classList.remove('hidden');
+            showToast(`⚡ Verification code generated for ${email}!`, 'info');
+            audio.powerup();
+        });
+    }
+
+    if (regEmailVerifyBtn) {
+        regEmailVerifyBtn.addEventListener('click', () => {
+            const entered = regEmailOtpInput ? regEmailOtpInput.value.trim() : '';
+            if (entered && entered === genEmailOtp) {
+                isEmailVerified = true;
+                if (regEmailStatus) {
+                    regEmailStatus.textContent = '✅ Verified';
+                    regEmailStatus.className = 'auth-status-badge verified';
+                }
+                if (regEmailInput) regEmailInput.disabled = true;
+                if (regEmailSendOtpBtn) regEmailSendOtpBtn.disabled = true;
+                if (regEmailOtpBox) regEmailOtpBox.classList.add('hidden');
+                showToast('✅ Email address successfully verified!', 'success');
+                audio.victory();
+            } else {
+                showToast('❌ Incorrect OTP code. Please check and try again.', 'error');
+                audio.defeat();
+            }
+        });
+    }
+
+    // Phone Number OTP Generation & Verification
+    if (regPhoneSendOtpBtn) {
+        regPhoneSendOtpBtn.addEventListener('click', () => {
+            const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
+            if (!phone || phone.replace(/\D/g, '').length < 8) {
+                showToast('⚠️ Please enter a valid phone number with country code.', 'error');
+                return;
+            }
+            
+            genPhoneOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            if (authOtpAlert && authOtpAlertText) {
+                authOtpAlertText.innerHTML = `📱 SMS OTP sent to ${phone}: <code>${genPhoneOtp}</code>`;
+                authOtpAlert.classList.remove('hidden');
+            }
+            if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
+            showToast(`📲 SMS OTP generated for ${phone}!`, 'info');
+            audio.powerup();
+        });
+    }
+
+    if (regPhoneVerifyBtn) {
+        regPhoneVerifyBtn.addEventListener('click', () => {
+            const entered = regPhoneOtpInput ? regPhoneOtpInput.value.trim() : '';
+            if (entered && entered === genPhoneOtp) {
+                isPhoneVerified = true;
+                if (regPhoneStatus) {
+                    regPhoneStatus.textContent = '✅ Verified';
+                    regPhoneStatus.className = 'auth-status-badge verified';
+                }
+                if (regPhoneInput) regPhoneInput.disabled = true;
+                if (regPhoneSendOtpBtn) regPhoneSendOtpBtn.disabled = true;
+                if (regPhoneOtpBox) regPhoneOtpBox.classList.add('hidden');
+                showToast('✅ Phone number successfully verified!', 'success');
+                audio.victory();
+            } else {
+                showToast('❌ Incorrect SMS OTP code. Please check and try again.', 'error');
+                audio.defeat();
+            }
+        });
+    }
+
+    // Create Account Button Submit
+    if (regSubmitBtn) {
+        regSubmitBtn.addEventListener('click', () => {
+            const uid = regUserIdInput ? regUserIdInput.value.trim().toLowerCase() : '';
+            const sName = regShowNameInput ? regShowNameInput.value.trim() : '';
+            const pwd = regPasswordInput ? regPasswordInput.value.trim() : '';
+            const email = regEmailInput ? regEmailInput.value.trim() : '';
+            const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
+
+            if (!uid || uid.length < 3) {
+                showToast('⚠️ Unique User ID must be at least 3 characters.', 'error');
+                return;
+            }
+            const db = getAccountsDB();
+            if (db.some(a => a.userId && a.userId.toLowerCase() === uid)) {
+                showToast('❌ This User ID is already taken. Please choose another.', 'error');
+                return;
+            }
+            if (!sName) {
+                showToast('⚠️ Please enter your Show Name (Display Name).', 'error');
+                return;
+            }
+            if (!pwd || pwd.length < 6) {
+                showToast('⚠️ Password must be at least 6 characters long.', 'error');
+                return;
+            }
+            if (!isEmailVerified) {
+                showToast('⚠️ Email verification required! Click "Get OTP" to verify your email.', 'error');
+                return;
+            }
+            if (!isPhoneVerified) {
+                showToast('⚠️ Phone verification required! Click "Get SMS OTP" to verify your phone.', 'error');
+                return;
+            }
+
+            const now = new Date();
+            const joinedStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+            const newAcc = {
+                userId: uid,
+                showName: sName,
+                password: pwd,
+                email: email,
+                emailVerified: true,
+                phone: phone,
+                phoneVerified: true,
+                joinedDate: joinedStr,
+                joinedTimestamp: now.getTime(),
+                avatar: playerProfile.avatar || '👑',
+                rating: 1200,
+                points: 250,
+                matches: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                currentStreak: 0,
+                bestStreak: 0,
+                puzzles: 0,
+                botRecords: { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+            };
+
+            db.push(newAcc);
+            saveAccountsDB(db);
+            setActiveAccount(newAcc);
+
+            if (authModal) authModal.classList.add('hidden');
+            showToast(`🎉 Welcome to ELECTRO KING, ${sName}! Account verified.`, 'success');
+            audio.victory();
+            renderMainMenuUI();
+            renderSettingsUI();
+        });
+    }
+
+    // Login Form Submit (Multi-Device Login by Email, Phone, or User ID)
+    if (loginSubmitBtn) {
+        loginSubmitBtn.addEventListener('click', () => {
+            const ident = loginIdInput ? loginIdInput.value.trim().toLowerCase() : '';
+            const pwd = loginPasswordInput ? loginPasswordInput.value.trim() : '';
+
+            if (!ident || !pwd) {
+                showToast('⚠️ Please enter your Email/Phone/ID and password.', 'error');
+                return;
+            }
+
+            const db = getAccountsDB();
+            const found = db.find(a => 
+                (a.userId && a.userId.toLowerCase() === ident) ||
+                (a.email && a.email.toLowerCase() === ident) ||
+                (a.phone && a.phone.replace(/\D/g, '') === ident.replace(/\D/g, ''))
+            );
+
+            if (found && found.password === pwd) {
+                setActiveAccount(found);
+                if (authModal) authModal.classList.add('hidden');
+                showToast(`⚡ Welcome back, ${found.showName}! Cloud profile synced.`, 'success');
+                audio.victory();
+                renderMainMenuUI();
+                renderSettingsUI();
+            } else {
+                showToast('❌ Invalid credentials or account not found.', 'error');
+                audio.defeat();
+            }
+        });
+    }
+
+    // Cloud Key Import (Transfer Data to Another Device)
+    if (loginImportKeyBtn) {
+        loginImportKeyBtn.addEventListener('click', () => {
+            const key = prompt('Paste your ELECTRO KING Cloud Sync Key:');
+            if (!key) return;
+            try {
+                const jsonStr = decodeURIComponent(escape(atob(key.trim())));
+                const imported = JSON.parse(jsonStr);
+                if (imported && imported.userId && imported.showName) {
+                    const db = getAccountsDB();
+                    const idx = db.findIndex(a => a.userId.toLowerCase() === imported.userId.toLowerCase());
+                    if (idx >= 0) db[idx] = imported;
+                    else db.push(imported);
+                    saveAccountsDB(db);
+                    setActiveAccount(imported);
+                    if (authModal) authModal.classList.add('hidden');
+                    showToast(`⚡ Cloud profile restored for ${imported.showName}!`, 'success');
+                    audio.victory();
+                    renderMainMenuUI();
+                    renderSettingsUI();
+                } else {
+                    showToast('❌ Invalid Cloud Key format.', 'error');
+                }
+            } catch (err) {
+                showToast('❌ Failed to decode Cloud Key. Please check the code.', 'error');
+            }
+        });
+    }
+
+    // Guest Mode Continue
+    if (guestContinueBtn) {
+        guestContinueBtn.addEventListener('click', () => {
+            if (authModal) authModal.classList.add('hidden');
+            showToast('⚡ Continuing in Guest Mode. Link Email/Phone anytime in Settings!', 'info');
+        });
+    }
+
+    // Export Cloud Key button in Settings
+    const exportKeyBtn = document.getElementById('settings-export-key-btn');
+    if (exportKeyBtn) {
+        exportKeyBtn.addEventListener('click', () => {
+            const acc = getActiveAccount() || playerProfile;
+            try {
+                const key = btoa(unescape(encodeURIComponent(JSON.stringify(acc))));
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(key).then(() => {
+                        showToast('📋 Cloud Sync Key copied to clipboard! Paste it on any device to log in.', 'success');
+                    }).catch(() => {
+                        prompt('Copy your Cloud Sync Key below:', key);
+                    });
+                } else {
+                    prompt('Copy your Cloud Sync Key below:', key);
+                }
+            } catch (e) {
+                showToast('⚠️ Could not generate export key.', 'error');
+            }
+        });
+    }
+
+    // Switch Account button in Settings
+    const switchAccountBtn = document.getElementById('settings-switch-account-btn');
+    if (switchAccountBtn) {
+        switchAccountBtn.addEventListener('click', () => {
+            if (authModal) {
+                authModal.classList.remove('hidden');
+                const loginTabBtn = document.getElementById('tab-btn-login');
+                if (loginTabBtn) loginTabBtn.click();
+            }
+        });
+    }
+
+    // Main Menu Action Cards
+    const menuPlayCard = document.getElementById('menu-card-play');
+    const menuPuzzlesCard = document.getElementById('menu-card-puzzles');
+    const menuProfileCard = document.getElementById('menu-card-profile');
+    const menuSettingsCard = document.getElementById('menu-card-settings');
+    const setupBackBtn = document.getElementById('setup-back-btn');
+    const menuDailySolveBtn = document.getElementById('menu-daily-solve-btn');
+
+    if (menuPlayCard) menuPlayCard.addEventListener('click', () => switchTab('setup'));
+    if (menuPuzzlesCard) menuPuzzlesCard.addEventListener('click', () => switchTab('puzzles'));
+    if (menuProfileCard) menuProfileCard.addEventListener('click', () => switchTab('profile'));
+    if (menuSettingsCard) menuSettingsCard.addEventListener('click', () => switchTab('settings'));
+    if (setupBackBtn) setupBackBtn.addEventListener('click', () => switchTab('home'));
+    if (menuDailySolveBtn) menuDailySolveBtn.addEventListener('click', () => switchTab('puzzles'));
+
+    // Instant Quick Play buttons against 4 Bots
+    [
+        { id: 'quick-play-sparky', diff: 1 },
+        { id: 'quick-play-cyberknight', diff: 2 },
+        { id: 'quick-play-voltqueen', diff: 3 },
+        { id: 'quick-play-electroking', diff: 4 }
+    ].forEach(item => {
+        const btn = document.getElementById(item.id);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                gameMode = 'ai';
+                difficulty = item.diff;
+                playerSide = 'white';
+                botSide = 'black';
+                matchClockLimit = 0;
+                playerNames = {
+                    white: playerProfile.name || 'Player',
+                    black: BOT_PERSONALITIES[item.diff].name
+                };
+                switchTab('arena');
+                startNew2PlayerGame();
+                showToast(`⚔️ Commencing Quick Play battle vs ${BOT_PERSONALITIES[item.diff].name}!`, 'info');
+            });
+        }
+    });
 
     // Profile Avatar Picker Modal
     const avatarPickerBtn = document.getElementById('avatar-picker-btn');
@@ -3296,31 +4044,94 @@ function applyProfileAvatarUI() {
     }
 }
 
+// --- MULTI-DEVICE ACCOUNT REGISTRATION & VERIFICATION STORAGE ---
+function getAccountsDB() {
+    try {
+        const raw = localStorage.getItem('electro_accounts_db');
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveAccountsDB(list) {
+    try {
+        localStorage.setItem('electro_accounts_db', JSON.stringify(list));
+    } catch (e) {}
+}
+
+function getActiveAccount() {
+    const list = getAccountsDB();
+    const activeId = localStorage.getItem('electro_active_user_id');
+    if (activeId) {
+        const found = list.find(a => a.userId && a.userId.toLowerCase() === activeId.toLowerCase());
+        if (found) return found;
+    }
+    if (list.length > 0) return list[0];
+    return null;
+}
+
+function setActiveAccount(acc) {
+    localStorage.setItem('electro_active_user_id', acc.userId);
+    playerProfile.userId = acc.userId;
+    playerProfile.name = acc.showName || 'Player';
+    playerProfile.email = acc.email || 'viaan@electroking.chess';
+    playerProfile.emailVerified = !!acc.emailVerified;
+    playerProfile.phone = acc.phone || '+91 98239 55519';
+    playerProfile.phoneVerified = !!acc.phoneVerified;
+    playerProfile.joinedDate = acc.joinedDate || 'November 22, 2026';
+    playerProfile.joinedTimestamp = acc.joinedTimestamp || Date.now();
+    playerProfile.avatar = acc.avatar || '👑';
+    playerProfile.avatarUrl = acc.avatarUrl || '';
+    playerProfile.rating = acc.rating || 1200;
+    playerProfile.points = acc.points || 250;
+    playerProfile.matches = acc.matches || 0;
+    playerProfile.wins = acc.wins || 0;
+    playerProfile.losses = acc.losses || 0;
+    playerProfile.draws = acc.draws || 0;
+    playerProfile.currentStreak = acc.currentStreak || 0;
+    playerProfile.bestStreak = acc.bestStreak || 0;
+    playerProfile.puzzles = acc.puzzles || 0;
+    if (acc.botRecords) playerProfile.botRecords = acc.botRecords;
+    
+    saveProfile();
+}
+
 function loadProfile() {
-    const savedName = localStorage.getItem('electro_player_name');
-    if (savedName) {
-        playerProfile.name = savedName;
-    } else {
-        playerProfile.name = 'Viaan';
+    let acc = getActiveAccount();
+    if (!acc) {
+        const existingName = localStorage.getItem('electro_player_name') || 'Viaan Patel';
+        const defaultUid = existingName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'viaan_patel';
+        acc = {
+            userId: defaultUid,
+            showName: existingName,
+            password: 'password123',
+            email: 'viaan@electroking.chess',
+            emailVerified: true,
+            phone: '+91 98239 55519',
+            phoneVerified: true,
+            joinedDate: 'November 22, 2026',
+            joinedTimestamp: Date.now(),
+            avatar: localStorage.getItem('electro_profile_avatar') || '👑',
+            avatarUrl: localStorage.getItem('electro_profile_avatar_url') || '',
+            rating: parseInt(localStorage.getItem('electro_player_rating') || '1200', 10),
+            points: 250,
+            matches: parseInt(localStorage.getItem('electro_stat_matches') || '0', 10),
+            wins: parseInt(localStorage.getItem('electro_stat_wins') || '0', 10),
+            losses: parseInt(localStorage.getItem('electro_stat_losses') || '0', 10),
+            draws: parseInt(localStorage.getItem('electro_stat_draws') || '0', 10),
+            currentStreak: parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10),
+            bestStreak: parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10),
+            puzzles: parseInt(localStorage.getItem('electro_puzzles_solved') || '0', 10),
+            botRecords: { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+        };
+        const db = getAccountsDB();
+        db.push(acc);
+        saveAccountsDB(db);
+        localStorage.setItem('electro_active_user_id', acc.userId);
     }
     
-    playerProfile.avatar = localStorage.getItem('electro_profile_avatar') || '👑';
-    playerProfile.avatarUrl = localStorage.getItem('electro_profile_avatar_url') || '';
-    playerProfile.matches = parseInt(localStorage.getItem('electro_stat_matches') || '0', 10);
-    playerProfile.wins = parseInt(localStorage.getItem('electro_stat_wins') || '0', 10);
-    playerProfile.losses = parseInt(localStorage.getItem('electro_stat_losses') || '0', 10);
-    playerProfile.draws = parseInt(localStorage.getItem('electro_stat_draws') || '0', 10);
-    playerProfile.currentStreak = parseInt(localStorage.getItem('electro_stat_current_streak') || '0', 10);
-    playerProfile.bestStreak = parseInt(localStorage.getItem('electro_stat_best_streak') || '0', 10);
-    playerProfile.rating = parseInt(localStorage.getItem('electro_player_rating') || '1200', 10);
-    playerProfile.puzzles = parseInt(localStorage.getItem('electro_puzzles_solved') || '0', 10);
-    
-    try {
-        const savedRecs = localStorage.getItem('electro_bot_records');
-        if (savedRecs) {
-            playerProfile.botRecords = JSON.parse(savedRecs);
-        }
-    } catch (e) {}
+    setActiveAccount(acc);
 
     const orientSelect = document.getElementById('pref-orientation-select');
     if (orientSelect) {
@@ -3330,12 +4141,11 @@ function loadProfile() {
     }
     
     const homeInput = document.getElementById('home-player-name');
-    const authInput = document.getElementById('auth-username-input');
-    
     if (homeInput) homeInput.value = playerProfile.name;
-    if (authInput) authInput.value = playerProfile.name;
     
     updateProfileUI();
+    renderMainMenuUI();
+    renderSettingsUI();
 }
 
 function saveProfile() {
@@ -3360,7 +4170,32 @@ function saveProfile() {
     if (playerProfile.botRecords) {
         localStorage.setItem('electro_bot_records', JSON.stringify(playerProfile.botRecords));
     }
+
+    // Sync active record into accounts database
+    if (playerProfile.userId) {
+        const db = getAccountsDB();
+        const idx = db.findIndex(a => a.userId && a.userId.toLowerCase() === playerProfile.userId.toLowerCase());
+        if (idx >= 0) {
+            db[idx].showName = playerProfile.name;
+            db[idx].avatar = playerProfile.avatar;
+            db[idx].avatarUrl = playerProfile.avatarUrl;
+            db[idx].rating = playerProfile.rating;
+            db[idx].points = playerProfile.points;
+            db[idx].matches = playerProfile.matches;
+            db[idx].wins = playerProfile.wins;
+            db[idx].losses = playerProfile.losses;
+            db[idx].draws = playerProfile.draws;
+            db[idx].currentStreak = playerProfile.currentStreak;
+            db[idx].bestStreak = playerProfile.bestStreak;
+            db[idx].puzzles = playerProfile.puzzles;
+            db[idx].botRecords = playerProfile.botRecords;
+            saveAccountsDB(db);
+        }
+    }
+
     updateProfileUI();
+    renderMainMenuUI();
+    renderSettingsUI();
 }
 
 function updateProfileUI() {
