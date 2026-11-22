@@ -2025,9 +2025,14 @@ function getDailyPuzzlesForToday(customDateStr = null) {
 let PUZZLES = getDailyPuzzlesForToday();
 let pzCurrentStep = 0; // Tracks multi-move step index
 
+function getCurrentUserStorageKey() {
+    return (playerProfile && playerProfile.userId) ? playerProfile.userId.toLowerCase().trim() : 'guest';
+}
+
 function getDailyPuzzleStorageKey() {
     const dateStr = getTodayKolkataDateStr();
-    return `electro_daily_puzzles_${dateStr}`;
+    const userKey = getCurrentUserStorageKey();
+    return `electro_daily_puzzles_${userKey}_${dateStr}`;
 }
 
 function getCompletedPuzzlesToday() {
@@ -2058,6 +2063,7 @@ function markPuzzleCompletedToday(idx) {
                 playerProfile.points = (playerProfile.points || 0) + pz.points;
             }
             saveProfile();
+            refreshDailyPuzzlesUI();
             if (completed.length === PUZZLES.length) {
                 updatePuzzleStreakOnCompletion();
             }
@@ -2077,7 +2083,8 @@ function getYesterdayDateStr() {
 
 function getPuzzleStreakData() {
     try {
-        const raw = localStorage.getItem('electro_puzzle_streak');
+        const userKey = getCurrentUserStorageKey();
+        const raw = localStorage.getItem(`electro_puzzle_streak_${userKey}`);
         return raw ? JSON.parse(raw) : { streak: 0, lastDate: '' };
     } catch (e) {
         return { streak: 0, lastDate: '' };
@@ -2087,6 +2094,7 @@ function getPuzzleStreakData() {
 function updatePuzzleStreakOnCompletion() {
     const today = getTodayKolkataDateStr();
     const yesterday = getYesterdayDateStr();
+    const userKey = getCurrentUserStorageKey();
     let data = getPuzzleStreakData();
     
     if (data.lastDate === today) {
@@ -2099,9 +2107,16 @@ function updatePuzzleStreakOnCompletion() {
         data.streak = 1;
     }
     data.lastDate = today;
-    localStorage.setItem('electro_puzzle_streak', JSON.stringify(data));
+    localStorage.setItem(`electro_puzzle_streak_${userKey}`, JSON.stringify(data));
     renderPuzzleStreak();
     checkAndUnlockAchievements();
+}
+
+function refreshDailyPuzzlesUI() {
+    renderPuzzleProgressPills();
+    renderPuzzleStreak();
+    renderCurrentPuzzle();
+    renderMainMenuUI();
 }
 
 function renderPuzzleStreak() {
@@ -2668,6 +2683,7 @@ function setupEventListeners() {
             if (customName) {
                 playerProfile.name = customName;
                 saveProfile();
+            refreshDailyPuzzlesUI();
             }
             
             // Switch to Arena tab and start match
@@ -2782,6 +2798,7 @@ function setupEventListeners() {
                     triggerHaptic('victory');
                     playerProfile.matches++;
                     saveProfile();
+            refreshDailyPuzzlesUI();
                 } else {
                     showToast(`${bot.name} declined: "I fight for checkmate!" ⚡`, 'info');
                     audio.defeat();
@@ -2805,6 +2822,7 @@ function setupEventListeners() {
             triggerHaptic('victory');
             playerProfile.matches++;
             saveProfile();
+            refreshDailyPuzzlesUI();
         });
     }
     if (drawDeclineBtn) {
@@ -3199,11 +3217,19 @@ function setupEventListeners() {
             
             genEmailOtp = Math.floor(100000 + Math.random() * 900000).toString();
             if (authOtpAlert && authOtpAlertText) {
-                authOtpAlertText.innerHTML = `📧 Verification Code sent to ${email}: <code>${genEmailOtp}</code>`;
+                authOtpAlertText.innerHTML = `<span>📧 Verification Code for <b>${email}</b>: <code>${genEmailOtp}</code></span> <button type="button" class="otp-autofill-btn" id="email-autofill-btn">⚡ Auto-Fill</button>`;
                 authOtpAlert.classList.remove('hidden');
+                const afBtn = document.getElementById('email-autofill-btn');
+                if (afBtn) {
+                    afBtn.onclick = () => {
+                        if (regEmailOtpInput) regEmailOtpInput.value = genEmailOtp;
+                        showToast('⚡ OTP Code auto-filled! Click "Verify" to confirm.', 'info');
+                    };
+                }
             }
             if (regEmailOtpBox) regEmailOtpBox.classList.remove('hidden');
-            showToast(`⚡ Verification code generated for ${email}!`, 'info');
+            if (regEmailOtpInput) regEmailOtpInput.value = genEmailOtp;
+            showToast(`⚡ Verification code generated for ${email}! Auto-filled below.`, 'info');
             audio.powerup();
         });
     }
@@ -3240,11 +3266,19 @@ function setupEventListeners() {
             
             genPhoneOtp = Math.floor(100000 + Math.random() * 900000).toString();
             if (authOtpAlert && authOtpAlertText) {
-                authOtpAlertText.innerHTML = `📱 SMS OTP sent to ${phone}: <code>${genPhoneOtp}</code>`;
+                authOtpAlertText.innerHTML = `<span>📱 SMS OTP for <b>${phone}</b>: <code>${genPhoneOtp}</code></span> <button type="button" class="otp-autofill-btn" id="phone-autofill-btn">⚡ Auto-Fill</button>`;
                 authOtpAlert.classList.remove('hidden');
+                const afBtn = document.getElementById('phone-autofill-btn');
+                if (afBtn) {
+                    afBtn.onclick = () => {
+                        if (regPhoneOtpInput) regPhoneOtpInput.value = genPhoneOtp;
+                        showToast('📲 SMS OTP auto-filled! Click "Verify" to confirm.', 'info');
+                    };
+                }
             }
             if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
-            showToast(`📲 SMS OTP generated for ${phone}!`, 'info');
+            if (regPhoneOtpInput) regPhoneOtpInput.value = genPhoneOtp;
+            showToast(`📲 SMS OTP generated for ${phone}! Auto-filled below.`, 'info');
             audio.powerup();
         });
     }
@@ -3408,6 +3442,19 @@ function setupEventListeners() {
     if (guestContinueBtn) {
         guestContinueBtn.addEventListener('click', () => {
             if (authModal) authModal.classList.add('hidden');
+            playerProfile.userId = '';
+            playerProfile.name = 'Guest Player';
+            playerProfile.email = '';
+            playerProfile.phone = '';
+            playerProfile.emailVerified = false;
+            playerProfile.phoneVerified = false;
+            playerProfile.joinedDate = 'Today';
+            playerProfile.points = 0;
+            saveProfile();
+            renderMainMenuUI();
+            renderSettingsUI();
+            updateProfileUI();
+            refreshDailyPuzzlesUI();
             showToast('⚡ Continuing in Guest Mode. Link Email/Phone anytime in Settings!', 'info');
         });
     }
@@ -3461,6 +3508,7 @@ function setupEventListeners() {
                 renderMainMenuUI();
                 renderSettingsUI();
                 updateProfileUI();
+                refreshDailyPuzzlesUI();
                 showToast('👋 Logged out. Returning to Login / Sign In menu...', 'info');
                 openAuthModal('login');
             }
@@ -3484,6 +3532,7 @@ function setupEventListeners() {
             if (newName && newName.trim().length > 0) {
                 playerProfile.name = newName.trim().substring(0, 30);
                 saveProfile();
+            refreshDailyPuzzlesUI();
                 updateProfileUI();
                 renderMainMenuUI();
                 renderSettingsUI();
@@ -3752,6 +3801,7 @@ function setupEventListeners() {
             };
             localStorage.removeItem('electro_game_history');
             saveProfile();
+            refreshDailyPuzzlesUI();
             resetStatsModal.classList.add('hidden');
             showToast('Career statistics reset successfully.', 'info');
             triggerHaptic('strike');
@@ -4178,6 +4228,7 @@ function setActiveAccount(acc) {
     if (acc.botRecords) playerProfile.botRecords = acc.botRecords;
     
     saveProfile();
+    refreshDailyPuzzlesUI();
 }
 
 function purgeLegacyData() {
@@ -4232,6 +4283,7 @@ function loadProfile() {
         }
         
         saveProfile();
+        refreshDailyPuzzlesUI();
 
         // Prompt user with Log In / Sign In Menu immediately on launch!
         setTimeout(() => {
