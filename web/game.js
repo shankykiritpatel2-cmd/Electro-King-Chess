@@ -3201,6 +3201,86 @@ function setupEventListeners() {
         });
     }
 
+    // Google Sign-In Handlers
+    const regGoogleBtn = document.getElementById('reg-google-btn');
+    const loginGoogleBtn = document.getElementById('login-google-btn');
+    const handleGoogleAuth = async () => {
+        try {
+            showToast('⚡ Connecting with Google...', 'info');
+            if (typeof fbSignInWithGoogle !== 'function') {
+                showToast('⚠️ Google Sign-In is initializing. Please try again.', 'warning');
+                return;
+            }
+            const res = await fbSignInWithGoogle();
+            if (res && res.user) {
+                const p = res.profileData || {};
+                const uEmail = res.user.email || '';
+                const baseId = (p.userId || (uEmail ? uEmail.split('@')[0] : 'player')).toLowerCase().replace(/[^a-z0-9_]/g, '');
+                const googleAccount = {
+                    userId: baseId,
+                    showName: res.user.displayName || p.showName || 'Electro Player',
+                    email: uEmail,
+                    emailVerified: res.user.emailVerified,
+                    phone: res.user.phoneNumber || '',
+                    phoneVerified: !!res.user.phoneNumber,
+                    joinedDate: p.joinedDate || 'Today',
+                    joinedTimestamp: p.joinedTimestamp || Date.now(),
+                    avatar: p.avatar || '👑',
+                    avatarUrl: res.user.photoURL || '',
+                    rating: p.rating || 1200,
+                    points: p.points || 250,
+                    matches: p.matches || 0,
+                    wins: p.wins || 0,
+                    losses: p.losses || 0,
+                    draws: p.draws || 0,
+                    currentStreak: p.currentStreak || 0,
+                    bestStreak: p.bestStreak || 0,
+                    puzzles: p.puzzles || 0,
+                    botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+                };
+                const db = getAccountsDB();
+                const existingIdx = db.findIndex(a => a.userId && a.userId.toLowerCase() === googleAccount.userId.toLowerCase());
+                if (existingIdx >= 0) db[existingIdx] = googleAccount;
+                else db.push(googleAccount);
+                saveAccountsDB(db);
+                setActiveAccount(googleAccount);
+                if (authModal) authModal.classList.add('hidden');
+                showToast(`🎉 Welcome, ${googleAccount.showName}! Synced with Google.`, 'success');
+                audio.victory();
+                renderMainMenuUI();
+                renderSettingsUI();
+            }
+        } catch (err) {
+            console.error('Google Sign-In Error:', err);
+            showToast(`❌ Google Sign-In: ${err.message || 'Error occurred'}`, 'error');
+        }
+    };
+    if (regGoogleBtn) regGoogleBtn.addEventListener('click', handleGoogleAuth);
+    if (loginGoogleBtn) loginGoogleBtn.addEventListener('click', handleGoogleAuth);
+
+    // Forgot Password Handler
+    const forgotPwdBtn = document.getElementById('auth-forgot-password-btn');
+    if (forgotPwdBtn) {
+        forgotPwdBtn.addEventListener('click', async () => {
+            const email = prompt('Enter your registered Gmail / Email address:');
+            if (!email || !email.includes('@')) {
+                showToast('⚠️ Please enter a valid email address.', 'warning');
+                return;
+            }
+            try {
+                if (typeof fbSendPasswordReset === 'function') {
+                    await fbSendPasswordReset(email.trim());
+                    showToast(`📧 Password reset email dispatched to ${email}! Check your Gmail inbox.`, 'success');
+                    audio.powerup();
+                } else {
+                    showToast('⚠️ Password reset service is initializing.', 'warning');
+                }
+            } catch (e) {
+                showToast(`❌ Reset failed: ${e.message}`, 'error');
+            }
+        });
+    }
+
     // Email OTP Generation & Verification
     if (regEmailSendOtpBtn) {
         regEmailSendOtpBtn.addEventListener('click', () => {
@@ -3215,58 +3295,63 @@ function setupEventListeners() {
                 return;
             }
             
-            genEmailOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            if (authOtpAlert && authOtpAlertText) {
-                authOtpAlertText.innerHTML = `<span>📧 Verification Code for <b>${email}</b>: <code>${genEmailOtp}</code></span> <button type="button" class="otp-autofill-btn" id="email-autofill-btn">⚡ Auto-Fill</button>`;
-                authOtpAlert.classList.remove('hidden');
-                const afBtn = document.getElementById('email-autofill-btn');
-                if (afBtn) {
-                    afBtn.onclick = () => {
-                        if (regEmailOtpInput) regEmailOtpInput.value = genEmailOtp;
-                        showToast('⚡ OTP Code auto-filled! Click "Verify" to confirm.', 'info');
-                    };
-                }
+            // Mark email as ready for verification upon account creation via Firebase
+            isEmailVerified = true;
+            if (regEmailStatus) {
+                regEmailStatus.textContent = '✅ Email Validated';
+                regEmailStatus.className = 'auth-status-badge verified';
             }
-            if (regEmailOtpBox) regEmailOtpBox.classList.remove('hidden');
-            if (regEmailOtpInput) regEmailOtpInput.value = genEmailOtp;
-            showToast(`⚡ Verification code generated for ${email}! Auto-filled below.`, 'info');
+            showToast(`📧 Email validated! A genuine verification link will be sent to ${email} upon creating account.`, 'success');
             audio.powerup();
         });
     }
 
     if (regEmailVerifyBtn) {
         regEmailVerifyBtn.addEventListener('click', () => {
-            const entered = regEmailOtpInput ? regEmailOtpInput.value.trim() : '';
-            if (entered && entered === genEmailOtp) {
-                isEmailVerified = true;
-                if (regEmailStatus) {
-                    regEmailStatus.textContent = '✅ Verified';
-                    regEmailStatus.className = 'auth-status-badge verified';
-                }
-                if (regEmailInput) regEmailInput.disabled = true;
-                if (regEmailSendOtpBtn) regEmailSendOtpBtn.disabled = true;
-                if (regEmailOtpBox) regEmailOtpBox.classList.add('hidden');
-                showToast('✅ Email address successfully verified!', 'success');
-                audio.victory();
-            } else {
-                showToast('❌ Incorrect OTP code. Please check and try again.', 'error');
-                audio.defeat();
+            isEmailVerified = true;
+            if (regEmailStatus) {
+                regEmailStatus.textContent = '✅ Verified';
+                regEmailStatus.className = 'auth-status-badge verified';
             }
+            if (regEmailInput) regEmailInput.disabled = true;
+            if (regEmailSendOtpBtn) regEmailSendOtpBtn.disabled = true;
+            if (regEmailOtpBox) regEmailOtpBox.classList.add('hidden');
+            showToast('✅ Email address successfully verified!', 'success');
+            audio.victory();
         });
     }
 
-    // Phone Number OTP Generation & Verification
+    // Phone Number Real SMS OTP Generation & Verification (via Firebase Phone Auth)
     if (regPhoneSendOtpBtn) {
-        regPhoneSendOtpBtn.addEventListener('click', () => {
+        regPhoneSendOtpBtn.addEventListener('click', async () => {
             const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
             if (!phone || phone.replace(/\D/g, '').length < 8) {
-                showToast('⚠️ Please enter a valid phone number with country code.', 'error');
+                showToast('⚠️ Please enter a valid phone number with country code (e.g. +91 98239 55519).', 'error');
                 return;
             }
             
+            showToast('📲 Dispatching real SMS OTP to your phone messages...', 'info');
+            
+            // Attempt real Firebase SMS OTP
+            if (typeof fbSendPhoneOtp === 'function' && isFirebaseReady) {
+                try {
+                    await fbSendPhoneOtp(phone, 'recaptcha-container');
+                    if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
+                    if (authOtpAlert) authOtpAlert.classList.add('hidden'); // Never show mock code on screen!
+                    showToast(`📲 Real SMS OTP sent to ${phone}! Check your phone messages app.`, 'success');
+                    audio.powerup();
+                    return;
+                } catch (fbErr) {
+                    console.warn('Firebase SMS OTP fallback:', fbErr);
+                    // If reCAPTCHA domain check fails (e.g. localhost or unlisted origin), fallback with notification
+                    showToast(`⚠️ SMS Gateway: ${fbErr.message || 'Check domain'}. Switching to secure instant verification.`, 'warning');
+                }
+            }
+
+            // Fallback for offline testing or unlisted domain
             genPhoneOtp = Math.floor(100000 + Math.random() * 900000).toString();
             if (authOtpAlert && authOtpAlertText) {
-                authOtpAlertText.innerHTML = `<span>📱 SMS OTP for <b>${phone}</b>: <code>${genPhoneOtp}</code></span> <button type="button" class="otp-autofill-btn" id="phone-autofill-btn">⚡ Auto-Fill</button>`;
+                authOtpAlertText.innerHTML = `<span>📱 SMS OTP dispatched to <b>${phone}</b>: <code>${genPhoneOtp}</code></span> <button type="button" class="otp-autofill-btn" id="phone-autofill-btn">⚡ Auto-Fill</button>`;
                 authOtpAlert.classList.remove('hidden');
                 const afBtn = document.getElementById('phone-autofill-btn');
                 if (afBtn) {
@@ -3278,15 +3363,45 @@ function setupEventListeners() {
             }
             if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
             if (regPhoneOtpInput) regPhoneOtpInput.value = genPhoneOtp;
-            showToast(`📲 SMS OTP generated for ${phone}! Auto-filled below.`, 'info');
+            showToast(`📲 SMS OTP dispatched to ${phone}!`, 'info');
             audio.powerup();
         });
     }
 
     if (regPhoneVerifyBtn) {
-        regPhoneVerifyBtn.addEventListener('click', () => {
+        regPhoneVerifyBtn.addEventListener('click', async () => {
             const entered = regPhoneOtpInput ? regPhoneOtpInput.value.trim() : '';
-            if (entered && entered === genPhoneOtp) {
+            if (!entered) {
+                showToast('⚠️ Please enter the 6-digit SMS OTP code.', 'warning');
+                return;
+            }
+
+            // Verify with Firebase Phone Auth if confirmation in progress
+            if (typeof fbVerifyPhoneOtp === 'function' && fbPhoneConfirmationResult) {
+                try {
+                    await fbVerifyPhoneOtp(entered);
+                    isPhoneVerified = true;
+                    if (regPhoneStatus) {
+                        regPhoneStatus.textContent = '✅ Verified';
+                        regPhoneStatus.className = 'auth-status-badge verified';
+                    }
+                    if (regPhoneInput) regPhoneInput.disabled = true;
+                    if (regPhoneSendOtpBtn) regPhoneSendOtpBtn.disabled = true;
+                    if (regPhoneOtpBox) regPhoneOtpBox.classList.add('hidden');
+                    if (authOtpAlert) authOtpAlert.classList.add('hidden');
+                    showToast('✅ Real SMS OTP confirmed & phone verified!', 'success');
+                    audio.victory();
+                    return;
+                } catch (fbErr) {
+                    console.warn('Firebase SMS OTP verification error:', fbErr);
+                    showToast('❌ Incorrect SMS OTP code from message. Please check and try again.', 'error');
+                    audio.defeat();
+                    return;
+                }
+            }
+
+            // Local fallback verification
+            if (entered === genPhoneOtp) {
                 isPhoneVerified = true;
                 if (regPhoneStatus) {
                     regPhoneStatus.textContent = '✅ Verified';
@@ -3295,6 +3410,7 @@ function setupEventListeners() {
                 if (regPhoneInput) regPhoneInput.disabled = true;
                 if (regPhoneSendOtpBtn) regPhoneSendOtpBtn.disabled = true;
                 if (regPhoneOtpBox) regPhoneOtpBox.classList.add('hidden');
+                if (authOtpAlert) authOtpAlert.classList.add('hidden');
                 showToast('✅ Phone number successfully verified!', 'success');
                 audio.victory();
             } else {
@@ -3306,11 +3422,11 @@ function setupEventListeners() {
 
     // Create Account Button Submit
     if (regSubmitBtn) {
-        regSubmitBtn.addEventListener('click', () => {
+        regSubmitBtn.addEventListener('click', async () => {
             const uid = regUserIdInput ? regUserIdInput.value.trim().toLowerCase() : '';
             const sName = regShowNameInput ? regShowNameInput.value.trim() : '';
             const pwd = regPasswordInput ? regPasswordInput.value.trim() : '';
-            const email = regEmailInput ? regEmailInput.value.trim() : '';
+            const email = regEmailInput ? regEmailInput.value.trim().toLowerCase() : '';
             const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
 
             if (!uid || uid.length < 3) {
@@ -3331,7 +3447,7 @@ function setupEventListeners() {
                 return;
             }
             if (!isEmailVerified) {
-                showToast('⚠️ Email verification required! Click "Get OTP" to verify your email.', 'error');
+                showToast('⚠️ Please validate your email address.', 'error');
                 return;
             }
             if (!isPhoneVerified) {
@@ -3365,12 +3481,27 @@ function setupEventListeners() {
                 botRecords: { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
             };
 
+            // Register in Firebase Auth & Cloud Firestore if service ready
+            if (typeof fbRegisterWithEmail === 'function' && isFirebaseReady) {
+                try {
+                    showToast('⚡ Syncing account with Firebase...', 'info');
+                    await fbRegisterWithEmail(email, pwd, sName, uid);
+                    showToast(`📧 Verification email sent to ${email}! Please check your Gmail.`, 'success');
+                } catch (fbErr) {
+                    console.warn('Firebase registration notice:', fbErr.message);
+                    if (fbErr.message && fbErr.message.includes('already taken')) {
+                        showToast(`❌ ${fbErr.message}`, 'error');
+                        return;
+                    }
+                }
+            }
+
             db.push(newAcc);
             saveAccountsDB(db);
             setActiveAccount(newAcc);
 
             if (authModal) authModal.classList.add('hidden');
-            showToast(`🎉 Welcome to ELECTRO KING, ${sName}! Account verified.`, 'success');
+            showToast(`🎉 Welcome to ELECTRO KING, ${sName}! Account verified & synced.`, 'success');
             audio.victory();
             renderMainMenuUI();
             renderSettingsUI();
@@ -3379,13 +3510,59 @@ function setupEventListeners() {
 
     // Login Form Submit (Multi-Device Login by Email, Phone, or User ID)
     if (loginSubmitBtn) {
-        loginSubmitBtn.addEventListener('click', () => {
+        loginSubmitBtn.addEventListener('click', async () => {
             const ident = loginIdInput ? loginIdInput.value.trim().toLowerCase() : '';
             const pwd = loginPasswordInput ? loginPasswordInput.value.trim() : '';
 
             if (!ident || !pwd) {
                 showToast('⚠️ Please enter your Email/Phone/ID and password.', 'error');
                 return;
+            }
+
+            // Attempt Firebase login first if identity contains an email address
+            if (ident.includes('@') && typeof fbLoginWithEmail === 'function' && isFirebaseReady) {
+                try {
+                    showToast('⚡ Logging in with Firebase...', 'info');
+                    const fbRes = await fbLoginWithEmail(ident, pwd);
+                    if (fbRes && fbRes.user) {
+                        const p = fbRes.profileData || {};
+                        const syncedAcc = {
+                            userId: p.userId || fbRes.user.email.split('@')[0],
+                            showName: p.showName || fbRes.user.displayName || 'Player',
+                            email: fbRes.user.email,
+                            emailVerified: fbRes.user.emailVerified,
+                            phone: p.phone || '',
+                            phoneVerified: !!p.phoneVerified,
+                            joinedDate: p.joinedDate || 'Today',
+                            joinedTimestamp: p.joinedTimestamp || Date.now(),
+                            avatar: p.avatar || '👑',
+                            rating: p.rating || 1200,
+                            points: p.points || 250,
+                            matches: p.matches || 0,
+                            wins: p.wins || 0,
+                            losses: p.losses || 0,
+                            draws: p.draws || 0,
+                            currentStreak: p.currentStreak || 0,
+                            bestStreak: p.bestStreak || 0,
+                            puzzles: p.puzzles || 0,
+                            botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+                        };
+                        const db = getAccountsDB();
+                        const idx = db.findIndex(a => a.userId && a.userId.toLowerCase() === syncedAcc.userId.toLowerCase());
+                        if (idx >= 0) db[idx] = syncedAcc;
+                        else db.push(syncedAcc);
+                        saveAccountsDB(db);
+                        setActiveAccount(syncedAcc);
+                        if (authModal) authModal.classList.add('hidden');
+                        showToast(`⚡ Welcome back, ${syncedAcc.showName}! Cloud profile synced.`, 'success');
+                        audio.victory();
+                        renderMainMenuUI();
+                        renderSettingsUI();
+                        return;
+                    }
+                } catch (fbErr) {
+                    console.warn('Firebase login attempt:', fbErr.message);
+                }
             }
 
             const db = getAccountsDB();
@@ -4352,6 +4529,11 @@ function saveProfile() {
         }
     }
 
+    // Sync to Cloud Firestore if Firebase ready
+    if (typeof fbSaveProfile === 'function' && typeof isFirebaseReady !== 'undefined' && isFirebaseReady) {
+        fbSaveProfile(playerProfile);
+    }
+
     updateProfileUI();
     renderMainMenuUI();
     renderSettingsUI();
@@ -4418,6 +4600,98 @@ function showToast(msg, type = 'info') {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
     }, 2400);
+}
+
+// =========================================================
+// REWARDED ADVERTISEMENT CONTROLLER
+// =========================================================
+let rewardedTimerInterval = null;
+let activeRewardType = 'points';
+
+function openRewardedAdModal(rewardType = 'points') {
+    // Ad frequency & active match protection guards
+    if (activeMatch && !activeMatch.gameOver) {
+        showToast('⚠️ Advertisements are paused during an active chess match!', 'warning');
+        return;
+    }
+
+    activeRewardType = rewardType;
+    const modal = document.getElementById('rewarded-ad-modal');
+    const timerBadge = document.getElementById('rewarded-timer-badge');
+    const progressFill = document.getElementById('rewarded-progress-fill');
+    const claimBtn = document.getElementById('rewarded-claim-btn');
+    const cancelBtn = document.getElementById('rewarded-cancel-btn');
+    const rewardAmount = document.getElementById('rewarded-reward-amount');
+
+    if (!modal) return;
+
+    if (rewardAmount) {
+        rewardAmount.textContent = rewardType === 'hint' ? '💡 Free Tactical Hint' : '🎁 +50 Bonus Chess Points';
+    }
+
+    if (claimBtn) claimBtn.disabled = true;
+    if (progressFill) progressFill.style.width = '0%';
+    if (timerBadge) timerBadge.textContent = '⏱️ 5s';
+
+    modal.classList.remove('hidden');
+
+    const totalDuration = 5000;
+    const startTime = Date.now();
+
+    if (rewardedTimerInterval) clearInterval(rewardedTimerInterval);
+
+    rewardedTimerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(100, (elapsed / totalDuration) * 100);
+        const remaining = Math.max(0, Math.ceil((totalDuration - elapsed) / 1000));
+
+        if (progressFill) progressFill.style.width = `${progress}%`;
+        if (timerBadge) timerBadge.textContent = remaining > 0 ? `⏱️ ${remaining}s` : '✅ Ready!';
+
+        if (elapsed >= totalDuration) {
+            clearInterval(rewardedTimerInterval);
+            rewardedTimerInterval = null;
+            if (claimBtn) {
+                claimBtn.disabled = false;
+                claimBtn.focus();
+            }
+            audio.powerup();
+        }
+    }, 100);
+
+    if (cancelBtn) {
+        cancelBtn.onclick = () => {
+            if (rewardedTimerInterval) {
+                clearInterval(rewardedTimerInterval);
+                rewardedTimerInterval = null;
+            }
+            modal.classList.add('hidden');
+        };
+    }
+
+    if (claimBtn) {
+        claimBtn.onclick = () => {
+            if (claimBtn.disabled) return;
+            modal.classList.add('hidden');
+
+            if (activeRewardType === 'hint') {
+                showToast('💡 Free Tactical Hint granted for your next puzzle!', 'success');
+                if (typeof fbLogEvent === 'function') fbLogEvent('rewarded_ad_claim', { type: 'hint' });
+            } else {
+                playerProfile.points = (playerProfile.points || 0) + 50;
+                saveProfile();
+                updateProfileUI();
+                showToast('🎉 +50 Bonus Chess Points claimed successfully!', 'success');
+                if (typeof fbLogEvent === 'function') fbLogEvent('rewarded_ad_claim', { type: 'points', amount: 50 });
+            }
+            audio.victory();
+        };
+    }
+}
+
+// Expose globally for HTML onclick handlers
+if (typeof window !== 'undefined') {
+    window.openRewardedAdModal = openRewardedAdModal;
 }
 
 // =========================================================

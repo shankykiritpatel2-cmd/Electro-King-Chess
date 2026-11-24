@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to verify if user is signed in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Function to verify if requesting user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profiles collection: users/{uid}
+    match /users/{userId} {
+      // Authenticated users can read player profiles for matchmaking & leaderboards
+      allow read: if isAuthenticated();
+      // Only the authenticated account owner can write to their own profile
+      allow write: if isOwner(userId);
+
+      // Subcollection: users/{uid}/dailyPuzzles/{date}
+      match /dailyPuzzles/{puzzleDate} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Subcollection: users/{uid}/puzzleStreaks/{streakId}
+      match /puzzleStreaks/{streakId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Subcollection: users/{uid}/matches/{matchId}
+      match /matches/{matchId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Subcollection: users/{uid}/achievements/{achievementId}
+      match /achievements/{achievementId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Unique User ID registry: usernames/{username}
+    match /usernames/{username} {
+      // Anyone can read during signup to check if a username is available
+      allow read: if true;
+      // Only authenticated users can claim their own username
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+    
+    // Secure fallback: deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

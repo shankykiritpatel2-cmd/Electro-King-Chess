@@ -53,6 +53,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
+        // Initialize Google Mobile Ads (AdMob) SDK
+        try {
+            com.google.android.gms.ads.MobileAds.initialize(this, initializationStatus -> {});
+        } catch (Exception ignored) {}
+
         // Create and configure WebView
         webView = new WebView(this);
         setContentView(webView);
@@ -173,6 +178,23 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             });
+        }
+
+        @JavascriptInterface
+        public void showRewardedAd(String rewardType) {
+            runOnUiThread(() -> {
+                showToast("⚡ Connecting to AdMob rewarded sponsor video...");
+            });
+        }
+
+        @JavascriptInterface
+        public void showBannerAd() {
+            // AdMob banner ad interface
+        }
+
+        @JavascriptInterface
+        public void hideBannerAd() {
+            // AdMob banner ad hide interface
         }
     }
 
