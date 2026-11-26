@@ -74,12 +74,13 @@ public class MainActivity extends AppCompatActivity {
             MobileAds.initialize(this, initializationStatus -> loadRewardedAd());
         } catch (Exception ignored) {}
 
-        // Root layout with dark background + WebView + optional bottom AdMob Banner
+        // Root layout with pure black background (#000000) + WebView + optional bottom AdMob Banner
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
-        rootLayout.setBackgroundColor(0xFF070414);
+        rootLayout.setBackgroundColor(0xFF000000);
 
         webView = new WebView(this);
+        webView.setBackgroundColor(0xFF000000);
         LinearLayout.LayoutParams webParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
         rootLayout.addView(webView, webParams);
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         bannerAdView = new AdView(this);
         bannerAdView.setAdSize(AdSize.BANNER);
         bannerAdView.setAdUnitId(ADMOB_BANNER_UNIT_ID);
+        bannerAdView.setBackgroundColor(0xFF000000);
         bannerAdView.setVisibility(View.GONE);
         LinearLayout.LayoutParams adParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -217,13 +219,26 @@ public class MainActivity extends AppCompatActivity {
         public void showRewardedAd(String rewardType) {
             runOnUiThread(() -> {
                 if (mRewardedAd != null) {
+                    mRewardedAd.setFullScreenContentCallback(new com.google.android.gms.ads.FullScreenContentCallback() {
+                        @Override
+                        public void onAdDismissedFullScreenContent() {
+                            mRewardedAd = null;
+                            loadRewardedAd();
+                        }
+
+                        @Override
+                        public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
+                            mRewardedAd = null;
+                            loadRewardedAd();
+                            Toast.makeText(MainActivity.this, "Could not display ad. Please try again.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     mRewardedAd.show(MainActivity.this, rewardItem -> {
                         String safeType = escapeJs(rewardType != null ? rewardType : "points");
                         String js = String.format("if (typeof window.onAdMobRewardEarned === 'function') window.onAdMobRewardEarned('%s', 50);", safeType);
                         if (webView != null) {
                             webView.post(() -> webView.evaluateJavascript(js, null));
                         }
-                        loadRewardedAd();
                     });
                 } else {
                     loadRewardedAd();

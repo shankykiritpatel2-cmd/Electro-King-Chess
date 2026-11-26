@@ -2123,6 +2123,33 @@ function getTodayKolkataDateStr() {
     }
 }
 
+function getExtraPuzzleUnlockedStorageKey() {
+    const dateStr = getTodayKolkataDateStr();
+    const userKey = getCurrentUserStorageKey();
+    return `electro_extra_puzzle_unlocked_${userKey}_${dateStr}`;
+}
+
+function isExtraPuzzleUnlockedToday() {
+    try {
+        return localStorage.getItem(getExtraPuzzleUnlockedStorageKey()) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function unlockExtraDailyPuzzleToday() {
+    try {
+        localStorage.setItem(getExtraPuzzleUnlockedStorageKey(), '1');
+        PUZZLES = getDailyPuzzlesForToday();
+        currentPuzzleIdx = 5;
+        pzMode = 'daily';
+        pzCurrentStep = 0;
+        pzHintLevel = 0;
+        renderCurrentPuzzle();
+        if (typeof fbLogEvent === 'function') fbLogEvent('extra_daily_puzzle_unlocked');
+    } catch (e) {}
+}
+
 function getDailyPuzzlesForToday(customDateStr = null) {
     const dateStr = customDateStr || getTodayKolkataDateStr();
     const parts = dateStr.split('-');
@@ -2138,7 +2165,14 @@ function getDailyPuzzlesForToday(customDateStr = null) {
     const p4 = PUZZLE_POOL_4[(daySeq * 17) % PUZZLE_POOL_4.length];
     const p5 = PUZZLE_POOL_5[(daySeq * 19) % PUZZLE_POOL_5.length];
 
-    return [p1, p2, p3, p4, p5];
+    const list = [p1, p2, p3, p4, p5];
+    if (isExtraPuzzleUnlockedToday()) {
+        const usedIds = new Set(list.map(p => p.id));
+        const bonusPool = ALL_PUZZLES_DB.filter(p => !usedIds.has(p.id));
+        const p6 = bonusPool.length > 0 ? bonusPool[(daySeq * 23) % bonusPool.length] : PUZZLE_POOL_5[(daySeq + 1) % PUZZLE_POOL_5.length];
+        list.push({ ...p6, title: `Bonus #6: ${p6.title}` });
+    }
+    return list;
 }
 
 let PUZZLES = getDailyPuzzlesForToday();
@@ -2358,6 +2392,13 @@ function renderCurrentPuzzle() {
     
     lvlTag.textContent = `${pz.title} • ${pz.level || 'Medium'} (${pz.difficulty})`;
     if (solvedBadge) solvedBadge.classList.toggle('hidden', !isCompleted);
+
+    // Show optional rewarded ad unlock card ONLY after all 5 free daily puzzles are solved today
+    const unlockExtraCard = document.getElementById('puzzle-unlock-extra-card');
+    if (unlockExtraCard) {
+        const canUnlockExtra = pzMode === 'daily' && completedList.length >= 5 && !isExtraPuzzleUnlockedToday();
+        unlockExtraCard.classList.toggle('hidden', !canUnlockExtra);
+    }
     
     if (feedbackEl) {
         if (pzMode === 'daily' && completedList.length === PUZZLES.length && isCompleted) {
@@ -3332,6 +3373,21 @@ function setupEventListeners() {
             showToast(`💡 Hint ${idx + 1}: ${hintMsg}`, 'info');
             if (pzHintLevel < hintsArr.length - 1) pzHintLevel++;
             audio.powerup();
+        });
+    }
+
+    const puzzleUnlockExtraBtn = document.getElementById('puzzle-unlock-extra-btn');
+    if (puzzleUnlockExtraBtn) {
+        puzzleUnlockExtraBtn.addEventListener('click', () => {
+            if (isExtraPuzzleUnlockedToday()) {
+                showToast('✅ Bonus Daily Puzzle #6 is already unlocked for today!', 'info');
+                return;
+            }
+            if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === 'function') {
+                window.AndroidBridge.showRewardedAd('extra_puzzle');
+            } else {
+                showToast('ℹ️ Rewarded Google Ads to unlock the bonus puzzle run inside the Electro King Android app.', 'info');
+            }
         });
     }
     
@@ -4939,7 +4995,6 @@ function initFirstLaunchConsent() {
     }
 }
 
-let lastBannerShownAt = 0;
 function syncNativeBannerAds(tabId) {
     if (!window.AndroidBridge) return;
     const authModal = document.getElementById('auth-modal');
@@ -4955,18 +5010,20 @@ function syncNativeBannerAds(tabId) {
         return;
     }
 
-    // Occasional frequency limit: at most once per 20s transition on non-gameplay screens
-    const now = Date.now();
-    if (now - lastBannerShownAt >= 20000 || tabId === 'home') {
-        if (typeof window.AndroidBridge.showBannerAd === 'function') {
-            window.AndroidBridge.showBannerAd();
-            lastBannerShownAt = now;
-        }
+    // Show native Google AdMob banner in appropriate non-gameplay sections
+    if (typeof window.AndroidBridge.showBannerAd === 'function') {
+        window.AndroidBridge.showBannerAd();
     }
 }
 
 // Verified Native Android AdMob Rewarded Ad Callback
 window.onAdMobRewardEarned = function(rewardType, amount) {
+    if (rewardType === 'extra_puzzle') {
+        unlockExtraDailyPuzzleToday();
+        showToast('🎉 Bonus Daily Puzzle #6 unlocked! Good luck!', 'success');
+        audio.victory();
+        return;
+    }
     const pts = parseInt(amount, 10) || 50;
     playerProfile.points = (playerProfile.points || 0) + pts;
     saveProfile();

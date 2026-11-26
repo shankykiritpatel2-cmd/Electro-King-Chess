@@ -271,6 +271,8 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background-color: #000000 !important;
+    background-image: none !important;
 }
 
 .tab-screen {
@@ -284,6 +286,8 @@ body {
     flex-direction: column;
     opacity: 0;
     transition: opacity 0.25s ease;
+    background-color: #000000 !important;
+    background-image: none !important;
 }
 
 .tab-screen.active {
