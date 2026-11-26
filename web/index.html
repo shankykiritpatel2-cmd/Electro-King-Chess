@@ -134,6 +134,9 @@
                         </div>
                     </div>
 
+                    <!-- WEBSITE ADSENSE SLOT (HIDDEN UNTIL ADSENSE APPROVED & CONFIGURED) -->
+                    <div class="web-ad-container hidden" id="web-adsense-home" data-ad-slot="home"></div>
+
                     <!-- QUICK PLAY DIRECT LAUNCHER (VS 4 BOTS) -->
                     <div class="quick-play-section">
                         <div class="quick-play-header">
@@ -766,6 +769,9 @@
                         </div>
                     </div>
 
+                    <!-- WEBSITE ADSENSE SLOT (HIDDEN UNTIL ADSENSE APPROVED & CONFIGURED) -->
+                    <div class="web-ad-container hidden" id="web-adsense-profile" data-ad-slot="profile"></div>
+
                     <!-- ELECTRO ACHIEVEMENTS -->
                     <div class="settings-card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1137,8 +1143,14 @@
                 </div>
 
                 <div class="auth-input-group" style="margin-bottom:6px;">
-                    <label class="auth-label" for="login-password-input">🔒 Password</label>
+                    <label class="auth-label" for="login-password-input">🔒 Password (or leave blank for Phone SMS OTP)</label>
                     <input type="password" id="login-password-input" class="setup-input" placeholder="Enter your password">
+                </div>
+
+                <!-- Phone Login SMS OTP Box (shown when logging in with phone number) -->
+                <div class="auth-otp-verify-box hidden" id="login-phone-otp-box" style="margin-bottom:10px;">
+                    <input type="text" id="login-phone-otp-input" class="setup-input" placeholder="Enter 6-digit SMS OTP" maxlength="6" style="padding:6px 10px; font-size:0.85rem; letter-spacing:2px; text-align:center;">
+                    <button type="button" class="auth-otp-btn" id="login-phone-verify-btn">Verify SMS</button>
                 </div>
 
                 <div style="text-align:right; margin-bottom:12px;">

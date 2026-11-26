@@ -3426,34 +3426,95 @@ function setupEventListeners() {
         });
     }
 
-    // Google Sign-In Handlers
+    function getGuestProgressSnapshot() {
+        if (playerProfile && !playerProfile.userId) {
+            return { ...playerProfile };
+        }
+        return null;
+    }
+
+    function applyAuthenticatedAccount(accData) {
+        const db = getAccountsDB();
+        const sanitized = { ...accData };
+        delete sanitized.password; // Never persist plaintext passwords
+        const existingIdx = db.findIndex(a => a.userId && sanitized.userId && a.userId.toLowerCase() === sanitized.userId.toLowerCase());
+        if (existingIdx >= 0) db[existingIdx] = sanitized;
+        else db.push(sanitized);
+        saveAccountsDB(db);
+        setActiveAccount(sanitized);
+        if (authModal) authModal.classList.add('hidden');
+        renderMainMenuUI();
+        renderSettingsUI();
+        syncNativeBannerAds(currentTab);
+    }
+
+    // Native Android Google Sign-In Callbacks (invoked by MainActivity.java)
+    window.onGoogleSignInSuccess = function(name, email, photoUrl) {
+        const guestSnap = getGuestProgressSnapshot();
+        const baseId = (email ? email.split('@')[0] : 'player').toLowerCase().replace(/[^a-z0-9_]/g, '');
+        const googleAccount = {
+            userId: baseId,
+            showName: name || 'Electro Player',
+            email: email || '',
+            emailVerified: true,
+            phone: '',
+            phoneVerified: false,
+            joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            joinedTimestamp: Date.now(),
+            avatar: (guestSnap && guestSnap.avatar) || '👑',
+            avatarUrl: photoUrl || '',
+            rating: (guestSnap && guestSnap.rating) || 1200,
+            points: Math.max(250, (guestSnap && guestSnap.points) || 0),
+            matches: (guestSnap && guestSnap.matches) || 0,
+            wins: (guestSnap && guestSnap.wins) || 0,
+            losses: (guestSnap && guestSnap.losses) || 0,
+            draws: (guestSnap && guestSnap.draws) || 0,
+            currentStreak: (guestSnap && guestSnap.currentStreak) || 0,
+            bestStreak: (guestSnap && guestSnap.bestStreak) || 0,
+            puzzles: (guestSnap && guestSnap.puzzles) || 0,
+            botRecords: (guestSnap && guestSnap.botRecords) || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+        };
+        applyAuthenticatedAccount(googleAccount);
+        showToast(`🎉 Welcome, ${googleAccount.showName}! Signed in with Google.`, 'success');
+        audio.victory();
+    };
+
+    window.onGoogleSignInFailure = function(errMsg) {
+        console.error('[Android Google Sign-In Error]', errMsg);
+        showToast(`❌ Google Sign-In failed: ${errMsg || 'Please check Play Services / SHA-1 config.'}`, 'error');
+        audio.defeat();
+    };
+
+    // Google Sign-In Handlers (Web Popup / Redirect & Android Native)
     const regGoogleBtn = document.getElementById('reg-google-btn');
     const loginGoogleBtn = document.getElementById('login-google-btn');
     const handleGoogleAuth = async () => {
         try {
             showToast('⚡ Connecting with Google...', 'info');
-            if (typeof fbSignInWithGoogle !== 'function') {
-                showToast('⚠️ Google Sign-In is initializing. Please try again.', 'warning');
+            if (typeof fbSignInWithGoogle !== 'function' || !isFirebaseReady) {
+                showToast('⚠️ Firebase Auth is still initializing. Please try again.', 'warning');
                 return;
             }
-            const res = await fbSignInWithGoogle();
-            if (res && res.user) {
+            const res = await fbSignInWithGoogle(getGuestProgressSnapshot());
+            if (!res || res.isAndroidNative || res.redirecting) return;
+
+            if (res.user) {
                 const p = res.profileData || {};
                 const uEmail = res.user.email || '';
                 const baseId = (p.userId || (uEmail ? uEmail.split('@')[0] : 'player')).toLowerCase().replace(/[^a-z0-9_]/g, '');
                 const googleAccount = {
                     userId: baseId,
-                    showName: res.user.displayName || p.showName || 'Electro Player',
+                    showName: p.showName || res.user.displayName || 'Electro Player',
                     email: uEmail,
                     emailVerified: res.user.emailVerified,
-                    phone: res.user.phoneNumber || '',
-                    phoneVerified: !!res.user.phoneNumber,
+                    phone: p.phone || res.user.phoneNumber || '',
+                    phoneVerified: !!(p.phoneVerified || res.user.phoneNumber),
                     joinedDate: p.joinedDate || 'Today',
                     joinedTimestamp: p.joinedTimestamp || Date.now(),
                     avatar: p.avatar || '👑',
-                    avatarUrl: res.user.photoURL || '',
+                    avatarUrl: p.avatarUrl || res.user.photoURL || '',
                     rating: p.rating || 1200,
-                    points: p.points || 250,
+                    points: p.points !== undefined ? p.points : 250,
                     matches: p.matches || 0,
                     wins: p.wins || 0,
                     losses: p.losses || 0,
@@ -3463,21 +3524,14 @@ function setupEventListeners() {
                     puzzles: p.puzzles || 0,
                     botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
                 };
-                const db = getAccountsDB();
-                const existingIdx = db.findIndex(a => a.userId && a.userId.toLowerCase() === googleAccount.userId.toLowerCase());
-                if (existingIdx >= 0) db[existingIdx] = googleAccount;
-                else db.push(googleAccount);
-                saveAccountsDB(db);
-                setActiveAccount(googleAccount);
-                if (authModal) authModal.classList.add('hidden');
+                applyAuthenticatedAccount(googleAccount);
                 showToast(`🎉 Welcome, ${googleAccount.showName}! Synced with Google.`, 'success');
                 audio.victory();
-                renderMainMenuUI();
-                renderSettingsUI();
             }
         } catch (err) {
-            console.error('Google Sign-In Error:', err);
-            showToast(`❌ Google Sign-In: ${err.message || 'Error occurred'}`, 'error');
+            const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(err) : (err.message || 'Google Sign-In failed.');
+            showToast(`❌ ${msg}`, 'error');
+            audio.defeat();
         }
     };
     if (regGoogleBtn) regGoogleBtn.addEventListener('click', handleGoogleAuth);
@@ -3487,26 +3541,28 @@ function setupEventListeners() {
     const forgotPwdBtn = document.getElementById('auth-forgot-password-btn');
     if (forgotPwdBtn) {
         forgotPwdBtn.addEventListener('click', async () => {
-            const email = prompt('Enter your registered Gmail / Email address:');
+            const prefill = loginIdInput && loginIdInput.value.includes('@') ? loginIdInput.value.trim() : '';
+            const email = prompt('Enter your registered Gmail / Email address:', prefill);
             if (!email || !email.includes('@')) {
                 showToast('⚠️ Please enter a valid email address.', 'warning');
                 return;
             }
             try {
-                if (typeof fbSendPasswordReset === 'function') {
+                if (typeof fbSendPasswordReset === 'function' && isFirebaseReady) {
                     await fbSendPasswordReset(email.trim());
                     showToast(`📧 Password reset email dispatched to ${email}! Check your Gmail inbox.`, 'success');
                     audio.powerup();
                 } else {
-                    showToast('⚠️ Password reset service is initializing.', 'warning');
+                    showToast('⚠️ Password reset service is offline.', 'warning');
                 }
             } catch (e) {
-                showToast(`❌ Reset failed: ${e.message}`, 'error');
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(e) : e.message;
+                showToast(`❌ ${msg}`, 'error');
             }
         });
     }
 
-    // Email OTP Generation & Verification
+    // Email Validation (Real Gmail/Email verified via Firebase link upon registration)
     if (regEmailSendOtpBtn) {
         regEmailSendOtpBtn.addEventListener('click', () => {
             const email = regEmailInput ? regEmailInput.value.trim().toLowerCase() : '';
@@ -3519,114 +3575,57 @@ function setupEventListeners() {
                 showToast('⚠️ Please enter a valid email address (e.g. name@gmail.com).', 'error');
                 return;
             }
-            
-            // Mark email as ready for verification upon account creation via Firebase
             isEmailVerified = true;
             if (regEmailStatus) {
                 regEmailStatus.textContent = '✅ Email Validated';
                 regEmailStatus.className = 'auth-status-badge verified';
             }
-            showToast(`📧 Email validated! A genuine verification link will be sent to ${email} upon creating account.`, 'success');
+            showToast(`📧 Email validated! A genuine verification link will be sent to ${email} when you create your account.`, 'success');
             audio.powerup();
         });
     }
 
-    if (regEmailVerifyBtn) {
-        regEmailVerifyBtn.addEventListener('click', () => {
-            isEmailVerified = true;
-            if (regEmailStatus) {
-                regEmailStatus.textContent = '✅ Verified';
-                regEmailStatus.className = 'auth-status-badge verified';
-            }
-            if (regEmailInput) regEmailInput.disabled = true;
-            if (regEmailSendOtpBtn) regEmailSendOtpBtn.disabled = true;
-            if (regEmailOtpBox) regEmailOtpBox.classList.add('hidden');
-            showToast('✅ Email address successfully verified!', 'success');
-            audio.victory();
-        });
-    }
-
-    // Phone Number Real SMS OTP Generation & Verification (via Firebase Phone Auth)
+    // Phone Number Real SMS OTP Generation & Verification (Genuine Firebase Phone Auth ONLY — NO fake OTPs)
     if (regPhoneSendOtpBtn) {
         regPhoneSendOtpBtn.addEventListener('click', async () => {
             const phone = regPhoneInput ? regPhoneInput.value.trim() : '';
             if (!phone || phone.replace(/\D/g, '').length < 8) {
-                showToast('⚠️ Please enter a valid phone number with country code (e.g. +91 98239 55519).', 'error');
+                showToast('⚠️ Please enter a valid phone number with country code (e.g. +919823955519).', 'error');
                 return;
             }
-            
-            showToast('📲 Dispatching real SMS OTP to your phone messages...', 'info');
-            
-            // Attempt real Firebase SMS OTP
-            if (typeof fbSendPhoneOtp === 'function' && isFirebaseReady) {
-                try {
-                    await fbSendPhoneOtp(phone, 'recaptcha-container');
-                    if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
-                    if (authOtpAlert) authOtpAlert.classList.add('hidden'); // Never show mock code on screen!
-                    showToast(`📲 Real SMS OTP sent to ${phone}! Check your phone messages app.`, 'success');
-                    audio.powerup();
-                    return;
-                } catch (fbErr) {
-                    console.warn('Firebase SMS OTP fallback:', fbErr);
-                    // If reCAPTCHA domain check fails (e.g. localhost or unlisted origin), fallback with notification
-                    showToast(`⚠️ SMS Gateway: ${fbErr.message || 'Check domain'}. Switching to secure instant verification.`, 'warning');
-                }
+            if (typeof fbSendPhoneOtp !== 'function' || !isFirebaseReady) {
+                showToast('❌ Firebase Phone Auth is offline. Please check your internet connection.', 'error');
+                return;
             }
 
-            // Fallback for offline testing or unlisted domain
-            genPhoneOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            if (authOtpAlert && authOtpAlertText) {
-                authOtpAlertText.innerHTML = `<span>📱 SMS OTP dispatched to <b>${phone}</b>: <code>${genPhoneOtp}</code></span> <button type="button" class="otp-autofill-btn" id="phone-autofill-btn">⚡ Auto-Fill</button>`;
-                authOtpAlert.classList.remove('hidden');
-                const afBtn = document.getElementById('phone-autofill-btn');
-                if (afBtn) {
-                    afBtn.onclick = () => {
-                        if (regPhoneOtpInput) regPhoneOtpInput.value = genPhoneOtp;
-                        showToast('📲 SMS OTP auto-filled! Click "Verify" to confirm.', 'info');
-                    };
-                }
+            showToast('📲 Dispatching real SMS OTP via Firebase...', 'info');
+            try {
+                await fbSendPhoneOtp(phone, 'recaptcha-container');
+                if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
+                if (authOtpAlert) authOtpAlert.classList.add('hidden');
+                showToast(`📲 Real SMS OTP sent to ${phone}! Check your phone Messages app.`, 'success');
+                audio.powerup();
+            } catch (fbErr) {
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
+                showToast(`❌ SMS OTP Error: ${msg}`, 'error');
+                audio.defeat();
             }
-            if (regPhoneOtpBox) regPhoneOtpBox.classList.remove('hidden');
-            if (regPhoneOtpInput) regPhoneOtpInput.value = genPhoneOtp;
-            showToast(`📲 SMS OTP dispatched to ${phone}!`, 'info');
-            audio.powerup();
         });
     }
 
     if (regPhoneVerifyBtn) {
         regPhoneVerifyBtn.addEventListener('click', async () => {
             const entered = regPhoneOtpInput ? regPhoneOtpInput.value.trim() : '';
-            if (!entered) {
-                showToast('⚠️ Please enter the 6-digit SMS OTP code.', 'warning');
+            if (!entered || entered.length < 6) {
+                showToast('⚠️ Please enter the 6-digit SMS OTP from your Messages app.', 'warning');
                 return;
             }
-
-            // Verify with Firebase Phone Auth if confirmation in progress
-            if (typeof fbVerifyPhoneOtp === 'function' && fbPhoneConfirmationResult) {
-                try {
-                    await fbVerifyPhoneOtp(entered);
-                    isPhoneVerified = true;
-                    if (regPhoneStatus) {
-                        regPhoneStatus.textContent = '✅ Verified';
-                        regPhoneStatus.className = 'auth-status-badge verified';
-                    }
-                    if (regPhoneInput) regPhoneInput.disabled = true;
-                    if (regPhoneSendOtpBtn) regPhoneSendOtpBtn.disabled = true;
-                    if (regPhoneOtpBox) regPhoneOtpBox.classList.add('hidden');
-                    if (authOtpAlert) authOtpAlert.classList.add('hidden');
-                    showToast('✅ Real SMS OTP confirmed & phone verified!', 'success');
-                    audio.victory();
-                    return;
-                } catch (fbErr) {
-                    console.warn('Firebase SMS OTP verification error:', fbErr);
-                    showToast('❌ Incorrect SMS OTP code from message. Please check and try again.', 'error');
-                    audio.defeat();
-                    return;
-                }
+            if (typeof fbVerifyPhoneOtp !== 'function' || !fbPhoneConfirmationResult) {
+                showToast('⚠️ Please request an SMS OTP first.', 'warning');
+                return;
             }
-
-            // Local fallback verification
-            if (entered === genPhoneOtp) {
+            try {
+                await fbVerifyPhoneOtp(entered, getGuestProgressSnapshot());
                 isPhoneVerified = true;
                 if (regPhoneStatus) {
                     regPhoneStatus.textContent = '✅ Verified';
@@ -3635,17 +3634,17 @@ function setupEventListeners() {
                 if (regPhoneInput) regPhoneInput.disabled = true;
                 if (regPhoneSendOtpBtn) regPhoneSendOtpBtn.disabled = true;
                 if (regPhoneOtpBox) regPhoneOtpBox.classList.add('hidden');
-                if (authOtpAlert) authOtpAlert.classList.add('hidden');
-                showToast('✅ Phone number successfully verified!', 'success');
+                showToast('✅ Phone number verified via Firebase SMS OTP!', 'success');
                 audio.victory();
-            } else {
-                showToast('❌ Incorrect SMS OTP code. Please check and try again.', 'error');
+            } catch (fbErr) {
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
+                showToast(`❌ ${msg}`, 'error');
                 audio.defeat();
             }
         });
     }
 
-    // Create Account Button Submit
+    // Create Account Button Submit (Genuine Firebase Registration — no silent failure fallbacks)
     if (regSubmitBtn) {
         regSubmitBtn.addEventListener('click', async () => {
             const uid = regUserIdInput ? regUserIdInput.value.trim().toLowerCase() : '';
@@ -3658,11 +3657,6 @@ function setupEventListeners() {
                 showToast('⚠️ Unique User ID must be at least 3 characters.', 'error');
                 return;
             }
-            const db = getAccountsDB();
-            if (db.some(a => a.userId && a.userId.toLowerCase() === uid)) {
-                showToast('❌ This User ID is already taken. Please choose another.', 'error');
-                return;
-            }
             if (!sName) {
                 showToast('⚠️ Please enter your Show Name (Display Name).', 'error');
                 return;
@@ -3671,141 +3665,173 @@ function setupEventListeners() {
                 showToast('⚠️ Password must be at least 6 characters long.', 'error');
                 return;
             }
-            if (!isEmailVerified) {
-                showToast('⚠️ Please validate your email address.', 'error');
+            if (!email || !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email) || email.includes('.chess')) {
+                showToast('⚠️ Please enter a valid email address (e.g. name@gmail.com).', 'error');
                 return;
             }
-            if (!isPhoneVerified) {
-                showToast('⚠️ Phone verification required! Click "Get SMS OTP" to verify your phone.', 'error');
+            if (typeof fbRegisterWithEmail !== 'function' || !isFirebaseReady) {
+                showToast('❌ Firebase service is offline. Please check your internet connection.', 'error');
                 return;
             }
 
-            const now = new Date();
-            const joinedStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-            const newAcc = {
-                userId: uid,
-                showName: sName,
-                password: pwd,
-                email: email,
-                emailVerified: true,
-                phone: phone,
-                phoneVerified: true,
-                joinedDate: joinedStr,
-                joinedTimestamp: now.getTime(),
-                avatar: playerProfile.avatar || '👑',
-                rating: 1200,
-                points: 250,
-                matches: 0,
-                wins: 0,
-                losses: 0,
-                draws: 0,
-                currentStreak: 0,
-                bestStreak: 0,
-                puzzles: 0,
-                botRecords: { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
-            };
-
-            // Register in Firebase Auth & Cloud Firestore if service ready
-            if (typeof fbRegisterWithEmail === 'function' && isFirebaseReady) {
-                try {
-                    showToast('⚡ Syncing account with Firebase...', 'info');
-                    await fbRegisterWithEmail(email, pwd, sName, uid);
-                    showToast(`📧 Verification email sent to ${email}! Please check your Gmail.`, 'success');
-                } catch (fbErr) {
-                    console.warn('Firebase registration notice:', fbErr.message);
-                    if (fbErr.message && fbErr.message.includes('already taken')) {
-                        showToast(`❌ ${fbErr.message}`, 'error');
-                        return;
-                    }
-                }
+            try {
+                showToast('⚡ Creating Firebase account...', 'info');
+                const fbRes = await fbRegisterWithEmail(email, pwd, sName, uid, phone, isPhoneVerified, getGuestProgressSnapshot());
+                const p = fbRes.profileData;
+                applyAuthenticatedAccount({
+                    userId: p.userId,
+                    showName: p.showName,
+                    email: p.email,
+                    emailVerified: p.emailVerified,
+                    phone: p.phone,
+                    phoneVerified: p.phoneVerified,
+                    joinedDate: p.joinedDate,
+                    joinedTimestamp: p.joinedTimestamp,
+                    avatar: p.avatar,
+                    avatarUrl: p.avatarUrl,
+                    rating: p.rating,
+                    points: p.points,
+                    matches: p.matches,
+                    wins: p.wins,
+                    losses: p.losses,
+                    draws: p.draws,
+                    currentStreak: p.currentStreak,
+                    bestStreak: p.bestStreak,
+                    puzzles: p.puzzles,
+                    botRecords: p.botRecords
+                });
+                showToast(`🎉 Account created! Verification email sent to ${email}.`, 'success');
+                audio.victory();
+            } catch (fbErr) {
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
+                showToast(`❌ ${msg}`, 'error');
+                audio.defeat();
             }
-
-            db.push(newAcc);
-            saveAccountsDB(db);
-            setActiveAccount(newAcc);
-
-            if (authModal) authModal.classList.add('hidden');
-            showToast(`🎉 Welcome to ELECTRO KING, ${sName}! Account verified & synced.`, 'success');
-            audio.victory();
-            renderMainMenuUI();
-            renderSettingsUI();
         });
     }
 
-    // Login Form Submit (Multi-Device Login by Email, Phone, or User ID)
+    // Login Phone OTP Verify Button
+    const loginPhoneOtpBox = document.getElementById('login-phone-otp-box');
+    const loginPhoneOtpInput = document.getElementById('login-phone-otp-input');
+    const loginPhoneVerifyBtn = document.getElementById('login-phone-verify-btn');
+
+    if (loginPhoneVerifyBtn) {
+        loginPhoneVerifyBtn.addEventListener('click', async () => {
+            const otpCode = loginPhoneOtpInput ? loginPhoneOtpInput.value.trim() : '';
+            if (!otpCode || otpCode.length < 6) {
+                showToast('⚠️ Please enter the 6-digit SMS OTP code.', 'warning');
+                return;
+            }
+            try {
+                const res = await fbVerifyPhoneOtp(otpCode, getGuestProgressSnapshot());
+                const p = res.profileData || {};
+                applyAuthenticatedAccount({
+                    userId: p.userId || ('player_' + (res.user.phoneNumber || '').slice(-6)),
+                    showName: p.showName || 'Electro Player',
+                    email: p.email || '',
+                    emailVerified: !!p.emailVerified,
+                    phone: p.phone || res.user.phoneNumber || '',
+                    phoneVerified: true,
+                    joinedDate: p.joinedDate || 'Today',
+                    joinedTimestamp: p.joinedTimestamp || Date.now(),
+                    avatar: p.avatar || '👑',
+                    avatarUrl: p.avatarUrl || '',
+                    rating: p.rating || 1200,
+                    points: p.points !== undefined ? p.points : 250,
+                    matches: p.matches || 0,
+                    wins: p.wins || 0,
+                    losses: p.losses || 0,
+                    draws: p.draws || 0,
+                    currentStreak: p.currentStreak || 0,
+                    bestStreak: p.bestStreak || 0,
+                    puzzles: p.puzzles || 0,
+                    botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+                });
+                if (loginPhoneOtpBox) loginPhoneOtpBox.classList.add('hidden');
+                showToast(`⚡ Welcome back, ${p.showName || 'Player'}! Phone login verified.`, 'success');
+                audio.victory();
+            } catch (fbErr) {
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
+                showToast(`❌ ${msg}`, 'error');
+                audio.defeat();
+            }
+        });
+    }
+
+    // Login Form Submit (Supports Email, Phone Number via real SMS OTP, and User ID)
     if (loginSubmitBtn) {
         loginSubmitBtn.addEventListener('click', async () => {
-            const ident = loginIdInput ? loginIdInput.value.trim().toLowerCase() : '';
+            const rawIdent = loginIdInput ? loginIdInput.value.trim() : '';
+            const ident = rawIdent.toLowerCase();
             const pwd = loginPasswordInput ? loginPasswordInput.value.trim() : '';
 
-            if (!ident || !pwd) {
-                showToast('⚠️ Please enter your Email/Phone/ID and password.', 'error');
+            if (!ident) {
+                showToast('⚠️ Please enter your Email, Phone Number, or User ID.', 'error');
+                return;
+            }
+            if (!isFirebaseReady) {
+                showToast('❌ Firebase service is offline. Please check your internet connection.', 'error');
                 return;
             }
 
-            // Attempt Firebase login first if identity contains an email address
-            if (ident.includes('@') && typeof fbLoginWithEmail === 'function' && isFirebaseReady) {
+            // Detect Phone Number (starts with + or >= 8 digits with no @ and no letters)
+            const isPhoneLogin = !ident.includes('@') && (/^\+?\d[\d\s\-()]{7,}$/.test(rawIdent));
+            if (isPhoneLogin) {
                 try {
-                    showToast('⚡ Logging in with Firebase...', 'info');
-                    const fbRes = await fbLoginWithEmail(ident, pwd);
-                    if (fbRes && fbRes.user) {
-                        const p = fbRes.profileData || {};
-                        const syncedAcc = {
-                            userId: p.userId || fbRes.user.email.split('@')[0],
-                            showName: p.showName || fbRes.user.displayName || 'Player',
-                            email: fbRes.user.email,
-                            emailVerified: fbRes.user.emailVerified,
-                            phone: p.phone || '',
-                            phoneVerified: !!p.phoneVerified,
-                            joinedDate: p.joinedDate || 'Today',
-                            joinedTimestamp: p.joinedTimestamp || Date.now(),
-                            avatar: p.avatar || '👑',
-                            rating: p.rating || 1200,
-                            points: p.points || 250,
-                            matches: p.matches || 0,
-                            wins: p.wins || 0,
-                            losses: p.losses || 0,
-                            draws: p.draws || 0,
-                            currentStreak: p.currentStreak || 0,
-                            bestStreak: p.bestStreak || 0,
-                            puzzles: p.puzzles || 0,
-                            botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
-                        };
-                        const db = getAccountsDB();
-                        const idx = db.findIndex(a => a.userId && a.userId.toLowerCase() === syncedAcc.userId.toLowerCase());
-                        if (idx >= 0) db[idx] = syncedAcc;
-                        else db.push(syncedAcc);
-                        saveAccountsDB(db);
-                        setActiveAccount(syncedAcc);
-                        if (authModal) authModal.classList.add('hidden');
-                        showToast(`⚡ Welcome back, ${syncedAcc.showName}! Cloud profile synced.`, 'success');
-                        audio.victory();
-                        renderMainMenuUI();
-                        renderSettingsUI();
-                        return;
-                    }
+                    showToast('📲 Sending Firebase SMS OTP to your phone...', 'info');
+                    await fbSendPhoneOtp(rawIdent, 'recaptcha-container');
+                    if (loginPhoneOtpBox) loginPhoneOtpBox.classList.remove('hidden');
+                    showToast(`📲 SMS OTP sent to ${rawIdent}! Enter the code above to log in.`, 'success');
+                    audio.powerup();
                 } catch (fbErr) {
-                    console.warn('Firebase login attempt:', fbErr.message);
+                    const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
+                    showToast(`❌ ${msg}`, 'error');
+                    audio.defeat();
                 }
+                return;
             }
 
-            const db = getAccountsDB();
-            const found = db.find(a => 
-                (a.userId && a.userId.toLowerCase() === ident) ||
-                (a.email && a.email.toLowerCase() === ident) ||
-                (a.phone && a.phone.replace(/\D/g, '') === ident.replace(/\D/g, ''))
-            );
+            if (!pwd) {
+                showToast('⚠️ Please enter your password.', 'error');
+                return;
+            }
 
-            if (found && found.password === pwd) {
-                setActiveAccount(found);
-                if (authModal) authModal.classList.add('hidden');
-                showToast(`⚡ Welcome back, ${found.showName}! Cloud profile synced.`, 'success');
-                audio.victory();
-                renderMainMenuUI();
-                renderSettingsUI();
-            } else {
-                showToast('❌ Invalid credentials or account not found.', 'error');
+            try {
+                showToast('⚡ Signing in with Firebase...', 'info');
+                const fbRes = ident.includes('@')
+                    ? await fbLoginWithEmail(ident, pwd)
+                    : await fbLoginWithUserId(ident, pwd);
+
+                if (fbRes && fbRes.user) {
+                    const p = fbRes.profileData || {};
+                    applyAuthenticatedAccount({
+                        userId: p.userId || (fbRes.user.email ? fbRes.user.email.split('@')[0] : 'player'),
+                        showName: p.showName || fbRes.user.displayName || 'Player',
+                        email: fbRes.user.email || p.email || '',
+                        emailVerified: fbRes.user.emailVerified,
+                        phone: p.phone || fbRes.user.phoneNumber || '',
+                        phoneVerified: !!(p.phoneVerified || fbRes.user.phoneNumber),
+                        joinedDate: p.joinedDate || 'Today',
+                        joinedTimestamp: p.joinedTimestamp || Date.now(),
+                        avatar: p.avatar || '👑',
+                        avatarUrl: p.avatarUrl || fbRes.user.photoURL || '',
+                        rating: p.rating || 1200,
+                        points: p.points !== undefined ? p.points : 250,
+                        matches: p.matches || 0,
+                        wins: p.wins || 0,
+                        losses: p.losses || 0,
+                        draws: p.draws || 0,
+                        currentStreak: p.currentStreak || 0,
+                        bestStreak: p.bestStreak || 0,
+                        puzzles: p.puzzles || 0,
+                        botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+                    });
+                    showToast(`⚡ Welcome back, ${p.showName || fbRes.user.displayName || 'Player'}! Profile synced.`, 'success');
+                    audio.victory();
+                }
+            } catch (fbErr) {
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
+                showToast(`❌ ${msg}`, 'error');
                 audio.defeat();
             }
         });
@@ -4981,6 +5007,47 @@ window.addEventListener('DOMContentLoaded', () => {
                 window.AndroidBridge.showRewardedAd('points');
             }
         });
+    }
+
+    // Check for Google Sign-In Redirect Result (when returning from Google account picker)
+    if (typeof fbCheckGoogleRedirectResult === 'function' && isFirebaseReady) {
+        fbCheckGoogleRedirectResult(playerProfile && !playerProfile.userId ? { ...playerProfile } : null)
+            .then(res => {
+                if (res && res.user) {
+                    const p = res.profileData || {};
+                    const uEmail = res.user.email || '';
+                    const acc = {
+                        userId: p.userId || (uEmail ? uEmail.split('@')[0] : 'player'),
+                        showName: p.showName || res.user.displayName || 'Electro Player',
+                        email: uEmail,
+                        emailVerified: res.user.emailVerified,
+                        phone: p.phone || res.user.phoneNumber || '',
+                        phoneVerified: !!(p.phoneVerified || res.user.phoneNumber),
+                        joinedDate: p.joinedDate || 'Today',
+                        joinedTimestamp: p.joinedTimestamp || Date.now(),
+                        avatar: p.avatar || '👑',
+                        avatarUrl: p.avatarUrl || res.user.photoURL || '',
+                        rating: p.rating || 1200,
+                        points: p.points !== undefined ? p.points : 250,
+                        matches: p.matches || 0,
+                        wins: p.wins || 0,
+                        losses: p.losses || 0,
+                        draws: p.draws || 0,
+                        currentStreak: p.currentStreak || 0,
+                        bestStreak: p.bestStreak || 0,
+                        puzzles: p.puzzles || 0,
+                        botRecords: p.botRecords || { 1:{w:0,l:0,d:0}, 2:{w:0,l:0,d:0}, 3:{w:0,l:0,d:0}, 4:{w:0,l:0,d:0} }
+                    };
+                    setActiveAccount(acc);
+                    const authModal = document.getElementById('auth-modal');
+                    if (authModal) authModal.classList.add('hidden');
+                    showToast(`🎉 Welcome, ${acc.showName}! Signed in with Google.`, 'success');
+                }
+            })
+            .catch(err => {
+                const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(err) : err.message;
+                showToast(`❌ ${msg}`, 'error');
+            });
     }
         
     // Sync widgets to native Android with official Electro King branding

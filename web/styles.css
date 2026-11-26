@@ -14,9 +14,10 @@
 }
 
 :root {
-    --bg-color: #0b071e;
-    --bg-surface: #120e2e;
-    --bg-card: #18123c;
+    --global-app-bg: #000000;
+    --bg-color: #000000;
+    --bg-surface: #0b0e18;
+    --bg-card: #111626;
     --text-color: #ffffff;
     --text-muted: #9d99b3;
     
@@ -50,13 +51,8 @@
 
 /* THEME 1: CYBER NEON (Electro King Signature Default) */
 body.theme-cyber {
-    --bg-color: #0b071e;
-    --bg-surface: #120e2e;
-    --bg-card: #18123c;
-    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(157, 78, 221, 0.22) 0%, transparent 60%),
-                   radial-gradient(circle at 100% 100%, rgba(255, 0, 84, 0.14) 0%, transparent 50%),
-                   radial-gradient(circle at 0% 100%, rgba(0, 245, 212, 0.16) 0%, transparent 50%),
-                   linear-gradient(180deg, #070414 0%, #0b071e 100%);
+    --bg-surface: #0d0a1f;
+    --bg-card: #151033;
     --primary: #00f5d4;
     --primary-light: #70fff0;
     --primary-hover: #00d6b9;
@@ -71,19 +67,14 @@ body.theme-cyber {
     --board-light: rgba(0, 245, 212, 0.08);
     --board-frame-bg: linear-gradient(145deg, #1b143a 0%, #0f0a24 50%, #070414 100%);
     --board-frame-border: #00f5d4;
-    --panel-bg: rgba(18, 14, 46, 0.88);
-    --panel-border: rgba(0, 245, 212, 0.22);
+    --panel-bg: rgba(16, 12, 38, 0.92);
+    --panel-border: rgba(0, 245, 212, 0.28);
 }
 
-/* THEME 2: DARK OBSIDIAN */
+/* THEME 2: DARK OBSIDIAN (Neon Blue + Purple) */
 body.theme-obsidian {
-    --bg-color: #070709;
-    --bg-surface: #0f1015;
-    --bg-card: #171821;
-    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(114, 9, 183, 0.24) 0%, transparent 60%),
-                   radial-gradient(circle at 100% 100%, rgba(247, 37, 133, 0.14) 0%, transparent 50%),
-                   radial-gradient(circle at 0% 100%, rgba(76, 201, 240, 0.16) 0%, transparent 50%),
-                   linear-gradient(180deg, #050507 0%, #0d0e14 100%);
+    --bg-surface: #0a0c14;
+    --bg-card: #111524;
     --primary: #4cc9f0;
     --primary-light: #b3ecff;
     --primary-hover: #38bdf8;
@@ -96,19 +87,14 @@ body.theme-obsidian {
     --board-light: rgba(76, 201, 240, 0.08);
     --board-frame-bg: linear-gradient(145deg, #1f222d 0%, #11131a 50%, #08090d 100%);
     --board-frame-border: #4cc9f0;
-    --panel-bg: rgba(15, 16, 21, 0.88);
-    --panel-border: rgba(76, 201, 240, 0.22);
+    --panel-bg: rgba(12, 15, 24, 0.92);
+    --panel-border: rgba(76, 201, 240, 0.28);
 }
 
 /* THEME 3: GOLD VOLT */
 body.theme-gold {
-    --bg-color: #0d0903;
-    --bg-surface: #171005;
-    --bg-card: #221808;
-    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(255, 159, 28, 0.22) 0%, transparent 60%),
-                   radial-gradient(circle at 100% 100%, rgba(230, 57, 70, 0.14) 0%, transparent 50%),
-                   radial-gradient(circle at 0% 100%, rgba(255, 209, 102, 0.16) 0%, transparent 50%),
-                   linear-gradient(180deg, #090602 0%, #140e04 100%);
+    --bg-surface: #120d05;
+    --bg-card: #1c1408;
     --primary: #ffd166;
     --primary-light: #fff2c2;
     --primary-hover: #ffc338;
@@ -121,19 +107,14 @@ body.theme-gold {
     --board-light: rgba(255, 209, 102, 0.09);
     --board-frame-bg: linear-gradient(145deg, #2b1f0c 0%, #160f06 50%, #0d0903 100%);
     --board-frame-border: #ffd166;
-    --panel-bg: rgba(23, 16, 5, 0.88);
-    --panel-border: rgba(255, 209, 102, 0.25);
+    --panel-bg: rgba(20, 14, 6, 0.92);
+    --panel-border: rgba(255, 209, 102, 0.28);
 }
 
 /* THEME 4: MATRIX TERMINAL */
 body.theme-matrix, body.theme-wood {
-    --bg-color: #030d07;
-    --bg-surface: #07170c;
-    --bg-card: #0b2212;
-    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.18) 0%, transparent 60%),
-                   radial-gradient(circle at 100% 100%, rgba(0, 245, 212, 0.14) 0%, transparent 50%),
-                   radial-gradient(circle at 0% 100%, rgba(0, 255, 102, 0.14) 0%, transparent 50%),
-                   linear-gradient(180deg, #020804 0%, #051209 100%);
+    --bg-surface: #051209;
+    --bg-card: #091d0f;
     --primary: #00ff66;
     --primary-light: #80ffb3;
     --primary-hover: #00e65c;
@@ -146,14 +127,14 @@ body.theme-matrix, body.theme-wood {
     --board-light: rgba(0, 255, 102, 0.08);
     --board-frame-bg: linear-gradient(145deg, #0e2917 0%, #07170c 50%, #030d07 100%);
     --board-frame-border: #00ff66;
-    --panel-bg: rgba(7, 23, 12, 0.88);
-    --panel-border: rgba(0, 255, 102, 0.25);
+    --panel-bg: rgba(6, 18, 10, 0.92);
+    --panel-border: rgba(0, 255, 102, 0.28);
 }
 
+html,
 body {
-    background-color: var(--bg-color);
-    background-image: var(--bg-gradient, linear-gradient(180deg, #070414 0%, #0b071e 100%));
-    background-attachment: fixed;
+    background-color: var(--global-app-bg, #000000) !important;
+    background-image: none !important;
     color: var(--text-color);
     font-family: 'Outfit', sans-serif;
     min-height: 100dvh;
@@ -176,6 +157,8 @@ body {
     gap: 4px;
     box-sizing: border-box;
     overflow-x: hidden;
+    background-color: var(--global-app-bg, #000000) !important;
+    background-image: none !important;
 }
 
 /* =========================================================
@@ -3556,6 +3539,18 @@ body.is-android .android-only-widget {
     overflow-x: hidden;
     padding-bottom: 6px;
     box-sizing: border-box;
+}
+
+/* Website AdSense Container (Black + Theme Neon Border, Hidden Until Configured/Approved) */
+.web-ad-container {
+    background-color: #050505;
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin: 12px auto;
+    max-width: 680px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 10px var(--primary-glow);
 }
 
 
