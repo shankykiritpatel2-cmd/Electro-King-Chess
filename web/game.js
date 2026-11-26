@@ -408,10 +408,21 @@ function applyTheme(themeName) {
     if (!['cyber', 'obsidian', 'gold', 'matrix'].includes(themeName)) themeName = 'cyber';
     electroSettings.theme = themeName;
     localStorage.setItem('electro_chess_theme', themeName);
-    document.body.className = `theme-${themeName}`;
-    document.querySelectorAll('.theme-card-btn').forEach(btn => {
+    document.body.classList.remove('theme-cyber', 'theme-obsidian', 'theme-gold', 'theme-matrix', 'theme-wood');
+    document.body.classList.add(`theme-${themeName}`);
+    document.documentElement.setAttribute('data-theme', themeName);
+    document.querySelectorAll('.theme-card-btn[data-theme]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === themeName);
     });
+    if (typeof fbSavePreferences === 'function' && typeof isFirebaseReady !== 'undefined' && isFirebaseReady) {
+        fbSavePreferences({
+            theme: electroSettings.theme,
+            sound: electroSettings.sound,
+            vibration: electroSettings.vibration,
+            coords: electroSettings.coords,
+            evalBar: electroSettings.evalBar
+        });
+    }
 }
 
 // 2-Player Match State
@@ -1713,72 +1724,102 @@ function fenToBoard(fen) {
     return b;
 }
 
-// 5 VERIFIED TIERED PUZZLE POOLS FOR DAILY CALENDAR ROTATION
+// 5 VERIFIED TIERED PUZZLE POOLS FOR DAILY CALENDAR ROTATION & PRACTICE MODE
 const PUZZLE_POOL_1 = [
     {
         id: "m1_backrank_a",
-        title: "Daily #1: Back-Rank Corridor Mate",
+        title: "Back-Rank Corridor",
         category: "Back-Rank",
         difficulty: "Mate in 1",
-        turn: "⚪ White Rook to move & deliver Back-Rank Mate",
+        level: "Easy",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1",
         moves: [{ from: coordToRC("a1"), to: coordToRC("a8") }],
-        hint: "Deliver checkmate on a8 along the open back rank!",
+        hints: [
+            "Look for a Rook move.",
+            "Look at the opponent's weak back rank.",
+            "Think about whether the enemy King has any escape squares behind its pawns."
+        ],
         points: 25
     },
     {
         id: "m1_scholars",
-        title: "Daily #1: Scholar's Queen Strike",
+        title: "Scholar's Strike",
         category: "Scholar's",
         difficulty: "Mate in 1",
-        turn: "⚪ White Queen to move & deliver Checkmate",
+        level: "Easy",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
         moves: [{ from: coordToRC("f3"), to: coordToRC("f7") }],
-        hint: "Strike the weak f7 square with Queen supported by Bishop on c4!",
+        hints: [
+            "Look for a Queen move.",
+            "Consider your opponent's weakest pawn near the King.",
+            "Your Bishop and Queen are already aiming at the same target."
+        ],
         points: 25
     },
     {
         id: "m1_smothered",
-        title: "Daily #1: Smothered Knight Ambush",
+        title: "Smothered Ambush",
         category: "Smothered",
         difficulty: "Mate in 1",
-        turn: "⚪ White Knight to move & deliver Smothered Mate",
+        level: "Easy",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "6rk/6pp/8/4N3/8/8/8/7K w - - 0 1",
         moves: [{ from: coordToRC("e5"), to: coordToRC("f7") }],
-        hint: "Hop your Knight to f7! The enemy King is trapped by its own pieces.",
+        hints: [
+            "Look for a Knight move.",
+            "Notice how the enemy King is boxed in by its own pieces.",
+            "Look for a possible check that cannot be captured or blocked."
+        ],
         points: 25
     },
     {
         id: "m1_arabian",
-        title: "Daily #1: Arabian Corner Trap",
+        title: "Arabian Corner Net",
         category: "Arabian",
         difficulty: "Mate in 1",
-        turn: "⚪ White Rook to move & deliver Arabian Mate",
+        level: "Easy",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "7k/1R6/5N2/8/8/8/8/6K1 w - - 0 1",
         moves: [{ from: coordToRC("b7"), to: coordToRC("h7") }],
-        hint: "Move the Rook to h7 with Knight protection!",
+        hints: [
+            "Look for a Rook move.",
+            "Your Knight is already controlling key escape squares around the King.",
+            "Think about how your Rook and Knight can work together right next to the enemy King."
+        ],
         points: 25
     },
     {
         id: "m1_anastasia",
-        title: "Daily #1: Anastasia's Corridor Mate",
+        title: "Anastasia's Corridor",
         category: "Anastasia",
         difficulty: "Mate in 1",
-        turn: "⚪ White Rook to move & deliver Checkmate on a8",
+        level: "Easy",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "7k/4N1pp/8/8/R7/8/8/6K1 w - - 0 1",
         moves: [{ from: coordToRC("a4"), to: coordToRC("a8") }],
-        hint: "Fire your Rook to the back rank!",
+        hints: [
+            "Look for a Rook move.",
+            "Your Knight is guarding important escape squares on the kingside.",
+            "Look at the open back rank for a decisive check."
+        ],
         points: 25
     },
     {
         id: "m1_lawn_mower",
-        title: "Daily #1: Lawn Mower Double Rook Mate",
+        title: "Double Rook Finish",
         category: "Lawn Mower",
         difficulty: "Mate in 1",
-        turn: "⚪ White Rook to move & seal Rank 8",
+        level: "Easy",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "7k/R7/1R6/8/8/8/8/7K w - - 0 1",
         moves: [{ from: coordToRC("b6"), to: coordToRC("b8") }],
-        hint: "Cut off the 8th rank with your second Rook on b8!",
+        hints: [
+            "Look for a Rook move.",
+            "One of your Rooks is already cutting off the 7th rank.",
+            "Use your other Rook to seal the remaining rank."
+        ],
         points: 25
     }
 ];
@@ -1786,68 +1827,98 @@ const PUZZLE_POOL_1 = [
 const PUZZLE_POOL_2 = [
     {
         id: "m1_epaulette",
-        title: "Daily #2: Epaulette Royal Squeeze",
+        title: "Epaulette Squeeze",
         category: "Epaulette",
         difficulty: "Mate in 1",
-        turn: "⚪ White Queen to move & deliver Epaulette Checkmate",
+        level: "Medium",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "3rkr2/3p1p2/8/3Q4/8/8/8/7K w - - 0 1",
         moves: [{ from: coordToRC("d5"), to: coordToRC("e5") }],
-        hint: "Slide your Queen to e5! The Black King is trapped between its own Rooks.",
+        hints: [
+            "Look for a Queen move.",
+            "Notice how the opponent's Rooks block the King's sideways escape.",
+            "Look for a central check along the file."
+        ],
         points: 25
     },
     {
         id: "m1_bodens_move",
-        title: "Daily #2: Boden's Criss-Cross Mate",
+        title: "Boden's Criss-Cross",
         category: "Boden's",
         difficulty: "Mate in 1",
-        turn: "⚪ White Bishop to move & deliver Boden's Mate",
+        level: "Medium",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "2kr4/3p4/8/1B6/5B2/8/8/7K w - - 0 1",
         moves: [{ from: coordToRC("b5"), to: coordToRC("a6") }],
-        hint: "Deliver Boden's criss-cross mate with Ba6#!",
+        hints: [
+            "Look for a Bishop move.",
+            "Your other Bishop is already slicing across a key diagonal.",
+            "Think about criss-crossing both Bishops against the enemy King."
+        ],
         points: 25
     },
     {
         id: "m1_corner_kiss",
-        title: "Daily #2: Queen & Pawn Corner Trap",
+        title: "Corner Queen Net",
         category: "Queen Net",
         difficulty: "Mate in 1",
-        turn: "⚪ White Queen to move & deliver Checkmate on g8",
+        level: "Medium",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "7k/5P1p/8/8/8/8/8/6QK w - - 0 1",
         moves: [{ from: coordToRC("g1"), to: coordToRC("g8") }],
-        hint: "Drive your Queen to g8 right into the corner!",
+        hints: [
+            "Look for a Queen move.",
+            "Your advanced pawn is taking away an important escape square.",
+            "Look for a back-rank check supported by your pawn."
+        ],
         points: 25
     },
     {
         id: "m1_balestra",
-        title: "Daily #2: Balestra Bishop & Queen Net",
+        title: "Bishop & Queen Net",
         category: "Balestra",
         difficulty: "Mate in 1",
-        turn: "⚪ White Queen to move & deliver Balestra Mate",
+        level: "Medium",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "k7/2B5/8/8/8/8/8/1Q5K w - - 0 1",
         moves: [{ from: coordToRC("b1"), to: coordToRC("b8") }],
-        hint: "Deliver checkmate on b8 with Queen supported by Bishop on c7!",
+        hints: [
+            "Look for a Queen move.",
+            "Your Bishop is already guarding a key square next to the cornered King.",
+            "Deliver a supported check along the edge of the board."
+        ],
         points: 25
     },
     {
         id: "m1_rook_exchange_mate",
-        title: "Daily #2: Back-Rank Capture Mate",
+        title: "Back-Rank Capture",
         category: "Back-Rank",
         difficulty: "Mate in 1",
-        turn: "⚪ White Rook to move & capture d8",
+        level: "Medium",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "3r2k1/5ppp/8/8/8/8/8/3R3K w - - 0 1",
         moves: [{ from: coordToRC("d1"), to: coordToRC("d8") }],
-        hint: "Capture the Black Rook on d8 to deliver immediate checkmate!",
+        hints: [
+            "Look for a Rook move.",
+            "Consider capturing the defender on the back rank.",
+            "Think about whether the enemy King has any air behind its pawns."
+        ],
         points: 25
     },
     {
         id: "m1_backrank_queen",
-        title: "Daily #2: Queen Infiltration Mate",
+        title: "Queen Infiltration",
         category: "Back-Rank",
         difficulty: "Mate in 1",
-        turn: "⚪ White Queen to move & deliver Checkmate",
+        level: "Medium",
+        turn: "⚪ White to move — Find Checkmate in 1",
         fen: "k7/pp6/8/8/8/8/8/2Q4K w - - 0 1",
         moves: [{ from: coordToRC("c1"), to: coordToRC("c8") }],
-        hint: "Slide your Queen to c8 for an unstoppable back-rank checkmate!",
+        hints: [
+            "Look for a Queen move.",
+            "Look at the opponent's trapped King behind its own pawns.",
+            "Look for a possible check along the open file to the back rank."
+        ],
         points: 25
     }
 ];
@@ -1855,47 +1926,62 @@ const PUZZLE_POOL_2 = [
 const PUZZLE_POOL_3 = [
     {
         id: "m2_kinghunt",
-        title: "Daily #3: King Hunt Corner Finish",
+        title: "King Hunt Finish",
         category: "King Hunt",
         difficulty: "Mate in 2",
-        turn: "⚪ White Queen to strike with check (Mate in 2)",
+        level: "Hard",
+        turn: "⚪ White to move — Find Checkmate in 2",
         fen: "6k1/5ppp/8/6N1/2B5/5Q2/8/7K w - - 0 1",
         moves: [
-            { from: coordToRC("f3"), to: coordToRC("f7") }, // 1. Qxf7+
-            { from: coordToRC("g8"), to: coordToRC("h8") }, // 1... Kh8
-            { from: coordToRC("f7"), to: coordToRC("g8") }  // 2. Qg8#
+            { from: coordToRC("f3"), to: coordToRC("f7") },
+            { from: coordToRC("g8"), to: coordToRC("h8") },
+            { from: coordToRC("f7"), to: coordToRC("g8") }
         ],
-        hint: "Strike on f7 with check, driving the King into the corner before delivering mate on g8!",
+        hints: [
+            "Your Queen, Bishop, and Knight are all aimed toward the enemy King.",
+            "Look for a forcing check that drives the King into the corner.",
+            "Think about how your Bishop and Knight can support a close-range Queen finish."
+        ],
         points: 50
     },
     {
         id: "m2_bishopdeflect",
-        title: "Daily #3: Bishop-Queen Deflection",
+        title: "Bishop-Queen Deflection",
         category: "Deflection",
         difficulty: "Mate in 2",
-        turn: "⚪ White Queen to initiate combination (Mate in 2)",
+        level: "Hard",
+        turn: "⚪ White to move — Find Checkmate in 2",
         fen: "4r1k1/5ppp/8/8/2B5/5Q2/8/4R2K w - - 0 1",
         moves: [
-            { from: coordToRC("f3"), to: coordToRC("f7") }, // 1. Qxf7+
-            { from: coordToRC("g8"), to: coordToRC("h8") }, // 1... Kh8
-            { from: coordToRC("f7"), to: coordToRC("e8") }  // 2. Qxe8#
+            { from: coordToRC("f3"), to: coordToRC("f7") },
+            { from: coordToRC("g8"), to: coordToRC("h8") },
+            { from: coordToRC("f7"), to: coordToRC("e8") }
         ],
-        hint: "Capture f7 with check, then take the hanging Rook on e8 for checkmate!",
+        hints: [
+            "Look for a Queen move to start the attack.",
+            "Your Bishop supports a forcing check near the King.",
+            "Once the King steps aside, look at the undefended back-rank piece."
+        ],
         points: 50
     },
     {
         id: "m2_doublerook",
-        title: "Daily #3: Double Rook Decoy Strike",
+        title: "Double Rook Decoy",
         category: "Deflection",
         difficulty: "Mate in 2",
-        turn: "⚪ White Rook to sacrifice on e8 (Mate in 2)",
+        level: "Hard",
+        turn: "⚪ White to move — Find Checkmate in 2",
         fen: "r3r1k1/3Q1ppp/8/8/8/8/8/4R2K w - - 0 1",
         moves: [
-            { from: coordToRC("e1"), to: coordToRC("e8") }, // 1. Rxe8+
-            { from: coordToRC("a8"), to: coordToRC("e8") }, // 1... Rxe8
-            { from: coordToRC("d7"), to: coordToRC("e8") }  // 2. Qxe8#
+            { from: coordToRC("e1"), to: coordToRC("e8") },
+            { from: coordToRC("a8"), to: coordToRC("e8") },
+            { from: coordToRC("d7"), to: coordToRC("e8") }
         ],
-        hint: "Exchange on e8 with check to deflect Black's primary Rook, then strike with Queen!",
+        hints: [
+            "Consider whether a Rook sacrifice could help.",
+            "Look at the defenders guarding the enemy back rank.",
+            "Think about deflecting a defender so your Queen can follow up."
+        ],
         points: 50
     }
 ];
@@ -1903,47 +1989,62 @@ const PUZZLE_POOL_3 = [
 const PUZZLE_POOL_4 = [
     {
         id: "m2_overload",
-        title: "Daily #4: Battery Overload Deflection",
+        title: "Battery Overload",
         category: "Overload",
         difficulty: "Mate in 2",
-        turn: "⚪ White Queen to sacrifice on e8 (Mate in 2)",
+        level: "Hard",
+        turn: "⚪ White to move — Find Checkmate in 2",
         fen: "2r1r1k1/5ppp/8/8/8/8/4QPPP/4R2K w - - 0 1",
         moves: [
-            { from: coordToRC("e2"), to: coordToRC("e8") }, // 1. Qxe8+
-            { from: coordToRC("c8"), to: coordToRC("e8") }, // 1... Rxe8
-            { from: coordToRC("e1"), to: coordToRC("e8") }  // 2. Rxe8#
+            { from: coordToRC("e2"), to: coordToRC("e8") },
+            { from: coordToRC("c8"), to: coordToRC("e8") },
+            { from: coordToRC("e1"), to: coordToRC("e8") }
         ],
-        hint: "Sacrifice Queen on e8 to deflect Black's guarding Rook, then checkmate with your own Rook!",
+        hints: [
+            "Look at your Queen and Rook lined up on the same file.",
+            "Consider whether a sacrifice could overload the back-rank defenders.",
+            "Lead with the piece that lets your second heavy piece deliver the final blow."
+        ],
         points: 50
     },
     {
         id: "m2_anastasia_sac",
-        title: "Daily #4: Anastasia Queen Sacrifice",
+        title: "Anastasia Sacrifice",
         category: "Anastasia",
         difficulty: "Mate in 2",
-        turn: "⚪ White Queen sacrifice on h7 (Mate in 2)",
+        level: "Hard",
+        turn: "⚪ White to move — Find Checkmate in 2",
         fen: "7k/4N1pp/8/8/R6Q/8/8/7K w - - 0 1",
         moves: [
-            { from: coordToRC("h4"), to: coordToRC("h7") }, // 1. Qxh7+
-            { from: coordToRC("h8"), to: coordToRC("h7") }, // 1... Kxh7
-            { from: coordToRC("a4"), to: coordToRC("h4") }  // 2. Rh4#
+            { from: coordToRC("h4"), to: coordToRC("h7") },
+            { from: coordToRC("h8"), to: coordToRC("h7") },
+            { from: coordToRC("a4"), to: coordToRC("h4") }
         ],
-        hint: "Sacrifice Queen on h7 to shatter Black's pawn shield, then deliver Rh4# supported by Ne7!",
+        hints: [
+            "Think about attacking the opponent's King by breaking open its pawn shield.",
+            "Consider whether a Queen sacrifice could force the King onto an open file.",
+            "Your Knight controls the escape squares while your Rook waits to swing across."
+        ],
         points: 50
     },
     {
         id: "m2_flank_battery",
-        title: "Daily #4: Flank Battery Deflection",
+        title: "Flank Battery Deflection",
         category: "Deflection",
         difficulty: "Mate in 2",
-        turn: "⚪ White Queen to deflect defense (Mate in 2)",
+        level: "Hard",
+        turn: "⚪ White to move — Find Checkmate in 2",
         fen: "1r2r1k1/5ppp/8/8/8/8/4QPPP/4R2K w - - 0 1",
         moves: [
-            { from: coordToRC("e2"), to: coordToRC("e8") }, // 1. Qxe8+
-            { from: coordToRC("b8"), to: coordToRC("e8") }, // 1... Rxe8
-            { from: coordToRC("e1"), to: coordToRC("e8") }  // 2. Rxe8#
+            { from: coordToRC("e2"), to: coordToRC("e8") },
+            { from: coordToRC("b8"), to: coordToRC("e8") },
+            { from: coordToRC("e1"), to: coordToRC("e8") }
         ],
-        hint: "Sacrifice Queen on e8 to lure away Black's b8 Rook, then mate with your own Rook!",
+        hints: [
+            "Notice how your Queen and Rook form a battery.",
+            "Consider whether a sacrifice on the back rank lures away a defender.",
+            "Follow up with your remaining heavy piece."
+        ],
         points: 50
     }
 ];
@@ -1951,38 +2052,56 @@ const PUZZLE_POOL_4 = [
 const PUZZLE_POOL_5 = [
     {
         id: "m3_battery_dualrook",
-        title: "Daily #5: Dual Rook Battery Decimation",
+        title: "Dual Rook Battery",
         category: "Overload",
         difficulty: "Mate in 3",
-        turn: "⚪ White Bishop to sacrifice on f7 (Mate in 3)",
+        level: "Expert",
+        turn: "⚪ White to move — Find Checkmate in 3",
         fen: "5rk1/5ppp/8/8/2B5/8/8/3R1R1K w - - 0 1",
         moves: [
-            { from: coordToRC("c4"), to: coordToRC("f7") }, // 1. Bxf7+
-            { from: coordToRC("f8"), to: coordToRC("f7") }, // 1... Rxf7
-            { from: coordToRC("d1"), to: coordToRC("d8") }, // 2. Rd8+
-            { from: coordToRC("f7"), to: coordToRC("f8") }, // 2... Rf8
-            { from: coordToRC("d8"), to: coordToRC("f8") }  // 3. Rdxf8#
+            { from: coordToRC("c4"), to: coordToRC("f7") },
+            { from: coordToRC("f8"), to: coordToRC("f7") },
+            { from: coordToRC("d1"), to: coordToRC("d8") },
+            { from: coordToRC("f7"), to: coordToRC("f8") },
+            { from: coordToRC("d8"), to: coordToRC("f8") }
         ],
-        hint: "Sacrifice your Bishop on f7 with check, then drive your Rook to d8 for a crushing back-rank finish!",
+        hints: [
+            "Your Bishop could be important here to start the combination.",
+            "Consider whether a sacrifice can lure the defending Rook away from the back rank.",
+            "Look for a back-rank check once the defender is distracted."
+        ],
         points: 75
     },
     {
         id: "m3_philidor_hunt",
-        title: "Daily #5: Philidor Smothered Clearance",
+        title: "Philidor Smothered Clearance",
         category: "Philidor",
         difficulty: "Mate in 3",
-        turn: "⚪ White Bishop check on f7 (Mate in 3)",
+        level: "Expert",
+        turn: "⚪ White to move — Find Checkmate in 3",
         fen: "5rk1/5ppp/8/6N1/2B5/1Q6/8/7K w - - 0 1",
         moves: [
-            { from: coordToRC("c4"), to: coordToRC("f7") }, // 1. Bxf7+
-            { from: coordToRC("g8"), to: coordToRC("h8") }, // 1... Kh8
-            { from: coordToRC("f7"), to: coordToRC("g8") }, // 2. Bg8!
-            { from: coordToRC("f8"), to: coordToRC("g8") }, // 2... Rxg8
-            { from: coordToRC("g5"), to: coordToRC("f7") }  // 3. Nf7#
+            { from: coordToRC("c4"), to: coordToRC("f7") },
+            { from: coordToRC("g8"), to: coordToRC("h8") },
+            { from: coordToRC("f7"), to: coordToRC("g8") },
+            { from: coordToRC("f8"), to: coordToRC("g8") },
+            { from: coordToRC("g5"), to: coordToRC("f7") }
         ],
-        hint: "Deliver check on f7, clearance sacrifice on g8, and finish with an iconic smothered knight mate!",
+        hints: [
+            "Look for a forcing Bishop check first.",
+            "Think about how a clearance sacrifice can trap the enemy King in the corner.",
+            "Look for a Knight finish once the King's escape is completely blocked."
+        ],
         points: 75
     }
+];
+
+const ALL_PUZZLES_DB = [
+    ...PUZZLE_POOL_1,
+    ...PUZZLE_POOL_2,
+    ...PUZZLE_POOL_3,
+    ...PUZZLE_POOL_4,
+    ...PUZZLE_POOL_5
 ];
 
 // DETERMINISTIC CALENDAR ROTATION (DIFFERENT EVERY SINGLE DAY!)
@@ -2024,6 +2143,40 @@ function getDailyPuzzlesForToday(customDateStr = null) {
 
 let PUZZLES = getDailyPuzzlesForToday();
 let pzCurrentStep = 0; // Tracks multi-move step index
+let pzHintLevel = 0;   // Tracks progressive contextual hint index (0..2)
+let pzMode = 'daily';  // 'daily' | 'practice'
+let pzPracticeDiff = 'all';
+let pzPracticePool = [...ALL_PUZZLES_DB];
+let pzPracticeIdx = 0;
+let lastPracticePuzzleId = null;
+
+function selectRandomPracticePuzzle(diff = pzPracticeDiff) {
+    pzPracticeDiff = diff;
+    let pool = diff === 'all'
+        ? ALL_PUZZLES_DB
+        : ALL_PUZZLES_DB.filter(p => p.level === diff);
+    if (pool.length === 0) pool = ALL_PUZZLES_DB;
+
+    // Avoid immediate repetition when multiple puzzles exist
+    let candidates = pool.length > 1
+        ? pool.filter(p => p.id !== lastPracticePuzzleId)
+        : pool;
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    pzPracticePool = pool;
+    pzPracticeIdx = pool.findIndex(p => p.id === chosen.id);
+    if (pzPracticeIdx < 0) pzPracticeIdx = 0;
+    lastPracticePuzzleId = chosen.id;
+    pzCurrentStep = 0;
+    pzHintLevel = 0;
+}
+
+function getActivePuzzle() {
+    if (pzMode === 'practice') {
+        return pzPracticePool[pzPracticeIdx] || ALL_PUZZLES_DB[0];
+    }
+    PUZZLES = getDailyPuzzlesForToday();
+    return PUZZLES[currentPuzzleIdx];
+}
 
 function getCurrentUserStorageKey() {
     return (playerProfile && playerProfile.userId) ? playerProfile.userId.toLowerCase().trim() : 'guest';
@@ -2174,6 +2327,7 @@ function renderPuzzleProgressPills() {
         pill.addEventListener('click', () => {
             currentPuzzleIdx = idx;
             pzCurrentStep = 0;
+            pzHintLevel = 0;
             renderCurrentPuzzle();
         });
         
@@ -2182,12 +2336,15 @@ function renderPuzzleProgressPills() {
 }
 
 function renderCurrentPuzzle() {
-    PUZZLES = getDailyPuzzlesForToday();
-    const pz = PUZZLES[currentPuzzleIdx];
+    const pz = getActivePuzzle();
     if (!pz) return;
     
     renderPuzzleStreak();
-    renderPuzzleProgressPills();
+    const pillsRow = document.getElementById('puzzle-progress-pills');
+    if (pillsRow) {
+        pillsRow.classList.toggle('hidden', pzMode !== 'daily');
+        if (pzMode === 'daily') renderPuzzleProgressPills();
+    }
     
     const lvlTag = document.getElementById('puzzle-level-tag');
     const solvedBadge = document.getElementById('puzzle-solved-badge');
@@ -2196,49 +2353,34 @@ function renderCurrentPuzzle() {
     const feedbackEl = document.getElementById('puzzle-feedback');
     if (!lvlTag || !turnText || !boardEl) return;
     
-    const isCompleted = isPuzzleCompletedToday(currentPuzzleIdx);
+    const isCompleted = pzMode === 'daily' ? isPuzzleCompletedToday(currentPuzzleIdx) : false;
     const completedList = getCompletedPuzzlesToday();
     
-    lvlTag.textContent = `${pz.title} • [${pz.difficulty}]`;
+    lvlTag.textContent = `${pz.title} • ${pz.level || 'Medium'} (${pz.difficulty})`;
     if (solvedBadge) solvedBadge.classList.toggle('hidden', !isCompleted);
     
     if (feedbackEl) {
-        if (completedList.length === PUZZLES.length) {
-            feedbackEl.innerHTML = '<span style="color:#22c55e;">🏆 All 5 Daily Puzzles Solved Today! Grandmaster tactics achieved.</span>';
+        if (pzMode === 'daily' && completedList.length === PUZZLES.length && isCompleted) {
+            feedbackEl.innerHTML = '<span style="color:#22c55e;">🏆 All 5 Daily Puzzles Solved Today! You can still replay from the starting position.</span>';
         } else if (isCompleted) {
-            feedbackEl.innerHTML = '<span style="color:#22c55e;">✅ Solved! You have cleared this puzzle today. (+Points awarded)</span>';
+            feedbackEl.innerHTML = '<span style="color:#22c55e;">✅ Solved Today! Replay from the starting position anytime.</span>';
         } else {
             feedbackEl.textContent = '';
         }
     }
     
-    turnText.textContent = isCompleted ? 'Completed for today (Cannot repeat)' : pz.turn;
+    turnText.textContent = pz.turn;
     boardEl.innerHTML = '';
     
-    // Build initial board from FEN
+    // ALWAYS initialize the visible board from the original unsolved puzzle starting FEN!
+    // Never reveal or pre-play the solution position when opening a puzzle.
+    pzCurrentStep = 0;
+    pzHintLevel = 0;
     let pzBoard = fenToBoard(pz.fen);
-    
-    // If completed, fast-forward to final checkmate position
-    if (isCompleted) {
-        pz.moves.forEach(m => {
-            if (pzBoard[m.from.r] && pzBoard[m.from.r][m.from.c]) {
-                pzBoard[m.to.r][m.to.c] = pzBoard[m.from.r][m.from.c];
-                pzBoard[m.from.r][m.from.c] = null;
-            }
-        });
-    } else {
-        // Apply steps up to current step
-        for (let s = 0; s < pzCurrentStep; s++) {
-            const m = pz.moves[s];
-            if (pzBoard[m.from.r] && pzBoard[m.from.r][m.from.c]) {
-                pzBoard[m.to.r][m.to.c] = pzBoard[m.from.r][m.from.c];
-                pzBoard[m.from.r][m.from.c] = null;
-            }
-        }
-    }
     
     let pzSelected = null;
     let isProcessingReply = false;
+    let isSolvedThisSession = false;
     
     function drawPzBoard() {
         boardEl.innerHTML = '';
@@ -2257,7 +2399,7 @@ function renderCurrentPuzzle() {
                     const pEl = document.createElement('div');
                     pEl.className = 'piece-svg';
                     pEl.innerHTML = getPieceSvg(piece.color, piece.type);
-                    if (!isCompleted && !isProcessingReply && piece.color === 'white') {
+                    if (!isSolvedThisSession && !isProcessingReply && piece.color === 'white') {
                         pEl.classList.add('draggable');
                         pEl.setAttribute('draggable', 'true');
                         pEl.addEventListener('dragstart', (e) => {
@@ -2271,8 +2413,7 @@ function renderCurrentPuzzle() {
                 }
 
                 function handlePzMove(targetR, targetC) {
-                    if (isCompleted || isProcessingReply) {
-                        if (isCompleted) showToast('✅ Puzzle already completed today!', 'info');
+                    if (isSolvedThisSession || isProcessingReply) {
                         return;
                     }
                     
@@ -2286,6 +2427,18 @@ function renderCurrentPuzzle() {
                         const targetPiece = pzBoard[targetR][targetC];
                         if (targetPiece && targetPiece.color === 'white') {
                             pzSelected = { r: targetR, c: targetC };
+                            drawPzBoard();
+                            return;
+                        }
+
+                        // Validate legal chess move before checking against solution
+                        const legalMoves = typeof getLegalMoves === 'function'
+                            ? getLegalMoves(pzSelected.r, pzSelected.c, pzBoard)
+                            : [];
+                        const isLegalChessMove = legalMoves.some(m => m.r === targetR && m.c === targetC);
+                        if (!isLegalChessMove) {
+                            showToast('⚠️ Illegal chess move! Choose a legal move.', 'warning');
+                            pzSelected = null;
                             drawPzBoard();
                             return;
                         }
@@ -2303,11 +2456,21 @@ function renderCurrentPuzzle() {
                             
                             // Check if puzzle is now fully solved
                             if (pzCurrentStep >= pz.moves.length) {
-                                markPuzzleCompletedToday(currentPuzzleIdx);
+                                isSolvedThisSession = true;
+                                drawPzBoard();
+                                if (pzMode === 'daily') {
+                                    markPuzzleCompletedToday(currentPuzzleIdx);
+                                } else {
+                                    playerProfile.puzzles = (playerProfile.puzzles || 0) + 1;
+                                    playerProfile.points = (playerProfile.points || 0) + (pz.points || 25);
+                                    saveProfile();
+                                }
                                 audio.victory();
                                 triggerHaptic('victory');
-                                showToast(`🎉 Checkmate! Daily Puzzle #${currentPuzzleIdx + 1} Solved! (+${pz.points} pts)`, 'success');
-                                renderCurrentPuzzle();
+                                if (feedbackEl) {
+                                    feedbackEl.innerHTML = `<span style="color:#22c55e;">🎉 Checkmate! Solved (+${pz.points || 25} pts).</span>`;
+                                }
+                                showToast(`🎉 Checkmate! Puzzle Solved! (+${pz.points || 25} pts)`, 'success');
                                 return;
                             }
                             
@@ -2328,12 +2491,13 @@ function renderCurrentPuzzle() {
                                 audio.move();
                                 triggerHaptic('check');
                                 isProcessingReply = false;
-                                if (feedbackEl) feedbackEl.innerHTML = '<span style="color:var(--yellow);">⚪ Your turn! Deliver the final checkmate!</span>';
+                                if (feedbackEl) feedbackEl.innerHTML = '<span style="color:var(--yellow);">⚪ Your turn! Continue the combination.</span>';
                                 drawPzBoard();
                             }, 500);
 
                         } else {
                             showToast('❌ Incorrect move. Try another tactical idea!', 'error');
+                            if (feedbackEl) feedbackEl.innerHTML = '<span style="color:#ef4444;">❌ Not the strongest move — board reset. Use Hint for strategic guidance.</span>';
                             audio.defeat();
                             triggerHaptic('check');
                             pzSelected = null;
@@ -2528,6 +2692,8 @@ function switchTab(tabId) {
         pauseGame();
         renderSettingsUI();
     }
+
+    syncNativeBannerAds(tabId);
 }
 
 
@@ -2572,6 +2738,9 @@ function bindCheckbox(id, key, onChange) {
 function openAuthModal(defaultTab = 'register') {
     const authModal = document.getElementById('auth-modal');
     if (!authModal) return;
+    if (window.AndroidBridge && typeof window.AndroidBridge.hideBannerAd === 'function') {
+        window.AndroidBridge.hideBannerAd();
+    }
     authModal.classList.remove('hidden');
     const targetTabBtn = document.getElementById(
         defaultTab === 'login' ? 'tab-btn-login' : 
@@ -3024,10 +3193,11 @@ function setupEventListeners() {
     if (repEndBtn) repEndBtn.addEventListener('click', () => returnToLiveGame());
     if (repReturnBtn) repReturnBtn.addEventListener('click', () => returnToLiveGame());
     
-    // Theme Card buttons (both on Home, Options Modal, and Profile)
-    document.querySelectorAll('.theme-card-btn').forEach(btn => {
+    // Theme Card buttons (Setup, Options Modal, Profile, Settings)
+    document.querySelectorAll('.theme-card-btn[data-theme]').forEach(btn => {
         btn.addEventListener('click', () => {
             const t = btn.dataset.theme;
+            if (!t) return;
             applyTheme(t);
             showToast(`Theme: ${t.charAt(0).toUpperCase() + t.slice(1)} Applied 🎨`);
             triggerHaptic('move');
@@ -3077,36 +3247,91 @@ function setupEventListeners() {
     }
     
         
-    // 5 Daily Puzzles Action Buttons
+    // 5 Daily Puzzles & Practice Mode Action Buttons
     const puzzlePrevBtn = document.getElementById('puzzle-prev-btn');
     const puzzleNextBtn = document.getElementById('puzzle-next-btn');
     const puzzleResetBtn = document.getElementById('puzzle-reset-btn');
     const puzzleHintBtn = document.getElementById('puzzle-hint-btn');
+    const pzModeDailyBtn = document.getElementById('pz-mode-daily');
+    const pzModePracticeBtn = document.getElementById('pz-mode-practice');
+    const pzDiffFilters = document.getElementById('puzzle-diff-filters');
+
+    if (pzModeDailyBtn && pzModePracticeBtn) {
+        pzModeDailyBtn.addEventListener('click', () => {
+            pzMode = 'daily';
+            pzCurrentStep = 0;
+            pzHintLevel = 0;
+            pzModeDailyBtn.classList.add('active');
+            pzModePracticeBtn.classList.remove('active');
+            if (pzDiffFilters) pzDiffFilters.classList.add('hidden');
+            renderCurrentPuzzle();
+        });
+        pzModePracticeBtn.addEventListener('click', () => {
+            pzMode = 'practice';
+            pzModePracticeBtn.classList.add('active');
+            pzModeDailyBtn.classList.remove('active');
+            if (pzDiffFilters) pzDiffFilters.classList.remove('hidden');
+            selectRandomPracticePuzzle(pzPracticeDiff);
+            renderCurrentPuzzle();
+        });
+    }
+
+    document.querySelectorAll('.puzzle-diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.puzzle-diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectRandomPracticePuzzle(btn.dataset.pzdiff || 'all');
+            renderCurrentPuzzle();
+        });
+    });
     
     if (puzzlePrevBtn) {
         puzzlePrevBtn.addEventListener('click', () => {
-            currentPuzzleIdx = (currentPuzzleIdx + PUZZLES.length - 1) % PUZZLES.length;
+            pzCurrentStep = 0;
+            pzHintLevel = 0;
+            if (pzMode === 'practice') {
+                pzPracticeIdx = (pzPracticeIdx + pzPracticePool.length - 1) % pzPracticePool.length;
+            } else {
+                currentPuzzleIdx = (currentPuzzleIdx + PUZZLES.length - 1) % PUZZLES.length;
+            }
             renderCurrentPuzzle();
         });
     }
     if (puzzleNextBtn) {
         puzzleNextBtn.addEventListener('click', () => {
-            currentPuzzleIdx = (currentPuzzleIdx + 1) % PUZZLES.length;
+            pzCurrentStep = 0;
+            pzHintLevel = 0;
+            if (pzMode === 'practice') {
+                selectRandomPracticePuzzle(pzPracticeDiff);
+            } else {
+                currentPuzzleIdx = (currentPuzzleIdx + 1) % PUZZLES.length;
+            }
             renderCurrentPuzzle();
         });
     }
     if (puzzleResetBtn) {
         puzzleResetBtn.addEventListener('click', () => {
+            pzCurrentStep = 0;
+            pzHintLevel = 0;
             renderCurrentPuzzle();
         });
     }
     if (puzzleHintBtn) {
         puzzleHintBtn.addEventListener('click', () => {
-            const pz = PUZZLES[currentPuzzleIdx];
-            if (pz && pz.hint) {
-                showToast(`💡 Hint: ${pz.hint}`, 'info');
-                audio.powerup();
+            const pz = getActivePuzzle();
+            if (!pz) return;
+            const hintsArr = Array.isArray(pz.hints) && pz.hints.length > 0
+                ? pz.hints
+                : ['Look for a tactical opportunity.', 'Think about attacking the opponent\'s king.', 'Look for a possible check.'];
+            const idx = Math.min(pzHintLevel, hintsArr.length - 1);
+            const hintMsg = hintsArr[idx];
+            const feedbackEl = document.getElementById('puzzle-feedback');
+            if (feedbackEl) {
+                feedbackEl.innerHTML = `<span style="color:var(--yellow);">💡 Hint ${idx + 1}/${hintsArr.length}: ${hintMsg}</span>`;
             }
+            showToast(`💡 Hint ${idx + 1}: ${hintMsg}`, 'info');
+            if (pzHintLevel < hintsArr.length - 1) pzHintLevel++;
+            audio.powerup();
         });
     }
     
@@ -4462,11 +4687,13 @@ function loadProfile() {
         saveProfile();
         refreshDailyPuzzlesUI();
 
-        // Prompt user with Log In / Sign In Menu immediately on launch!
-        setTimeout(() => {
-            const hasAccounts = getAccountsDB().length > 0;
-            openAuthModal(hasAccounts ? 'login' : 'register');
-        }, 200);
+        // Prompt user with Log In / Sign In Menu immediately on launch (only after consent is accepted)
+        if (hasValidLegalConsent()) {
+            setTimeout(() => {
+                const hasAccounts = getAccountsDB().length > 0;
+                openAuthModal(hasAccounts ? 'login' : 'register');
+            }, 200);
+        }
     }
 
     const orientSelect = document.getElementById('pref-orientation-select');
@@ -4603,96 +4830,125 @@ function showToast(msg, type = 'info') {
 }
 
 // =========================================================
-// REWARDED ADVERTISEMENT CONTROLLER
+// FIRST-LAUNCH LEGAL CONSENT & NATIVE ANDROID ADMOB BRIDGE
 // =========================================================
-let rewardedTimerInterval = null;
-let activeRewardType = 'points';
+const POLICY_VERSION = '2026.11.1';
+const LEGAL_CONSENT_KEY = 'electro_legal_consent';
 
-function openRewardedAdModal(rewardType = 'points') {
-    // Ad frequency & active match protection guards
-    if (activeMatch && !activeMatch.gameOver) {
-        showToast('⚠️ Advertisements are paused during an active chess match!', 'warning');
+function hasValidLegalConsent() {
+    try {
+        const raw = localStorage.getItem(LEGAL_CONSENT_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        return !!(parsed && parsed.accepted === true && parsed.termsVersion === POLICY_VERSION && parsed.privacyVersion === POLICY_VERSION);
+    } catch (e) {
+        return false;
+    }
+}
+
+function initFirstLaunchConsent() {
+    const modal = document.getElementById('consent-modal');
+    const termsChk = document.getElementById('consent-terms-checkbox');
+    const privacyChk = document.getElementById('consent-privacy-checkbox');
+    const acceptBtn = document.getElementById('consent-accept-btn');
+    const exitBtn = document.getElementById('consent-exit-btn');
+    if (!modal || !termsChk || !privacyChk || !acceptBtn) return;
+
+    if (hasValidLegalConsent()) {
+        modal.classList.add('hidden');
         return;
     }
 
-    activeRewardType = rewardType;
-    const modal = document.getElementById('rewarded-ad-modal');
-    const timerBadge = document.getElementById('rewarded-timer-badge');
-    const progressFill = document.getElementById('rewarded-progress-fill');
-    const claimBtn = document.getElementById('rewarded-claim-btn');
-    const cancelBtn = document.getElementById('rewarded-cancel-btn');
-    const rewardAmount = document.getElementById('rewarded-reward-amount');
+    // Ensure checkboxes are NEVER pre-checked
+    termsChk.checked = false;
+    privacyChk.checked = false;
+    acceptBtn.disabled = true;
 
-    if (!modal) return;
-
-    if (rewardAmount) {
-        rewardAmount.textContent = rewardType === 'hint' ? '💡 Free Tactical Hint' : '🎁 +50 Bonus Chess Points';
+    if (window.AndroidBridge && typeof window.AndroidBridge.hideBannerAd === 'function') {
+        window.AndroidBridge.hideBannerAd();
     }
-
-    if (claimBtn) claimBtn.disabled = true;
-    if (progressFill) progressFill.style.width = '0%';
-    if (timerBadge) timerBadge.textContent = '⏱️ 5s';
-
     modal.classList.remove('hidden');
 
-    const totalDuration = 5000;
-    const startTime = Date.now();
+    const updateBtnState = () => {
+        acceptBtn.disabled = !(termsChk.checked && privacyChk.checked);
+    };
+    termsChk.addEventListener('change', updateBtnState);
+    privacyChk.addEventListener('change', updateBtnState);
 
-    if (rewardedTimerInterval) clearInterval(rewardedTimerInterval);
-
-    rewardedTimerInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(100, (elapsed / totalDuration) * 100);
-        const remaining = Math.max(0, Math.ceil((totalDuration - elapsed) / 1000));
-
-        if (progressFill) progressFill.style.width = `${progress}%`;
-        if (timerBadge) timerBadge.textContent = remaining > 0 ? `⏱️ ${remaining}s` : '✅ Ready!';
-
-        if (elapsed >= totalDuration) {
-            clearInterval(rewardedTimerInterval);
-            rewardedTimerInterval = null;
-            if (claimBtn) {
-                claimBtn.disabled = false;
-                claimBtn.focus();
-            }
-            audio.powerup();
+    acceptBtn.addEventListener('click', () => {
+        if (!termsChk.checked || !privacyChk.checked) {
+            showToast('⚠️ Please agree to both Terms & Conditions and Privacy Policy to continue.', 'error');
+            return;
         }
-    }, 100);
-
-    if (cancelBtn) {
-        cancelBtn.onclick = () => {
-            if (rewardedTimerInterval) {
-                clearInterval(rewardedTimerInterval);
-                rewardedTimerInterval = null;
-            }
-            modal.classList.add('hidden');
+        const consentRecord = {
+            accepted: true,
+            timestamp: Date.now(),
+            isoDate: new Date().toISOString(),
+            termsVersion: POLICY_VERSION,
+            privacyVersion: POLICY_VERSION
         };
-    }
+        localStorage.setItem(LEGAL_CONSENT_KEY, JSON.stringify(consentRecord));
+        playerProfile.consent = consentRecord;
+        saveProfile();
 
-    if (claimBtn) {
-        claimBtn.onclick = () => {
-            if (claimBtn.disabled) return;
-            modal.classList.add('hidden');
+        modal.classList.add('hidden');
+        showToast('✅ Welcome to ELECTRO KING!', 'success');
+        audio.powerup();
 
-            if (activeRewardType === 'hint') {
-                showToast('💡 Free Tactical Hint granted for your next puzzle!', 'success');
-                if (typeof fbLogEvent === 'function') fbLogEvent('rewarded_ad_claim', { type: 'hint' });
+        // If user is not logged into an account yet, show the Login/Sign In menu now
+        if (!getActiveAccount()) {
+            const hasAccounts = getAccountsDB().length > 0;
+            openAuthModal(hasAccounts ? 'login' : 'register');
+        }
+    });
+
+    if (exitBtn) {
+        exitBtn.addEventListener('click', () => {
+            if (window.AndroidBridge && typeof window.AndroidBridge.exitApp === 'function') {
+                window.AndroidBridge.exitApp();
             } else {
-                playerProfile.points = (playerProfile.points || 0) + 50;
-                saveProfile();
-                updateProfileUI();
-                showToast('🎉 +50 Bonus Chess Points claimed successfully!', 'success');
-                if (typeof fbLogEvent === 'function') fbLogEvent('rewarded_ad_claim', { type: 'points', amount: 50 });
+                showToast('You may close this browser tab to exit ELECTRO KING.', 'info');
             }
-            audio.victory();
-        };
+        });
     }
 }
 
-// Expose globally for HTML onclick handlers
-if (typeof window !== 'undefined') {
-    window.openRewardedAdModal = openRewardedAdModal;
+let lastBannerShownAt = 0;
+function syncNativeBannerAds(tabId) {
+    if (!window.AndroidBridge) return;
+    const authModal = document.getElementById('auth-modal');
+    const consentModal = document.getElementById('consent-modal');
+    const isAuthOpen = authModal && !authModal.classList.contains('hidden');
+    const isConsentOpen = consentModal && !consentModal.classList.contains('hidden');
+
+    // Never show ads during chess matches, puzzle solving, or auth/consent screens
+    if (tabId === 'arena' || tabId === 'battle' || tabId === 'puzzles' || isAuthOpen || isConsentOpen || !hasValidLegalConsent()) {
+        if (typeof window.AndroidBridge.hideBannerAd === 'function') {
+            window.AndroidBridge.hideBannerAd();
+        }
+        return;
+    }
+
+    // Occasional frequency limit: at most once per 20s transition on non-gameplay screens
+    const now = Date.now();
+    if (now - lastBannerShownAt >= 20000 || tabId === 'home') {
+        if (typeof window.AndroidBridge.showBannerAd === 'function') {
+            window.AndroidBridge.showBannerAd();
+            lastBannerShownAt = now;
+        }
+    }
 }
+
+// Verified Native Android AdMob Rewarded Ad Callback
+window.onAdMobRewardEarned = function(rewardType, amount) {
+    const pts = parseInt(amount, 10) || 50;
+    playerProfile.points = (playerProfile.points || 0) + pts;
+    saveProfile();
+    updateProfileUI();
+    showToast(`🎉 +${pts} Bonus Chess Points awarded!`, 'success');
+    if (typeof fbLogEvent === 'function') fbLogEvent('rewarded_ad_claim', { type: rewardType || 'points', amount: pts });
+    audio.victory();
+};
 
 // =========================================================
 // 8. BOOTSTRAPPING (STARTS CLEANLY ON HOME)
@@ -4715,7 +4971,17 @@ window.addEventListener('DOMContentLoaded', () => {
     syncSettingsCheckboxes();
     loadProfile();
     setupEventListeners();
+    initFirstLaunchConsent();
     init2PlayerBoard();
+
+    const androidRewardBtn = document.getElementById('android-watch-rewarded-btn');
+    if (androidRewardBtn) {
+        androidRewardBtn.addEventListener('click', () => {
+            if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === 'function') {
+                window.AndroidBridge.showRewardedAd('points');
+            }
+        });
+    }
         
     // Sync widgets to native Android with official Electro King branding
     if (window.AndroidBridge && typeof window.AndroidBridge.updateAndroidWidgets === 'function') {

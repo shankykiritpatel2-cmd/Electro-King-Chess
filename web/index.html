@@ -134,19 +134,6 @@
                         </div>
                     </div>
 
-                    <!-- COMPACT SECTION AD (HOME DASHBOARD) -->
-                    <div class="compact-ad-card" id="ad-banner-home" data-ad-slot="home_dashboard">
-                        <div class="ad-badge-tag">SPONSORED</div>
-                        <div class="ad-content-box">
-                            <span class="ad-icon">⚡</span>
-                            <div class="ad-info-text">
-                                <div class="ad-headline">Electro King Pro Cloud</div>
-                                <div class="ad-subline">Instant multi-device cloud synchronization & master analytics.</div>
-                            </div>
-                            <button type="button" class="ad-cta-btn" onclick="openRewardedAdModal('points')">Claim +50 Pts 🎁</button>
-                        </div>
-                    </div>
-
                     <!-- QUICK PLAY DIRECT LAUNCHER (VS 4 BOTS) -->
                     <div class="quick-play-section">
                         <div class="quick-play-header">
@@ -322,19 +309,6 @@
                         </div>
                     </div>
 
-                    <!-- COMPACT SECTION AD (MATCH SETUP) -->
-                    <div class="compact-ad-card" id="ad-banner-setup" data-ad-slot="setup_screen">
-                        <div class="ad-badge-tag">SPONSORED</div>
-                        <div class="ad-content-box">
-                            <span class="ad-icon">🛡️</span>
-                            <div class="ad-info-text">
-                                <div class="ad-headline">Grandmaster Tactics Vault</div>
-                                <div class="ad-subline">Level up your game against ElectroKing with master endgame patterns.</div>
-                            </div>
-                            <button type="button" class="ad-cta-btn" onclick="openRewardedAdModal('hint')">Get Free Hint 💡</button>
-                        </div>
-                    </div>
-
                     <div class="home-action-row">
                         <button id="home-start-btn" class="start-btn">START BATTLE ⚔️</button>
                     </div>
@@ -481,6 +455,21 @@
                         </div>
                     </div>
 
+                    <!-- PUZZLE MODE & DIFFICULTY SELECTOR -->
+                    <div class="puzzle-mode-bar" id="puzzle-mode-bar">
+                        <div class="puzzle-mode-tabs">
+                            <button type="button" class="puzzle-mode-btn active" id="pz-mode-daily" data-pzmode="daily">📅 Daily 5</button>
+                            <button type="button" class="puzzle-mode-btn" id="pz-mode-practice" data-pzmode="practice">🔀 Practice</button>
+                        </div>
+                        <div class="puzzle-diff-filters hidden" id="puzzle-diff-filters">
+                            <button type="button" class="puzzle-diff-btn active" data-pzdiff="all">All</button>
+                            <button type="button" class="puzzle-diff-btn" data-pzdiff="Easy">Easy</button>
+                            <button type="button" class="puzzle-diff-btn" data-pzdiff="Medium">Medium</button>
+                            <button type="button" class="puzzle-diff-btn" data-pzdiff="Hard">Hard</button>
+                            <button type="button" class="puzzle-diff-btn" data-pzdiff="Expert">Expert</button>
+                        </div>
+                    </div>
+
                     <!-- 5 DAILY PROGRESS PILLS -->
                     <div class="puzzle-progress-row" id="puzzle-progress-pills">
                         <!-- 5 puzzle indicator pills dynamically rendered -->
@@ -490,10 +479,10 @@
                     <div id="puzzles-view-container" class="puzzle-challenge-box">
                         <div class="puzzle-info-bar">
                             <div class="puzzle-title-row">
-                                <span class="puzzle-level-tag" id="puzzle-level-tag">Daily Puzzle #1: Back-Rank Mate</span>
-                                <span class="puzzle-solved-tag hidden" id="puzzle-solved-badge">✅ Solved Today</span>
+                                <span class="puzzle-level-tag" id="puzzle-level-tag">Daily Puzzle #1</span>
+                                <span class="puzzle-solved-tag hidden" id="puzzle-solved-badge">✅ Solved</span>
                             </div>
-                            <span class="puzzle-instruction" id="puzzle-turn-text">⚪ White to move & checkmate</span>
+                            <span class="puzzle-instruction" id="puzzle-turn-text">⚪ White to move</span>
                         </div>
                         
                         <div class="puzzle-board-container">
@@ -509,19 +498,6 @@
                             <button id="puzzle-next-btn" class="primary-btn btn-sm">Next ➡️</button>
                         </div>
                         <div class="puzzle-status-feedback" id="puzzle-feedback"></div>
-
-                        <!-- COMPACT SECTION AD (TACTICS PUZZLES) -->
-                        <div class="compact-ad-card" id="ad-banner-puzzles" data-ad-slot="puzzles_screen" style="margin-top: 14px;">
-                            <div class="ad-badge-tag">SPONSORED</div>
-                            <div class="ad-content-box">
-                                <span class="ad-icon">🧩</span>
-                                <div class="ad-info-text">
-                                    <div class="ad-headline">Daily Streak Multiplier</div>
-                                    <div class="ad-subline">Solve checkmate challenges daily to earn bonus points and achievements.</div>
-                                </div>
-                                <button type="button" class="ad-cta-btn" onclick="openRewardedAdModal('points')">+50 Bonus Pts 🎁</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -779,16 +755,14 @@
                         </div>
                     </div>
 
-                    <!-- COMPACT SECTION AD (PROFILE SCREEN) -->
-                    <div class="compact-ad-card" id="ad-banner-profile" data-ad-slot="profile_screen" style="margin-bottom: 14px;">
-                        <div class="ad-badge-tag">SPONSORED</div>
-                        <div class="ad-content-box">
-                            <span class="ad-icon">👑</span>
-                            <div class="ad-info-text">
-                                <div class="ad-headline">Electro King Master Pass</div>
-                                <div class="ad-subline">Official publisher edition by Shanky Patel & created by Viaan Patel.</div>
+                    <!-- OPTIONAL ANDROID REWARDED AD (SHOWN ONLY IN NATIVE ANDROID APP) -->
+                    <div class="settings-card android-only-widget" id="android-rewarded-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                            <div>
+                                <h4 class="settings-heading" style="margin-bottom:2px;">🎁 Optional Bonus Points</h4>
+                                <p style="font-size:0.74rem; color:var(--text-muted); margin:0;">Watch a short optional video ad to earn +50 chess points.</p>
                             </div>
-                            <button type="button" class="ad-cta-btn" onclick="openRewardedAdModal('points')">Boost Profile ⚡</button>
+                            <button type="button" class="primary-btn btn-sm" id="android-watch-rewarded-btn">🎬 Watch Ad</button>
                         </div>
                     </div>
 
@@ -1203,27 +1177,30 @@
         </div>
     </div>
 
-    <!-- REWARDED ADVERTISEMENT MODAL -->
-    <div class="modal-overlay hidden" id="rewarded-ad-modal">
-        <div class="modal-card rewarded-ad-card">
-            <div class="rewarded-ad-header">
-                <span class="ad-badge-tag">REWARDED SPONSOR</span>
-                <span class="rewarded-timer-badge" id="rewarded-timer-badge">⏱️ 5s</span>
+    <!-- FIRST-LAUNCH LEGAL CONSENT MODAL -->
+    <div class="modal-overlay hidden" id="consent-modal" style="z-index: 9999;">
+        <div class="modal-card consent-modal-card">
+            <div style="text-align:center; margin-bottom:14px;">
+                <div style="font-size:2.4rem; margin-bottom:6px;">👑⚡</div>
+                <h2 class="glow-text" style="font-size:1.3rem; margin-bottom:4px;">WELCOME TO ELECTRO KING</h2>
+                <p class="modal-sub" style="margin-bottom:0;">Think Smart. Play Strong. Rule the Board.</p>
             </div>
-            <div class="rewarded-ad-body">
-                <div class="rewarded-ad-icon">⚡👑</div>
-                <h3 class="rewarded-ad-title" id="rewarded-ad-title">Electro King Sponsor Boost</h3>
-                <p class="rewarded-ad-desc" id="rewarded-ad-desc">Watch this 5-second sponsor message to claim your reward.</p>
-                <div class="ad-progress-bar-container">
-                    <div class="ad-progress-bar-fill" id="rewarded-progress-fill"></div>
-                </div>
-                <div class="rewarded-reward-preview" id="rewarded-reward-preview">
-                    <span>🎁 Reward:</span> <strong id="rewarded-reward-amount">+50 Bonus Chess Points</strong>
-                </div>
+            <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.45; margin-bottom:14px;">
+                Before continuing, please read and accept our Terms & Conditions and Privacy Policy. Both agreements are required for all players, including Guest mode.
+            </p>
+            <div class="consent-checkbox-list">
+                <label class="consent-check-row" for="consent-terms-checkbox">
+                    <input type="checkbox" id="consent-terms-checkbox">
+                    <span>I agree to the <a href="terms.html" target="_blank" class="consent-doc-link">Terms & Conditions</a></span>
+                </label>
+                <label class="consent-check-row" for="consent-privacy-checkbox">
+                    <input type="checkbox" id="consent-privacy-checkbox">
+                    <span>I have read and understood the <a href="privacy.html" target="_blank" class="consent-doc-link">Privacy Policy</a></span>
+                </label>
             </div>
-            <div class="rewarded-ad-footer">
-                <button type="button" class="secondary-btn" id="rewarded-cancel-btn">Cancel</button>
-                <button type="button" class="start-btn" id="rewarded-claim-btn" disabled>CLAIM REWARD ⚡</button>
+            <div class="consent-actions-row">
+                <button type="button" class="secondary-btn" id="consent-exit-btn">Exit App</button>
+                <button type="button" class="start-btn" id="consent-accept-btn" disabled>Accept & Continue ⚡</button>
             </div>
         </div>
     </div>

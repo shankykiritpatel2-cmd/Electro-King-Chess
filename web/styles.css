@@ -53,6 +53,10 @@ body.theme-cyber {
     --bg-color: #0b071e;
     --bg-surface: #120e2e;
     --bg-card: #18123c;
+    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(157, 78, 221, 0.22) 0%, transparent 60%),
+                   radial-gradient(circle at 100% 100%, rgba(255, 0, 84, 0.14) 0%, transparent 50%),
+                   radial-gradient(circle at 0% 100%, rgba(0, 245, 212, 0.16) 0%, transparent 50%),
+                   linear-gradient(180deg, #070414 0%, #0b071e 100%);
     --primary: #00f5d4;
     --primary-light: #70fff0;
     --primary-hover: #00d6b9;
@@ -76,6 +80,10 @@ body.theme-obsidian {
     --bg-color: #070709;
     --bg-surface: #0f1015;
     --bg-card: #171821;
+    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(114, 9, 183, 0.24) 0%, transparent 60%),
+                   radial-gradient(circle at 100% 100%, rgba(247, 37, 133, 0.14) 0%, transparent 50%),
+                   radial-gradient(circle at 0% 100%, rgba(76, 201, 240, 0.16) 0%, transparent 50%),
+                   linear-gradient(180deg, #050507 0%, #0d0e14 100%);
     --primary: #4cc9f0;
     --primary-light: #b3ecff;
     --primary-hover: #38bdf8;
@@ -97,6 +105,10 @@ body.theme-gold {
     --bg-color: #0d0903;
     --bg-surface: #171005;
     --bg-card: #221808;
+    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(255, 159, 28, 0.22) 0%, transparent 60%),
+                   radial-gradient(circle at 100% 100%, rgba(230, 57, 70, 0.14) 0%, transparent 50%),
+                   radial-gradient(circle at 0% 100%, rgba(255, 209, 102, 0.16) 0%, transparent 50%),
+                   linear-gradient(180deg, #090602 0%, #140e04 100%);
     --primary: #ffd166;
     --primary-light: #fff2c2;
     --primary-hover: #ffc338;
@@ -118,6 +130,10 @@ body.theme-matrix, body.theme-wood {
     --bg-color: #030d07;
     --bg-surface: #07170c;
     --bg-card: #0b2212;
+    --bg-gradient: radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.18) 0%, transparent 60%),
+                   radial-gradient(circle at 100% 100%, rgba(0, 245, 212, 0.14) 0%, transparent 50%),
+                   radial-gradient(circle at 0% 100%, rgba(0, 255, 102, 0.14) 0%, transparent 50%),
+                   linear-gradient(180deg, #020804 0%, #051209 100%);
     --primary: #00ff66;
     --primary-light: #80ffb3;
     --primary-hover: #00e65c;
@@ -136,11 +152,7 @@ body.theme-matrix, body.theme-wood {
 
 body {
     background-color: var(--bg-color);
-    background-image: 
-        radial-gradient(circle at 50% 0%, rgba(157, 78, 221, 0.22) 0%, transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(255, 0, 84, 0.14) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(0, 245, 212, 0.16) 0%, transparent 50%),
-        linear-gradient(180deg, #070414 0%, #0b071e 100%);
+    background-image: var(--bg-gradient, linear-gradient(180deg, #070414 0%, #0b071e 100%));
     background-attachment: fixed;
     color: var(--text-color);
     font-family: 'Outfit', sans-serif;
@@ -3355,92 +3367,123 @@ body.is-android .android-only-widget {
 }
 
 /* =========================================================
-   COMPACT SECTION ADVERTISEMENTS (CYBER ACCENTS)
+   PUZZLE MODE & DIFFICULTY BAR
    ========================================================= */
-.compact-ad-card {
-    background: #080c14;
-    border: 1px solid rgba(0, 245, 212, 0.25);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin: 8px auto 14px;
-    max-width: 680px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 245, 212, 0.1);
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.compact-ad-card:hover {
-    border-color: rgba(0, 245, 212, 0.45);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 245, 212, 0.2);
-}
-
-.ad-badge-tag {
-    position: absolute;
-    top: 6px;
-    right: 10px;
-    font-size: 0.58rem;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ad-content-box {
+.puzzle-mode-bar {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-.ad-icon {
-    font-size: 1.6rem;
-    flex-shrink: 0;
-    filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.6));
+.puzzle-mode-tabs {
+    display: flex;
+    gap: 8px;
 }
 
-.ad-info-text {
+.puzzle-mode-btn {
     flex: 1;
-    min-width: 0;
-}
-
-.ad-headline {
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 2px;
-    letter-spacing: 0.5px;
-}
-
-.ad-subline {
-    font-size: 0.72rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--panel-border);
     color: var(--text-muted);
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ad-cta-btn {
-    background: linear-gradient(135deg, rgba(0, 245, 212, 0.15) 0%, rgba(123, 44, 191, 0.2) 100%);
-    border: 1px solid var(--primary);
-    color: var(--primary-light);
-    font-size: 0.74rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    padding: 7px 12px;
-    border-radius: 8px;
     cursor: pointer;
-    flex-shrink: 0;
     transition: all 0.2s;
 }
 
-.ad-cta-btn:hover {
+.puzzle-mode-btn.active {
+    background: rgba(0, 245, 212, 0.14);
+    border-color: var(--primary);
+    color: var(--primary-light);
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.puzzle-diff-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.puzzle-diff-btn {
+    flex: 1;
+    min-width: 54px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.puzzle-diff-btn.active {
     background: var(--primary);
     color: #06090e;
-    box-shadow: 0 0 12px rgba(0, 245, 212, 0.6);
-    transform: translateY(-1px);
+    border-color: var(--primary);
+}
+
+/* =========================================================
+   FIRST-LAUNCH LEGAL CONSENT MODAL
+   ========================================================= */
+.consent-modal-card {
+    max-width: 440px;
+    background: var(--bg-surface);
+    border: 1px solid var(--primary);
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.85), 0 0 28px var(--primary-glow);
+}
+
+.consent-checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.consent-check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.84rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+.consent-check-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.consent-doc-link {
+    color: var(--primary-light);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.consent-actions-row {
+    display: flex;
+    gap: 10px;
+}
+
+.consent-actions-row button {
+    flex: 1;
+}
+
+#consent-accept-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
 }
 
 /* =========================================================
@@ -3505,102 +3548,6 @@ body.is-android .android-only-widget {
 
 .auth-text-link:hover {
     color: #fff;
-}
-
-/* =========================================================
-   REWARDED ADVERTISEMENT MODAL
-   ========================================================= */
-.rewarded-ad-card {
-    max-width: 420px;
-    background: #090d16;
-    border: 1px solid rgba(123, 44, 191, 0.5);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(123, 44, 191, 0.35);
-    text-align: center;
-    padding: 20px;
-    border-radius: 16px;
-}
-
-.rewarded-ad-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.rewarded-timer-badge {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: var(--yellow);
-    background: rgba(255, 209, 102, 0.1);
-    border: 1px solid rgba(255, 209, 102, 0.3);
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-.rewarded-ad-icon {
-    font-size: 2.8rem;
-    margin-bottom: 8px;
-    filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.7));
-}
-
-.rewarded-ad-title {
-    font-size: 1.15rem;
-    color: #fff;
-    margin-bottom: 6px;
-}
-
-.rewarded-ad-desc {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-    margin-bottom: 16px;
-}
-
-.ad-progress-bar-container {
-    width: 100%;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.ad-progress-bar-fill {
-    width: 0%;
-    height: 100%;
-    background: linear-gradient(90deg, #00f5d4 0%, #7b2cbf 100%);
-    transition: width 0.1s linear;
-    box-shadow: 0 0 8px rgba(0, 245, 212, 0.8);
-}
-
-.rewarded-reward-preview {
-    background: rgba(0, 245, 212, 0.08);
-    border: 1px solid rgba(0, 245, 212, 0.25);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.82rem;
-    color: #fff;
-    margin-bottom: 18px;
-}
-
-.rewarded-reward-preview strong {
-    color: var(--primary);
-}
-
-.rewarded-ad-footer {
-    display: flex;
-    gap: 10px;
-}
-
-.rewarded-ad-footer button {
-    flex: 1;
-}
-
-#rewarded-claim-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-    filter: grayscale(0.8);
 }
 
 /* Arena Viewport Fit Fix */

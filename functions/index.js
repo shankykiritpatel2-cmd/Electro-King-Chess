@@ -98,3 +98,28 @@ exports.checkUsernameAvailability = functions.https.onCall(async (data) => {
     const doc = await db.collection('usernames').doc(username).get();
     return { available: !doc.exists, username };
 });
+
+/**
+ * Stores Contact Us support messages securely on the server.
+ */
+exports.submitContactMessage = functions.https.onCall(async (data, context) => {
+    const name = String(data.name || '').trim();
+    const email = String(data.email || '').trim();
+    const subject = String(data.subject || '').trim();
+    const message = String(data.message || '').trim();
+
+    if (name.length < 2 || !email.includes('@') || subject.length < 2 || message.length < 5) {
+        throw new functions.https.HttpsError('invalid-argument', 'Please complete all required contact form fields.');
+    }
+
+    const ref = await db.collection('contactMessages').add({
+        name,
+        email,
+        subject,
+        message,
+        uid: context.auth ? context.auth.uid : 'guest',
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return { success: true, id: ref.id };
+});

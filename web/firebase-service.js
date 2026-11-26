@@ -130,7 +130,7 @@ async function fbRegisterWithEmail(email, password, displayName, userId) {
         bestStreak: 0,
         puzzles: 0,
         botRecords: { "1": { w: 0, l: 0, d: 0 }, "2": { w: 0, l: 0, d: 0 }, "3": { w: 0, l: 0, d: 0 }, "4": { w: 0, l: 0, d: 0 } },
-        subscription: { status: 'free', tier: 'standard' },
+        preferences: { theme: 'cyber', sound: true, vibration: true, coords: true, evalBar: true },
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -320,7 +320,7 @@ async function fbSignInWithGoogle() {
                     bestStreak: 0,
                     puzzles: 0,
                     botRecords: { "1": { w: 0, l: 0, d: 0 }, "2": { w: 0, l: 0, d: 0 }, "3": { w: 0, l: 0, d: 0 }, "4": { w: 0, l: 0, d: 0 } },
-                    subscription: { status: 'free', tier: 'standard' },
+                    preferences: { theme: 'cyber', sound: true, vibration: true, coords: true, evalBar: true },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await userRef.set(profileData);
@@ -378,6 +378,8 @@ async function fbSaveProfile(profile) {
             bestStreak: profile.bestStreak || 0,
             puzzles: profile.puzzles || 0,
             botRecords: profile.botRecords || {},
+            preferences: profile.preferences || undefined,
+            consent: profile.consent || undefined,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         return true;
@@ -385,6 +387,45 @@ async function fbSaveProfile(profile) {
         console.warn('Cloud Firestore saveProfile error (saved locally):', e);
         return false;
     }
+}
+
+/**
+ * Save Player Preferences (including theme) to Cloud Firestore
+ */
+async function fbSavePreferences(prefs) {
+    if (!isFirebaseReady || !fbDb || !fbAuth || !fbAuth.currentUser) {
+        return false;
+    }
+    try {
+        const uid = fbAuth.currentUser.uid;
+        await fbDb.collection('users').doc(uid).set({
+            preferences: prefs,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Submit Contact Us Support Message to Cloud Firestore
+ */
+async function fbSubmitContactMessage(payload) {
+    if (!isFirebaseReady || !fbDb) {
+        throw new Error('Firebase service is offline. Please try again when connected.');
+    }
+    const docData = {
+        name: String(payload.name || '').trim(),
+        email: String(payload.email || '').trim(),
+        subject: String(payload.subject || '').trim(),
+        message: String(payload.message || '').trim(),
+        uid: (fbAuth && fbAuth.currentUser) ? fbAuth.currentUser.uid : 'guest',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const docRef = await fbDb.collection('contactMessages').add(docData);
+    fbLogEvent('contact_form_submitted', { messageId: docRef.id });
+    return docRef.id;
 }
 
 /**

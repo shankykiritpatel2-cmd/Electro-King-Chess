@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -15,11 +16,20 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -31,7 +41,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 9001;
     private static final int RC_FILE_CHOOSER = 9002;
+    // Google Official Test Ad Unit IDs (replace with production AdMob IDs before Play Store release)
+    private static final String ADMOB_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";
+    private static final String ADMOB_REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
+
     private WebView webView;
+    private AdView bannerAdView;
+    private RewardedAd mRewardedAd;
     private GoogleSignInClient googleSignInClient;
     private android.webkit.ValueCallback<android.net.Uri[]> filePathCallback;
 
@@ -53,14 +69,31 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        // Initialize Google Mobile Ads (AdMob) SDK
+        // Initialize Google Mobile Ads (AdMob) SDK and preload rewarded ad
         try {
-            com.google.android.gms.ads.MobileAds.initialize(this, initializationStatus -> {});
+            MobileAds.initialize(this, initializationStatus -> loadRewardedAd());
         } catch (Exception ignored) {}
 
-        // Create and configure WebView
+        // Root layout with dark background + WebView + optional bottom AdMob Banner
+        LinearLayout rootLayout = new LinearLayout(this);
+        rootLayout.setOrientation(LinearLayout.VERTICAL);
+        rootLayout.setBackgroundColor(0xFF070414);
+
         webView = new WebView(this);
-        setContentView(webView);
+        LinearLayout.LayoutParams webParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
+        rootLayout.addView(webView, webParams);
+
+        bannerAdView = new AdView(this);
+        bannerAdView.setAdSize(AdSize.BANNER);
+        bannerAdView.setAdUnitId(ADMOB_BANNER_UNIT_ID);
+        bannerAdView.setVisibility(View.GONE);
+        LinearLayout.LayoutParams adParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        adParams.gravity = Gravity.CENTER_HORIZONTAL;
+        rootLayout.addView(bannerAdView, adParams);
+
+        setContentView(rootLayout);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -183,19 +216,62 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void showRewardedAd(String rewardType) {
             runOnUiThread(() -> {
-                showToast("⚡ Connecting to AdMob rewarded sponsor video...");
+                if (mRewardedAd != null) {
+                    mRewardedAd.show(MainActivity.this, rewardItem -> {
+                        String safeType = escapeJs(rewardType != null ? rewardType : "points");
+                        String js = String.format("if (typeof window.onAdMobRewardEarned === 'function') window.onAdMobRewardEarned('%s', 50);", safeType);
+                        if (webView != null) {
+                            webView.post(() -> webView.evaluateJavascript(js, null));
+                        }
+                        loadRewardedAd();
+                    });
+                } else {
+                    loadRewardedAd();
+                    Toast.makeText(MainActivity.this, "Rewarded ad is loading. Please try again in a moment.", Toast.LENGTH_SHORT).show();
+                }
             });
         }
 
         @JavascriptInterface
         public void showBannerAd() {
-            // AdMob banner ad interface
+            runOnUiThread(() -> {
+                if (bannerAdView != null) {
+                    if (bannerAdView.getVisibility() != View.VISIBLE) {
+                        bannerAdView.setVisibility(View.VISIBLE);
+                        bannerAdView.loadAd(new AdRequest.Builder().build());
+                    }
+                }
+            });
         }
 
         @JavascriptInterface
         public void hideBannerAd() {
-            // AdMob banner ad hide interface
+            runOnUiThread(() -> {
+                if (bannerAdView != null) {
+                    bannerAdView.setVisibility(View.GONE);
+                }
+            });
         }
+
+        @JavascriptInterface
+        public void exitApp() {
+            runOnUiThread(() -> finishAffinity());
+        }
+    }
+
+    private void loadRewardedAd() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+        RewardedAd.load(this, ADMOB_REWARDED_UNIT_ID, adRequest, new RewardedAdLoadCallback() {
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                mRewardedAd = null;
+            }
+
+            @Override
+            public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
+                mRewardedAd = rewardedAd;
+            }
+        });
     }
 
     @Override
