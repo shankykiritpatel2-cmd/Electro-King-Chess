@@ -41,9 +41,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 9001;
     private static final int RC_FILE_CHOOSER = 9002;
-    // Google Official Test Ad Unit IDs (replace with production AdMob IDs before Play Store release)
-    private static final String ADMOB_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";
-    private static final String ADMOB_REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
+    // Production Google AdMob Ad Unit IDs (Electro King Chess)
+    private static final String ADMOB_BANNER_UNIT_ID = "ca-app-pub-1692244874353487/2145115201";
+    private static final String ADMOB_REWARDED_UNIT_ID = "ca-app-pub-1692244874353487/4983031537";
 
     private WebView webView;
     private AdView bannerAdView;
