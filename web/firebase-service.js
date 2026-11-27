@@ -13,7 +13,7 @@ const FIREBASE_CONFIG = {
     projectId: "electrokingnew",
     storageBucket: "electrokingnew.firebasestorage.app",
     messagingSenderId: "438419947496",
-    appId: "1:438419947496:web:d5d2fac7b9ccbb69502e5d"
+    appId: "1:438419947496:web:6af93080b2e124c8502e5d"
 };
 
 let fbApp = null;
