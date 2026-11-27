@@ -8,12 +8,13 @@
  */
 
 const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyB99iLBFSPHLCHt4VKWMz_RRyG51JPkkmE",
+    apiKey: "AIzaSyCWSd9ZlnxcLsgJcLchND9m_7r5lZTD5ek",
     authDomain: "electrokingnew.firebaseapp.com",
     projectId: "electrokingnew",
     storageBucket: "electrokingnew.firebasestorage.app",
     messagingSenderId: "438419947496",
-    appId: "1:438419947496:web:6af93080b2e124c8502e5d"
+    appId: "1:438419947496:web:6af93080b2e124c8502e5d",
+    measurementId: "G-MSDMP5LWGN"
 };
 
 let fbApp = null;
