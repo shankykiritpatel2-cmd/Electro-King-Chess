@@ -2393,11 +2393,32 @@ function renderCurrentPuzzle() {
     lvlTag.textContent = `${pz.title} • ${pz.level || 'Medium'} (${pz.difficulty})`;
     if (solvedBadge) solvedBadge.classList.toggle('hidden', !isCompleted);
 
-    // Show optional rewarded ad unlock card ONLY after all 5 free daily puzzles are solved today
+    // Show Bonus Puzzle #6 card in Daily mode (locked until 5 free daily puzzles are solved, then unlockable via Rewarded Ad)
     const unlockExtraCard = document.getElementById('puzzle-unlock-extra-card');
+    const unlockExtraTitle = document.getElementById('puzzle-unlock-extra-title');
+    const unlockExtraDesc = document.getElementById('puzzle-unlock-extra-desc');
+    const unlockExtraBtn = document.getElementById('puzzle-unlock-extra-btn');
     if (unlockExtraCard) {
-        const canUnlockExtra = pzMode === 'daily' && completedList.length >= 5 && !isExtraPuzzleUnlockedToday();
-        unlockExtraCard.classList.toggle('hidden', !canUnlockExtra);
+        const alreadyUnlocked = isExtraPuzzleUnlockedToday();
+        unlockExtraCard.classList.toggle('hidden', pzMode !== 'daily' || alreadyUnlocked);
+        if (pzMode === 'daily' && !alreadyUnlocked) {
+            const freeSolved = Math.min(5, completedList.length);
+            const ready = freeSolved >= 5;
+            if (unlockExtraTitle) {
+                unlockExtraTitle.textContent = ready
+                    ? '🎁 Unlock 1 Extra Bonus Puzzle'
+                    : `🔒 Bonus Puzzle #6 (${freeSolved}/5 Free Solved)`;
+            }
+            if (unlockExtraDesc) {
+                unlockExtraDesc.textContent = ready
+                    ? 'You solved all 5 free daily puzzles! Watch a rewarded Google Ad to unlock Puzzle #6 today.'
+                    : `Solve all 5 free daily puzzles first (${5 - freeSolved} left), then watch a rewarded Google Ad to unlock 1 extra puzzle today.`;
+            }
+            if (unlockExtraBtn) {
+                unlockExtraBtn.disabled = !ready;
+                unlockExtraBtn.textContent = ready ? '🎬 Watch Ad & Unlock' : `🔒 ${freeSolved}/5 Solved`;
+            }
+        }
     }
     
     if (feedbackEl) {
@@ -5016,6 +5037,43 @@ function syncNativeBannerAds(tabId) {
     }
 }
 
+// =========================================================
+// WEBSITE GOOGLE ADSENSE INITIALIZER (REAL ADSENSE ONLY — NO FAKE ADS)
+// =========================================================
+const ELECTRO_ADSENSE_CONFIG = {
+    clientId: '', // Paste your approved Google AdSense Publisher ID (e.g. 'ca-pub-xxxxxxxxxxxxxxxx')
+    slots: {
+        home: '',    // AdSense slot ID for Home Dashboard
+        profile: ''  // AdSense slot ID for Profile Screen
+    }
+};
+
+function initWebAdSense() {
+    // Never run AdSense inside Android WebView (Android uses native AdMob SDK)
+    if (window.AndroidBridge) return;
+    const clientId = (ELECTRO_ADSENSE_CONFIG.clientId || '').trim();
+    if (!clientId || !clientId.startsWith('ca-pub-')) {
+        return; // Keep containers hidden until real AdSense Publisher ID is configured
+    }
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(clientId)}`;
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+
+    ['home', 'profile'].forEach(key => {
+        const slotId = (ELECTRO_ADSENSE_CONFIG.slots[key] || '').trim();
+        const container = document.getElementById(`web-adsense-${key}`);
+        if (!container || !slotId) return;
+        container.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${clientId}" data-ad-slot="${slotId}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+        container.classList.remove('hidden');
+        try {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {}
+    });
+}
+
 // Verified Native Android AdMob Rewarded Ad Callback
 window.onAdMobRewardEarned = function(rewardType, amount) {
     if (rewardType === 'extra_puzzle') {
@@ -5055,6 +5113,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadProfile();
     setupEventListeners();
     initFirstLaunchConsent();
+    initWebAdSense();
     init2PlayerBoard();
 
     const androidRewardBtn = document.getElementById('android-watch-rewarded-btn');
