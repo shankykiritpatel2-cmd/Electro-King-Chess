@@ -12,7 +12,36 @@
           "package_name": "com.electroking.chess"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "438419947496-jf9a52k5vjb676mmo5c3ujc209ujpdj5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electroking.chess",
+            "certificate_hash": "6b026dfa251daa0efe17f65ffeec2b4e55dcc18d"
+          }
+        },
+        {
+          "client_id": "438419947496-r784s0m46eejt3voe3efh4454iraq9sl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electroking.chess",
+            "certificate_hash": "a73e0fba203b20807ccbcd9aba5f0e4ccb6290e5"
+          }
+        },
+        {
+          "client_id": "438419947496-un2pdlvuauogmmar9b42fgi149251nvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electroking.chess",
+            "certificate_hash": "201168451110739a04ba7a4bfcf4fcefc5c77bca"
+          }
+        },
+        {
+          "client_id": "438419947496-9k0r389r1en4ajf9silks53kcdlam4vn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB99iLBFSPHLCHt4VKWMz_RRyG51JPkkmE"
@@ -20,7 +49,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "438419947496-9k0r389r1en4ajf9silks53kcdlam4vn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
