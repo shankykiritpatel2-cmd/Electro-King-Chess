@@ -537,6 +537,7 @@
                             <h3 class="profile-username" id="profile-name">Player</h3>
                             <div class="account-pill-group">
                                 <span class="account-badge guest" id="player-rating-badge">⚡ 1200 Elo • Electro Knight</span>
+                                <span class="account-badge" id="player-rank-badge">🏆 Rank #1</span>
                             </div>
                             <div class="profile-action-links" style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
                                 <button type="button" class="sign-in-link-btn" id="edit-avatar-btn">📷 Edit Picture</button>
@@ -636,6 +637,19 @@
                         <div class="history-list" id="profile-history-list">
                             <div class="history-empty-state" id="history-empty-state">
                                 <span>⚔️ No recorded games yet. Play a match to build your history!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOP 5 LEADERBOARD -->
+                    <div class="settings-card" id="profile-leaderboard-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 class="settings-heading">🏆 Top 5 Leaderboard</h4>
+                            <span style="font-size:0.68rem; color:var(--text-muted);">By Points</span>
+                        </div>
+                        <div class="history-list" id="profile-leaderboard-list">
+                            <div class="history-empty-state">
+                                <span>⚡ Loading leaderboard...</span>
                             </div>
                         </div>
                     </div>

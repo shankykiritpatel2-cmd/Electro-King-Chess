@@ -2642,7 +2642,7 @@ function renderMainMenuUI() {
     if (joinedEl) joinedEl.textContent = `Member Since: ${playerProfile.joinedDate || 'Nov 22, 2026'}`;
     
     if (ratingEl) ratingEl.textContent = playerProfile.rating || 1200;
-    if (pointsEl) pointsEl.textContent = playerProfile.points || 250;
+    if (pointsEl) pointsEl.textContent = playerProfile.points || 0;
     
     const streakData = getPuzzleStreakData();
     if (streakEl) streakEl.textContent = `🔥 ${streakData.streak || 0}`;
@@ -3550,7 +3550,7 @@ function setupEventListeners() {
             avatar: (guestSnap && guestSnap.avatar) || '👑',
             avatarUrl: photoUrl || '',
             rating: (guestSnap && guestSnap.rating) || 1200,
-            points: Math.max(250, (guestSnap && guestSnap.points) || 0),
+            points: (guestSnap && guestSnap.points) || 0,
             matches: (guestSnap && guestSnap.matches) || 0,
             wins: (guestSnap && guestSnap.wins) || 0,
             losses: (guestSnap && guestSnap.losses) || 0,
@@ -3600,7 +3600,7 @@ function setupEventListeners() {
                     avatar: p.avatar || '👑',
                     avatarUrl: p.avatarUrl || res.user.photoURL || '',
                     rating: p.rating || 1200,
-                    points: p.points !== undefined ? p.points : 250,
+                    points: p.points !== undefined ? p.points : 0,
                     matches: p.matches || 0,
                     wins: p.wins || 0,
                     losses: p.losses || 0,
@@ -3823,7 +3823,7 @@ function setupEventListeners() {
                     avatar: p.avatar || '👑',
                     avatarUrl: p.avatarUrl || '',
                     rating: p.rating || 1200,
-                    points: p.points !== undefined ? p.points : 250,
+                    points: p.points !== undefined ? p.points : 0,
                     matches: p.matches || 0,
                     wins: p.wins || 0,
                     losses: p.losses || 0,
@@ -3885,7 +3885,7 @@ function setupEventListeners() {
                         avatar: p.avatar || '👑',
                         avatarUrl: p.avatarUrl || fbRes.user.photoURL || '',
                         rating: p.rating || 1200,
-                        points: p.points !== undefined ? p.points : 250,
+                        points: p.points !== undefined ? p.points : 0,
                         matches: p.matches || 0,
                         wins: p.wins || 0,
                         losses: p.losses || 0,
@@ -4628,6 +4628,49 @@ function renderAchievements() {
     if (countEl) countEl.textContent = `${unlockedCount} / ${ELECTRO_ACHIEVEMENTS.length} Unlocked`;
 }
 
+function renderLeaderboardUI() {
+    const listEl = document.getElementById('profile-leaderboard-list');
+    const rankBadge = document.getElementById('player-rank-badge');
+    const db = typeof getAccountsDB === 'function' ? getAccountsDB() : [];
+    const players = db.map(a => ({
+        id: (a.userId || '').toLowerCase(),
+        name: a.showName || a.userId || 'Player',
+        points: a.points || 0,
+        rating: a.rating || 1200
+    }));
+    const myId = (playerProfile.userId || '').toLowerCase();
+    const myEntry = {
+        id: myId || '__guest__',
+        name: playerProfile.name || 'Guest Player',
+        points: playerProfile.points || 0,
+        rating: playerProfile.rating || 1200
+    };
+    const existingIdx = myId ? players.findIndex(p => p.id === myId) : -1;
+    if (existingIdx >= 0) players[existingIdx] = myEntry;
+    else players.push(myEntry);
+
+    players.sort((a, b) => (b.points - a.points) || (b.rating - a.rating));
+    const myRank = players.findIndex(p => p.id === myEntry.id) + 1;
+    if (rankBadge) rankBadge.textContent = `🏆 Rank #${myRank > 0 ? myRank : 1}`;
+
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+    players.slice(0, 5).forEach((p, idx) => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        const isMe = p.id === myEntry.id;
+        item.innerHTML = `
+            <div class="history-item-left">
+                <span class="history-item-title">${medals[idx] || `#${idx + 1}`} ${p.name}${isMe ? ' (You)' : ''}</span>
+                <span class="history-item-meta">${p.rating} Elo</span>
+            </div>
+            <span class="history-result-badge win">${p.points} pts</span>
+        `;
+        listEl.appendChild(item);
+    });
+}
+
 function renderGameHistoryUI() {
     const listEl = document.getElementById('profile-history-list');
     if (!listEl) return;
@@ -4918,6 +4961,7 @@ function updateProfileUI() {
     if (statCurrentStreak) statCurrentStreak.textContent = playerProfile.currentStreak || 0;
     if (statBestStreak) statBestStreak.textContent = playerProfile.bestStreak || 0;
     if (statPuzzles) statPuzzles.textContent = playerProfile.puzzles || 0;
+    if (typeof renderLeaderboardUI === 'function') renderLeaderboardUI();
     
     // Opponent Computer Records
     let totalBotsDefeated = 0;
@@ -5218,7 +5262,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         avatar: p.avatar || '👑',
                         avatarUrl: p.avatarUrl || res.user.photoURL || '',
                         rating: p.rating || 1200,
-                        points: p.points !== undefined ? p.points : 250,
+                        points: p.points !== undefined ? p.points : 0,
                         matches: p.matches || 0,
                         wins: p.wins || 0,
                         losses: p.losses || 0,
