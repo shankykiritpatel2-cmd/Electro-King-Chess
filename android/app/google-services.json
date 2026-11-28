@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "438419947496-k0n0bi4iiqn2unrbbutpubl2fpihh8on.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electroking.chess",
+            "certificate_hash": "34003d3c72b6d9ffb26b95311f9f824a1ba3615d"
+          }
+        },
+        {
           "client_id": "438419947496-r784s0m46eejt3voe3efh4454iraq9sl.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
