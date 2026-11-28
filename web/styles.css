@@ -3552,6 +3552,16 @@ body.is-android .android-only-widget {
     box-sizing: border-box;
 }
 
+body.is-android .pc-only-widget {
+    display: none !important;
+}
+
+@media (max-width: 600px) {
+    .pc-only-widget {
+        display: none !important;
+    }
+}
+
 /* Website AdSense Container (Black + Theme Neon Border, Hidden Until Configured/Approved) */
 .web-ad-container {
     background-color: #050505;

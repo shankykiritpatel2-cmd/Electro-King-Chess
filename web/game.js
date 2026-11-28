@@ -2446,6 +2446,9 @@ function renderCurrentPuzzle() {
     
     function drawPzBoard() {
         boardEl.innerHTML = '';
+        const pzLegalMoves = (pzSelected && typeof getLegalMoves === 'function')
+            ? getLegalMoves(pzSelected.r, pzSelected.c, pzBoard)
+            : [];
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const sq = document.createElement('div');
@@ -2454,6 +2457,11 @@ function renderCurrentPuzzle() {
                 
                 if (pzSelected && pzSelected.r === r && pzSelected.c === c) {
                     sq.classList.add('selected');
+                }
+                const pzMove = pzLegalMoves.find(m => m.r === r && m.c === c);
+                if (pzMove) {
+                    const isCap = pzBoard[r][c] !== null || pzMove.isEnPassant;
+                    sq.classList.add(isCap ? 'legal-capture' : 'legal-move');
                 }
                 
                 const piece = pzBoard[r][c];
@@ -3391,7 +3399,7 @@ function setupEventListeners() {
             if (feedbackEl) {
                 feedbackEl.innerHTML = `<span style="color:var(--yellow);">💡 Hint ${idx + 1}/${hintsArr.length}: ${hintMsg}</span>`;
             }
-            showToast(`💡 Hint ${idx + 1}: ${hintMsg}`, 'info');
+            showToast(`💡 Hint ${idx + 1}: ${hintMsg}`, 'info', 8000);
             if (pzHintLevel < hintsArr.length - 1) pzHintLevel++;
             audio.powerup();
         });
@@ -3520,6 +3528,7 @@ function setupEventListeners() {
         saveAccountsDB(db);
         setActiveAccount(sanitized);
         if (authModal) authModal.classList.add('hidden');
+        if (typeof switchTab === 'function') switchTab('home');
         renderMainMenuUI();
         renderSettingsUI();
         syncNativeBannerAds(currentTab);
@@ -3604,9 +3613,6 @@ function setupEventListeners() {
                 applyAuthenticatedAccount(googleAccount);
                 showToast(`🎉 Welcome, ${googleAccount.showName}! Synced with Google.`, 'success');
                 audio.victory();
-                if (!googleAccount.phone && typeof openEditAccountModal === 'function') {
-                    setTimeout(() => openEditAccountModal(), 450);
-                }
             }
         } catch (err) {
             const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(err) : (err.message || 'Google Sign-In failed.');
@@ -3854,23 +3860,6 @@ function setupEventListeners() {
                 return;
             }
 
-            // Detect Phone Number (starts with + or >= 8 digits with no @ and no letters)
-            const isPhoneLogin = !ident.includes('@') && (/^\+?\d[\d\s\-()]{7,}$/.test(rawIdent));
-            if (isPhoneLogin) {
-                try {
-                    showToast('📲 Sending Firebase SMS OTP to your phone...', 'info');
-                    await fbSendPhoneOtp(rawIdent, 'recaptcha-container');
-                    if (loginPhoneOtpBox) loginPhoneOtpBox.classList.remove('hidden');
-                    showToast(`📲 SMS OTP sent to ${rawIdent}! Enter the code above to log in.`, 'success');
-                    audio.powerup();
-                } catch (fbErr) {
-                    const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(fbErr) : fbErr.message;
-                    showToast(`❌ ${msg}`, 'error');
-                    audio.defeat();
-                }
-                return;
-            }
-
             if (!pwd) {
                 showToast('⚠️ Please enter your password.', 'error');
                 return;
@@ -4003,6 +3992,7 @@ function setupEventListeners() {
         logoutBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to log out of your ELECTRO KING account?')) {
                 localStorage.removeItem('electro_active_user_id');
+                localStorage.removeItem('electro_profile_avatar_url');
                 // Reset to clean guest
                 playerProfile.userId = '';
                 playerProfile.name = 'Guest Player';
@@ -4010,9 +4000,12 @@ function setupEventListeners() {
                 playerProfile.phone = '';
                 playerProfile.emailVerified = false;
                 playerProfile.phoneVerified = false;
+                playerProfile.avatar = '👑';
+                playerProfile.avatarUrl = '';
                 playerProfile.joinedDate = 'Today';
                 playerProfile.points = 0;
                 saveProfile();
+                if (typeof applyProfileAvatarUI === 'function') applyProfileAvatarUI();
                 renderMainMenuUI();
                 renderSettingsUI();
                 updateProfileUI();
@@ -4028,6 +4021,14 @@ function setupEventListeners() {
     if (profileSwitchBtn) {
         profileSwitchBtn.addEventListener('click', () => {
             openAuthModal('login');
+        });
+    }
+
+    // Top-right Settings button on Profile Screen
+    const profileTopSettingsBtn = document.getElementById('profile-top-settings-btn');
+    if (profileTopSettingsBtn) {
+        profileTopSettingsBtn.addEventListener('click', () => {
+            if (typeof switchTab === 'function') switchTab('settings');
         });
     }
 
@@ -4641,19 +4642,33 @@ function renderGameHistoryUI() {
             return;
         }
         listEl.innerHTML = '';
-        games.slice(0, 10).forEach(g => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            const badgeClass = g.result === 'Victory' ? 'win' : (g.result === 'Defeat' ? 'loss' : 'draw');
-            item.innerHTML = `
-                <div class="history-item-left">
-                    <span class="history-item-title">${g.opponent}</span>
-                    <span class="history-item-meta">${g.date} • ${g.mode} • ${g.moves} moves</span>
-                </div>
-                <span class="history-result-badge ${badgeClass}">${g.result}</span>
-            `;
-            listEl.appendChild(item);
-        });
+        const appendHistoryItems = (items) => {
+            items.forEach(g => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                const badgeClass = g.result === 'Victory' ? 'win' : (g.result === 'Defeat' ? 'loss' : 'draw');
+                item.innerHTML = `
+                    <div class="history-item-left">
+                        <span class="history-item-title">${g.opponent}</span>
+                        <span class="history-item-meta">${g.date} • ${g.mode} • ${g.moves} moves</span>
+                    </div>
+                    <span class="history-result-badge ${badgeClass}">${g.result}</span>
+                `;
+                listEl.appendChild(item);
+            });
+        };
+        appendHistoryItems(games.slice(0, 10));
+        if (games.length > 10) {
+            const showMoreBtn = document.createElement('button');
+            showMoreBtn.className = 'btn btn-secondary';
+            showMoreBtn.style.cssText = 'width:100%;margin-top:8px;padding:8px 12px;font-size:0.85rem;';
+            showMoreBtn.textContent = `Show More (${games.length - 10} older matches)`;
+            showMoreBtn.addEventListener('click', () => {
+                showMoreBtn.remove();
+                appendHistoryItems(games.slice(10));
+            });
+            listEl.appendChild(showMoreBtn);
+        }
     } catch (e) {
         console.error('Error rendering history:', e);
     }
@@ -4922,7 +4937,7 @@ function updateProfileUI() {
     renderAchievements();
 }
 
-function showToast(msg, type = 'info') {
+function showToast(msg, type = 'info', durationMs = 2400) {
     const container = document.getElementById('toast-container');
     if (!container) return;
     const toast = document.createElement('div');
@@ -4932,7 +4947,7 @@ function showToast(msg, type = 'info') {
     setTimeout(() => {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
-    }, 2400);
+    }, durationMs);
 }
 
 // =========================================================
@@ -5164,7 +5179,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (editAccSaveBtn) {
         editAccSaveBtn.addEventListener('click', () => {
             const nameVal = (document.getElementById('edit-acc-name')?.value || '').trim();
-            const phoneVal = (document.getElementById('edit-acc-phone')?.value || '').trim();
             const avatarUrlVal = (document.getElementById('edit-acc-avatar-url')?.value || '').trim();
 
             if (!nameVal) {
@@ -5172,9 +5186,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             playerProfile.name = nameVal;
-            if (phoneVal) {
-                playerProfile.phone = phoneVal;
-            }
             if (avatarUrlVal) {
                 playerProfile.avatarUrl = avatarUrlVal;
             }

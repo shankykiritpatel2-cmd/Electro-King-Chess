@@ -40,9 +40,9 @@
                     <span class="turn-dot-pulse" id="turn-dot"></span>
                     <span class="turn-label" id="turn-message">White's Turn</span>
                 </div>
-                <div class="header-pc-controls">
-                    <button type="button" class="header-btn" id="shortcuts-info-btn" title="Keyboard Shortcuts (?)">⌨️<span class="header-btn-label"> Shortcuts</span></button>
-                    <button type="button" class="header-btn" id="fullscreen-btn" title="Toggle Fullscreen (F11)">⛶<span class="header-btn-label"> Fullscreen</span></button>
+                <div class="header-pc-controls pc-only-widget">
+                    <button type="button" class="header-btn pc-only-widget" id="shortcuts-info-btn" title="Keyboard Shortcuts (?)">⌨️<span class="header-btn-label"> Shortcuts</span></button>
+                    <button type="button" class="header-btn pc-only-widget" id="fullscreen-btn" title="Toggle Fullscreen (F11)">⛶<span class="header-btn-label"> Fullscreen</span></button>
                 </div>
             </div>
         </header>
@@ -519,7 +519,10 @@
             <!-- TAB 4: PROFILE & RECORD -->
             <section class="tab-screen" id="screen-profile">
                 <div class="scrollable-screen-content">
-                    <h2 class="sub-screen-title">👑 Player Profile & Stats</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <h2 class="sub-screen-title" style="margin:0; text-align:left;">👑 Player Profile & Stats</h2>
+                        <button type="button" class="secondary-btn btn-sm" id="profile-top-settings-btn" title="Settings & About" style="padding:6px 12px; font-size:0.78rem; border-color:var(--primary); color:var(--primary-light);">⚙️ Settings</button>
+                    </div>
                     <p class="sub-screen-desc">Manage your player identity, view verified records, and configure settings.</p>
 
                     <!-- USER AVATAR & ACCOUNT STATUS -->
@@ -825,13 +828,6 @@
                                 </span>
                             </div>
                             <div class="account-row">
-                                <span class="account-row-label">Verified Phone</span>
-                                <span class="account-row-val">
-                                    <span id="settings-acc-phone">No phone linked</span>
-                                    <span class="badge-verified" id="settings-acc-phone-badge">⚠️ Unverified</span>
-                                </span>
-                            </div>
-                            <div class="account-row">
                                 <span class="account-row-label">Member Since</span>
                                 <span class="account-row-val" style="color:var(--yellow); font-weight:800;" id="settings-acc-joined">Today</span>
                             </div>
@@ -987,10 +983,6 @@
                 <span class="nav-icon">👑</span>
                 <span class="nav-label">Profile</span>
             </button>
-            <button class="nav-tab" id="nav-btn-settings" data-tab="settings" title="Settings & About">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-label">Settings</span>
-            </button>
         </nav>
     </div>
 
@@ -1098,37 +1090,15 @@
                     <input type="password" id="reg-password-input" class="setup-input" placeholder="Enter secure password">
                 </div>
 
-                <!-- Email Slot with OTP Verification -->
+                <!-- Email Slot with Verification -->
                 <div class="auth-input-group">
                     <div class="auth-label-row">
-                        <label class="auth-label" for="reg-email-input">📧 Email Address</label>
+                        <label class="auth-label" for="reg-email-input">📧 Email Address (Any Provider)</label>
                         <span class="auth-status-badge unverified" id="reg-email-status">⚠️ Unverified</span>
                     </div>
                     <div class="auth-action-row">
-                        <input type="email" id="reg-email-input" class="setup-input" placeholder="e.g. viaan@gmail.com">
-                        <button type="button" class="auth-otp-btn" id="reg-email-send-otp-btn">⚡ Get OTP</button>
-                    </div>
-                    <!-- Email OTP Verification Box -->
-                    <div class="auth-otp-verify-box hidden" id="reg-email-otp-box">
-                        <input type="text" id="reg-email-otp-input" class="setup-input" placeholder="Enter 6-digit OTP" maxlength="6" style="padding:6px 10px; font-size:0.85rem; letter-spacing:2px; text-align:center;">
-                        <button type="button" class="auth-otp-btn" id="reg-email-verify-btn">Verify</button>
-                    </div>
-                </div>
-
-                <!-- Phone Number Slot with OTP Verification -->
-                <div class="auth-input-group">
-                    <div class="auth-label-row">
-                        <label class="auth-label" for="reg-phone-input">📱 Phone Number</label>
-                        <span class="auth-status-badge unverified" id="reg-phone-status">⚠️ Unverified</span>
-                    </div>
-                    <div class="auth-action-row">
-                        <input type="tel" id="reg-phone-input" class="setup-input" placeholder="e.g. +91 98239 55519">
-                        <button type="button" class="auth-otp-btn" id="reg-phone-send-otp-btn">📲 Get SMS OTP</button>
-                    </div>
-                    <!-- Phone OTP Verification Box -->
-                    <div class="auth-otp-verify-box hidden" id="reg-phone-otp-box">
-                        <input type="text" id="reg-phone-otp-input" class="setup-input" placeholder="Enter 6-digit SMS OTP" maxlength="6" style="padding:6px 10px; font-size:0.85rem; letter-spacing:2px; text-align:center;">
-                        <button type="button" class="auth-otp-btn" id="reg-phone-verify-btn">Verify</button>
+                        <input type="email" id="reg-email-input" class="setup-input" placeholder="e.g. name@outlook.com, @yahoo.com, @gmail.com">
+                        <button type="button" class="auth-otp-btn" id="reg-email-send-otp-btn">⚡ Validate</button>
                     </div>
                 </div>
 
@@ -1152,19 +1122,13 @@
                 <div class="auth-divider"><span>OR SIGN IN WITH ACCOUNT</span></div>
 
                 <div class="auth-input-group">
-                    <label class="auth-label" for="login-id-input">👤 Email, Phone Number, or User ID</label>
-                    <input type="text" id="login-id-input" class="setup-input" placeholder="Enter email, phone, or User ID">
+                    <label class="auth-label" for="login-id-input">👤 Email or User ID</label>
+                    <input type="text" id="login-id-input" class="setup-input" placeholder="Enter email or User ID">
                 </div>
 
                 <div class="auth-input-group" style="margin-bottom:6px;">
-                    <label class="auth-label" for="login-password-input">🔒 Password (or leave blank for Phone SMS OTP)</label>
+                    <label class="auth-label" for="login-password-input">🔒 Password</label>
                     <input type="password" id="login-password-input" class="setup-input" placeholder="Enter your password">
-                </div>
-
-                <!-- Phone Login SMS OTP Box (shown when logging in with phone number) -->
-                <div class="auth-otp-verify-box hidden" id="login-phone-otp-box" style="margin-bottom:10px;">
-                    <input type="text" id="login-phone-otp-input" class="setup-input" placeholder="Enter 6-digit SMS OTP" maxlength="6" style="padding:6px 10px; font-size:0.85rem; letter-spacing:2px; text-align:center;">
-                    <button type="button" class="auth-otp-btn" id="login-phone-verify-btn">Verify SMS</button>
                 </div>
 
                 <div style="text-align:right; margin-bottom:12px;">
@@ -1212,10 +1176,6 @@
             <div class="auth-input-group">
                 <label class="auth-label" for="edit-acc-name">👑 Show Name</label>
                 <input type="text" id="edit-acc-name" class="setup-input" placeholder="Enter your display name" maxlength="30">
-            </div>
-            <div class="auth-input-group">
-                <label class="auth-label" for="edit-acc-phone">📱 Phone Number</label>
-                <input type="tel" id="edit-acc-phone" class="setup-input" placeholder="e.g. +91 98239 55519">
             </div>
             <div class="auth-input-group">
                 <label class="auth-label" for="edit-acc-avatar-url">📷 Profile Picture URL (optional)</label>
