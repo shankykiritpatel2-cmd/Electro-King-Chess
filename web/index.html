@@ -842,11 +842,14 @@
                         </div>
 
                         <div class="account-sync-buttons">
-                            <button type="button" class="secondary-btn" id="settings-export-key-btn" style="flex:1; font-size:0.75rem; padding:10px 6px;">
-                                🔑 Export Sync Key
+                            <button type="button" class="secondary-btn" id="settings-edit-details-btn" style="flex:1; font-size:0.75rem; padding:10px 6px; border-color:var(--primary); color:var(--primary-light);">
+                                ✏️ Edit Details
                             </button>
-                            <button type="button" class="secondary-btn" id="settings-switch-account-btn" style="flex:1; font-size:0.75rem; padding:10px 6px; border-color:var(--primary); color:var(--primary-light);">
-                                👥 Switch / Login
+                            <button type="button" class="secondary-btn" id="settings-export-key-btn" style="flex:1; font-size:0.75rem; padding:10px 6px;">
+                                🔑 Export Key
+                            </button>
+                            <button type="button" class="secondary-btn" id="settings-switch-account-btn" style="flex:1; font-size:0.75rem; padding:10px 6px;">
+                                👥 Switch
                             </button>
                             <button type="button" class="secondary-btn" id="settings-logout-btn" style="flex:1; font-size:0.75rem; padding:10px 6px; border-color:rgba(239,68,68,0.5); color:#ef4444;">
                                 🚪 Log Out
@@ -1197,6 +1200,31 @@
             <!-- INVISIBLE RECAPTCHA CONTAINER FOR REAL SMS OTP -->
             <div id="recaptcha-container"></div>
 
+        </div>
+    </div>
+
+    <!-- EDIT ACCOUNT DETAILS MODAL (NAME, PHONE, PROFILE PICTURE) -->
+    <div class="modal-overlay hidden" id="edit-account-modal">
+        <div class="modal-card">
+            <button type="button" class="modal-close-btn" id="edit-account-close-btn">&times;</button>
+            <h2 class="glow-text">EDIT ACCOUNT DETAILS ✏️</h2>
+            <p class="modal-sub">Update your display name, phone number, and profile picture</p>
+            <div class="auth-input-group">
+                <label class="auth-label" for="edit-acc-name">👑 Show Name</label>
+                <input type="text" id="edit-acc-name" class="setup-input" placeholder="Enter your display name" maxlength="30">
+            </div>
+            <div class="auth-input-group">
+                <label class="auth-label" for="edit-acc-phone">📱 Phone Number</label>
+                <input type="tel" id="edit-acc-phone" class="setup-input" placeholder="e.g. +91 98239 55519">
+            </div>
+            <div class="auth-input-group">
+                <label class="auth-label" for="edit-acc-avatar-url">📷 Profile Picture URL (optional)</label>
+                <input type="url" id="edit-acc-avatar-url" class="setup-input" placeholder="https://...">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button type="button" class="secondary-btn" id="edit-acc-avatar-picker-btn" style="flex:1;">🖼️ Choose Photo</button>
+                <button type="button" class="start-btn" id="edit-acc-save-btn" style="flex:1;">SAVE DETAILS ⚡</button>
+            </div>
         </div>
     </div>
 

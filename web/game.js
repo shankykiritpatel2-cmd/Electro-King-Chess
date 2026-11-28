@@ -3604,6 +3604,9 @@ function setupEventListeners() {
                 applyAuthenticatedAccount(googleAccount);
                 showToast(`🎉 Welcome, ${googleAccount.showName}! Synced with Google.`, 'success');
                 audio.victory();
+                if (!googleAccount.phone && typeof openEditAccountModal === 'function') {
+                    setTimeout(() => openEditAccountModal(), 450);
+                }
             }
         } catch (err) {
             const msg = typeof formatFirebaseAuthError === 'function' ? formatFirebaseAuthError(err) : (err.message || 'Google Sign-In failed.');
@@ -5122,6 +5125,66 @@ window.addEventListener('DOMContentLoaded', () => {
             if (window.AndroidBridge && typeof window.AndroidBridge.showRewardedAd === 'function') {
                 window.AndroidBridge.showRewardedAd('points');
             }
+        });
+    }
+
+    // Edit Account Details Modal (Name, Phone, Profile Picture)
+    window.openEditAccountModal = function() {
+        const modal = document.getElementById('edit-account-modal');
+        if (!modal) return;
+        const nameEl = document.getElementById('edit-acc-name');
+        const phoneEl = document.getElementById('edit-acc-phone');
+        const avatarEl = document.getElementById('edit-acc-avatar-url');
+        if (nameEl) nameEl.value = playerProfile.name || '';
+        if (phoneEl) phoneEl.value = playerProfile.phone || '';
+        if (avatarEl) avatarEl.value = playerProfile.avatarUrl || '';
+        modal.classList.remove('hidden');
+    };
+
+    const editDetailsBtn = document.getElementById('settings-edit-details-btn');
+    if (editDetailsBtn) editDetailsBtn.addEventListener('click', window.openEditAccountModal);
+
+    const editAccClose = document.getElementById('edit-account-close-btn');
+    if (editAccClose) {
+        editAccClose.addEventListener('click', () => {
+            const m = document.getElementById('edit-account-modal');
+            if (m) m.classList.add('hidden');
+        });
+    }
+
+    const editAccAvatarBtn = document.getElementById('edit-acc-avatar-picker-btn');
+    if (editAccAvatarBtn) {
+        editAccAvatarBtn.addEventListener('click', () => {
+            const avatarBtn = document.getElementById('avatar-picker-btn');
+            if (avatarBtn) avatarBtn.click();
+        });
+    }
+
+    const editAccSaveBtn = document.getElementById('edit-acc-save-btn');
+    if (editAccSaveBtn) {
+        editAccSaveBtn.addEventListener('click', () => {
+            const nameVal = (document.getElementById('edit-acc-name')?.value || '').trim();
+            const phoneVal = (document.getElementById('edit-acc-phone')?.value || '').trim();
+            const avatarUrlVal = (document.getElementById('edit-acc-avatar-url')?.value || '').trim();
+
+            if (!nameVal) {
+                showToast('⚠️ Show Name cannot be empty.', 'error');
+                return;
+            }
+            playerProfile.name = nameVal;
+            if (phoneVal) {
+                playerProfile.phone = phoneVal;
+            }
+            if (avatarUrlVal) {
+                playerProfile.avatarUrl = avatarUrlVal;
+            }
+            saveProfile();
+            renderSettingsUI();
+            updateProfileUI();
+            const m = document.getElementById('edit-account-modal');
+            if (m) m.classList.add('hidden');
+            showToast('✅ Account details updated and synced!', 'success');
+            audio.victory();
         });
     }
 

@@ -361,7 +361,8 @@
                     statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
                     statusEl.style.border = '1px solid #ef4444';
                     statusEl.style.color = '#fca5a5';
-                    statusEl.textContent = '❌ Failed to send message: ' + (err.message || 'Please check your internet connection and try again.');
+                    const mailto = 'mailto:noctwebsitestudio@gmail.com?subject=' + encodeURIComponent('[ELECTRO KING] ' + subject) + '&body=' + encodeURIComponent('From: ' + name + ' (' + email + ')\n\n' + message);
+                    statusEl.innerHTML = '❌ Could not send via Firestore (' + (err.message || 'Check Firestore Rules') + '). <a href="' + mailto + '" style="color:#00f3ff; text-decoration:underline; font-weight:700;">Click here to send directly via Email App ➔</a>';
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'SUBMIT MESSAGE ⚡';
